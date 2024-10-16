@@ -1,25 +1,25 @@
-# *auto-generated*
-A template repository for building python packages. Please replace `$package` with the package's name in `metadata.yml`.
+# readpub
+Reader for Ebooks.
 
 ## Installation
 ```sh
-*auto-generated*
+$ pip install readpub
 ```
 
 ## Requirements
 ```txt
-*auto-generated*
+
 ```
 
 ## See Also
 ### Github repository
-* *auto-generated*
+* https://github.com/Chitaoji/readpub/
 
 ### PyPI project
-* *auto-generated*
+* https://pypi.org/project/readpub/
 
 ## License
-*auto-generated*
+This project falls under the BSD 3-Clause License.
 
 ## History
 ### v0.0.0

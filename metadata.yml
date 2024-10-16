@@ -1,11 +1,11 @@
 # Package meta-data.
-NAME: $package
+NAME: readpub
 VERSION:
-SUMMARY: A template repository for building python packages.
-HOMEPAGE: https://github.com/Chitaoji/$package/
+SUMMARY: Reader for Ebooks.
+HOMEPAGE: https://github.com/Chitaoji/readpub/
 AUTHOR: Chitaoji
 AUTHOR_EMAIL: 2360742040@qq.com
-REQUIRES_PYTHON: ">=3.8.13"
+REQUIRES_PYTHON: ">=3.12.4"
 REQUIRES: []
 EXTRAS: {}
 SOURCE: src
@@ -16,8 +16,4 @@ CLASSIFIERS:
   - "License :: OSI Approved :: BSD License"
   - "Programming Language :: Python"
   - "Programming Language :: Python :: 3"
-  - "Programming Language :: Python :: 3.8"
-  - "Programming Language :: Python :: 3.9"
-  - "Programming Language :: Python :: 3.10"
-  - "Programming Language :: Python :: 3.11"
   - "Programming Language :: Python :: 3.12"
