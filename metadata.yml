@@ -1,0 +1,23 @@
+# Package meta-data.
+NAME: $package
+VERSION:
+SUMMARY: A template repository for building python packages.
+HOMEPAGE: https://github.com/Chitaoji/$package/
+AUTHOR: Chitaoji
+AUTHOR_EMAIL: 2360742040@qq.com
+REQUIRES_PYTHON: ">=3.8.13"
+REQUIRES: []
+EXTRAS: {}
+SOURCE: src
+SUBMODULES: []
+EXCLUDES:
+  - examples
+CLASSIFIERS:
+  - "License :: OSI Approved :: BSD License"
+  - "Programming Language :: Python"
+  - "Programming Language :: Python :: 3"
+  - "Programming Language :: Python :: 3.8"
+  - "Programming Language :: Python :: 3.9"
+  - "Programming Language :: Python :: 3.10"
+  - "Programming Language :: Python :: 3.11"
+  - "Programming Language :: Python :: 3.12"
