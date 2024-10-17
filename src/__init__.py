@@ -16,9 +16,9 @@ This project falls under the BSD 3-Clause License.
 
 from typing import List
 
-from . import core
+from . import main
 from .__version__ import __version__
-from .core import *
+from .main import *
 
 __all__: List[str] = []
-__all__.extend(core.__all__)
+__all__.extend(main.__all__)
