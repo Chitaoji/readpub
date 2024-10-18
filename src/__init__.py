@@ -14,9 +14,9 @@ This project falls under the BSD 3-Clause License.
 
 """
 
-from . import main
+from . import bookmanager
 from .__version__ import __version__
-from .main import *
+from .bookmanager import *
 
 __all__: list[str] = []
-__all__.extend(main.__all__)
+__all__.extend(bookmanager.__all__)
