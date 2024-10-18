@@ -8,7 +8,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import secrets
 import shutil
-import zipfile
 from pathlib import Path
 from typing import Optional
 
@@ -38,16 +37,15 @@ class BookManager:
         if not datapath.is_dir():
             raise NotADirectoryError(f"not a directory: {datapath}")
         self.datapath = datapath
+        self.opened_book = ""
         self.load_data()
 
     def load_data(self) -> None:
-        """
-        Load data.
-
-        """
-        self.books = {
-            p.name: Book(read_ebook(p)) for p in (self.datapath / "books").iterdir()
-        }
+        """Load data."""
+        books_path = self.datapath / "books"
+        if not books_path.exists():
+            books_path.mkdir()
+        self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
 
     def add_book(self, path: Path) -> None:
         """
@@ -67,12 +65,11 @@ class BookManager:
         if not path.exists():
             raise FileNotFoundError(f"no such file: {path}")
         bookid = self.get_new_bookid()
-        newdir = self.datapath / "books" / bookid
-        newdir.mkdir(parents=True)
-        backup_path = newdir / path.name
-        shutil.copyfile(path, backup_path)
+        backup_path = self.datapath / "books" / bookid
+        backup_path.mkdir()
+        shutil.copyfile(path, backup_path / path.name)
 
-        self.books[bookid] = Book(read_ebook(backup_path))
+        self.books[bookid] = Book(backup_path, self)
 
     def del_book(self, bookid: str) -> None:
         """
@@ -149,39 +146,3 @@ def get_datapath(datapath: Optional[Path] = None) -> tuple[Path, str]:
     elif not datapath.is_dir():
         return datapath, "not-a-dir"
     return datapath, ""
-
-
-def read_ebook(path: Path) -> dict[str, bytes]:
-    """
-    Read an e-book according to the path.
-
-    Parameters
-    ----------
-    path : Path
-        File path or directory path.
-
-    Returns
-    -------
-    dict[str, bytes]
-        A dict of files.
-
-    Raises
-    ------
-    NotImplementedError
-        Illegal file suffix.
-
-    """
-    if path.is_dir():
-        for p in path.iterdir():
-            if p.suffix in [".epub"]:
-                path = p
-                break
-        else:
-            raise FileNotFoundError(f"can't find a book from the directory: {path}")
-    match path.suffix:
-        case ".epub":
-            with zipfile.ZipFile(path) as z:
-                filedict = {f.filename: z.read(f) for f in z.filelist}
-        case _ as x:
-            raise NotImplementedError(f"can't read a {x!r} file: {path}")
-    return filedict
