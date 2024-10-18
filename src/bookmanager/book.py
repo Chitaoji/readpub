@@ -101,7 +101,7 @@ def read_ebook(path: Path) -> dict[str, bytes]:
     Raises
     ------
     NotImplementedError
-        Illegal file suffix.
+        Raised when the file suffix is illegal.
 
     """
     if path.is_dir():

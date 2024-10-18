@@ -28,8 +28,8 @@ class BookManager:
     Raises
     ------
     NotADirectoryError
-        Datapath is not a directory - please use `get_datapath()`
-        to get a legal datapath.
+        Raised when datapath is not a directory - use `get_datapath()`
+        to get a legal path.
 
     """
 
@@ -59,7 +59,7 @@ class BookManager:
         Raises
         ------
         FileNotFoundError
-            Book is not found.
+            Raised when book is not found.
 
         """
         if not path.exists():
@@ -103,7 +103,7 @@ class BookManager:
         Raises
         ------
         RuntimeError
-            Exceeded the max times of runs.
+            Raised when exceeding the max times of runs.
 
         """
         for _ in range(maxruns - maxruns // 2):
