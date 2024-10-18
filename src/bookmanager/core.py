@@ -38,7 +38,34 @@ class BookManager:
             raise NotADirectoryError(f"not a directory: {datapath}")
         self.datapath = datapath
         self.opened_book = ""
+        self.username = "testuser"
         self.load_data()
+
+    def login(self, username: str = "", password: str = "") -> None:
+        """
+        Login as a new user.
+
+        Parameters
+        ----------
+        username : str, optional
+            User name, by default "".
+        password : str, optional
+            User password, by default "".
+
+        Raises
+        ------
+        LoginError
+            Raised when failing to login.
+
+        """
+        if username == "":
+            username = Path("~").expanduser().name
+        else:
+            raise LoginError(f"no such user: {username!r}")
+        if password == "":
+            self.username = username
+        else:
+            raise LoginError(f"wrong password for user: {username!r}")
 
     def load_data(self) -> None:
         """Load data."""
@@ -47,13 +74,13 @@ class BookManager:
             books_path.mkdir()
         self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
 
-    def add_book(self, path: Path) -> None:
+    def add_book(self, src: Path) -> None:
         """
         Add a book.
 
         Parameters
         ----------
-        path : Path
+        src : Path
             Path of the book.
 
         Raises
@@ -62,12 +89,12 @@ class BookManager:
             Raised when book is not found.
 
         """
-        if not path.exists():
-            raise FileNotFoundError(f"no such file: {path}")
+        if not src.exists():
+            raise FileNotFoundError(f"no such file: {src}")
         bookid = self.get_new_bookid()
         backup_path = self.datapath / "books" / bookid
         backup_path.mkdir()
-        shutil.copyfile(path, backup_path / path.name)
+        shutil.copyfile(src, backup_path / src.name)
 
         self.books[bookid] = Book(backup_path, self)
 
@@ -142,3 +169,7 @@ def get_datapath(datapath: Optional[Path] = None) -> Path:
     elif not datapath.is_dir():
         raise NotADirectoryError(f"not a directory: {datapath}")
     return datapath
+
+
+class LoginError(Exception):
+    """Failed to log in."""
