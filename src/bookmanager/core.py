@@ -121,7 +121,7 @@ class BookManager:
         return bookid
 
 
-def get_datapath(datapath: Optional[Path] = None) -> tuple[Path, str]:
+def get_datapath(datapath: Optional[Path] = None) -> Path:
     """
     Get the path for data storage.
 
@@ -132,17 +132,13 @@ def get_datapath(datapath: Optional[Path] = None) -> tuple[Path, str]:
 
     Returns
     -------
-    tuple[Path, str]
-        A 2-tuple containing (datapath, error_message). If no error
-        occured, error_message will be "".
+    Path
+        The data path.
 
     """
     datapath = datapath if datapath else Path("~/AppData/Local/ReadPub").expanduser()
     if not datapath.exists():
-        try:
-            datapath.mkdir(parents=True)
-        except OSError:
-            return datapath, "mkdir-failed"
+        datapath.mkdir(parents=True)
     elif not datapath.is_dir():
-        return datapath, "not-a-dir"
-    return datapath, ""
+        raise NotADirectoryError(f"not a directory: {datapath}")
+    return datapath
