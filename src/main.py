@@ -1,5 +1,5 @@
 """
-The python starter of readpub.
+The launcher for readpub.
 
 If you want to launch the app directly, run:
 
@@ -7,13 +7,13 @@ If you want to launch the app directly, run:
 python main.py
 ```
 
-If you want to import from this module, use the main `readpub` namespace instead.
+If you want to import from the module, use the main `readpub` namespace instead.
 
 """
 
 import argparse
 
-parser = argparse.ArgumentParser(prog="readpub/main.py")
+parser = argparse.ArgumentParser(description="works as the launcher for readpub.")
 parser.add_argument(
     "-f",
     "--frame",
