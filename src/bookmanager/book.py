@@ -36,12 +36,6 @@ class Book:
         self.__page_now = -1
         self.__filedict: dict[str, bytes] = {}
 
-    def load(self) -> None:
-        """Load the whole book."""
-        if self.__filedict:
-            raise RuntimeError("book is already loaded")
-        self.__filedict = read_ebook(self.dirpath)
-
     def get_metadata(self) -> dict[str, str]:
         """Get the metadata from the book."""
         yml_path = self.dirpath / "metadata.yml"
@@ -52,23 +46,43 @@ class Book:
             {
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
+                "status": "normal",
             }
         )
         with open(yml_path, "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
         return metadata
 
+    def update_metadata(self, metadata: dict[str, str]) -> None:
+        """
+        Update the metadata.
+
+        Parameters
+        ----------
+        metadata : dict[str, str]
+            New metadata.
+
+        """
+        old_metadata = self.get_metadata()
+        old_metadata.update(metadata)
+        with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
+            yaml.safe_dump(metadata, stream)
+
     def del_metadata(self) -> None:
-        """Delete the cached metadata."""
+        """Delete the saved metadata."""
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.is_file():
             yml_path.unlink()
 
-    def release(self) -> None:
-        """Release memory."""
-        self.__filedict.clear()
+    def load(self) -> None:
+        """Load the whole book."""
+        if self.__filedict:
+            raise RuntimeError("book is already loaded")
+        self.__filedict = read_ebook(self.dirpath)
 
-    def divide_into_pages(self) -> None: ...
+    def release(self) -> None:
+        """Unload the book and release memory."""
+        self.__filedict.clear()
 
     def open(self) -> None:
         """Open the book."""
@@ -105,10 +119,17 @@ class Book:
         """Turn to the previous page"""
         return self.turn_to_page(self.__page_now - 1)
 
+    def divide_into_pages(self) -> None: ...
+
     @property
     def is_loaded(self) -> bool:
         """Indicates whether the book is already loaded."""
         return bool(self.__filedict)
+
+    @property
+    def is_opened(self) -> bool:
+        """Indicates whether the book is already opened."""
+        return self.__page_now > -1
 
 
 def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:

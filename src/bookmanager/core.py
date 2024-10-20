@@ -108,7 +108,34 @@ class BookManager:
         """
         Delete a book.
 
-        NOTE: this will also delete the backup file of the book.
+        NOTE: you can use `.recover_book()` to recover it.
+
+        Parameters
+        ----------
+        bookid : str
+            Book id.
+
+        """
+        self.books[bookid].update_metadata({"status": "deleted"})
+
+    def recover_book(self, bookid: str) -> None:
+        """
+        Recover a book.
+
+        Parameters
+        ----------
+        bookid : str
+            Book id.
+
+        """
+        self.books[bookid].update_metadata({"status": "normal"})
+
+    def del_book_entirely(self, bookid: str) -> None:
+        """
+        Delete a book entirely.
+
+        NOTE: this will entirely delete all the files and records related
+        to the book, so the book can not be recoverd again!!
 
         Parameters
         ----------
@@ -156,7 +183,7 @@ class BookManager:
 
 def get_datapath(datapath: Optional[Path] = None) -> Path:
     """
-    Get the path for data storage.
+    Get the path for storing data.
 
     Parameters
     ----------
