@@ -36,6 +36,11 @@ class Book:
         self.__page_now = -1
         self.__filedict: dict[str, bytes] = {}
 
+    def __repr__(self) -> str:
+        metadata = self.get_metadata()
+        title, author = metadata["title"], metadata["author"]
+        return f"{self.__class__.__name__}({title=}, {author=})"
+
     def get_metadata(self) -> dict[str, str]:
         """Get the metadata from the book."""
         yml_path = self.dirpath / "metadata.yml"
@@ -183,12 +188,12 @@ def _read_epub(path: Path) -> dict[str, bytes]:
 def _read_epub_metadata(path: Path) -> dict[str, str]:
     with zipfile.ZipFile(path) as z:
         if opf_href := _find_opf(z):  # opf format
-            title, author, cover_href = _get_opf_info(z, opf_href)
+            author, cover_href = _get_opf_info(z, opf_href)
             cover_path = _save_cover(z, cover_href, path)
         else:
             raise NotImplementedError(f"unsupported epub format: {path}")
     return {
-        "title": title,
+        "title": path.stem,
         "author": author,
         "filepath": path.as_posix(),
         "coverpath": cover_path.as_posix(),
@@ -219,11 +224,10 @@ def _get_opf_items(z: zipfile.ZipFile, opf_href: str) -> dict[str, bytes]:
 def _get_opf_info(z: zipfile.ZipFile, opf_href: str):
     maindir = "".join(opf_href.rpartition("/")[:-1])
     bs = BeautifulSoup(z.read(opf_href), features="xml")
-    title = t if (t := bs.title.text) else "Untitled"
-    author = a if (a := bs.creator.text) else "Unnamed"
+    author = a if (a := bs.creator.text) else "Unknown"
     c = bs.find("meta", attrs={"name": "cover"}).attrs["content"]
     cover_href = _merge_dir(maindir, bs.find(id=c).attrs["href"])
-    return title, author, cover_href
+    return author, cover_href
 
 
 def _save_cover(z: zipfile.ZipFile, cover_href: str, path: Path) -> Path:
