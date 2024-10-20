@@ -63,8 +63,8 @@ class Book:
             New metadata.
 
         """
-        old_metadata = self.get_metadata()
-        old_metadata.update(metadata)
+        oldmeta = self.get_metadata()
+        oldmeta.update(metadata)
         with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
 
@@ -131,6 +131,11 @@ class Book:
         """Indicates whether the book is already opened."""
         return self.__page_now > -1
 
+    @property
+    def filedict(self) -> dict[str, bytes]:
+        """Dictionary of book files."""
+        return self.__filedict
+
 
 def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:
     """
@@ -167,10 +172,12 @@ def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:
             return _read_epub_metadata(path) if only_metadata else _read_epub(path)
 
 
-def _read_epub(path: Path) -> dict[str, str]:
+def _read_epub(path: Path) -> dict[str, bytes]:
     with zipfile.ZipFile(path) as z:
-        filedict = {f.filename: z.read(f) for f in z.filelist}
-    return filedict
+        if opf_href := _find_opf(z):  # opf format
+            return _get_opf_items(z, opf_href)
+        else:
+            raise NotImplementedError(f"unsupported epub format: {path}")
 
 
 def _read_epub_metadata(path: Path) -> dict[str, str]:
@@ -195,13 +202,27 @@ def _find_opf(z: zipfile.ZipFile) -> str:
     return ""
 
 
+def _get_opf_items(z: zipfile.ZipFile, opf_href: str) -> dict[str, bytes]:
+    maindir = "".join(opf_href.rpartition("/")[:-1])
+    bs = BeautifulSoup(z.read(opf_href), features="xml")
+    idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
+    manifest, namelist = bs.manifest, z.namelist()
+
+    items: dict[str, bytes] = {}
+    for i in idrefs:
+        itemdir = _merge_dir(maindir, manifest.find(id=i).attrs["href"])
+        items[i] = z.read(itemdir) if itemdir in namelist else b""
+
+    return items
+
+
 def _get_opf_info(z: zipfile.ZipFile, opf_href: str):
     maindir = "".join(opf_href.rpartition("/")[:-1])
     bs = BeautifulSoup(z.read(opf_href), features="xml")
-    title = str(t.string) if (t := bs.find("dc:title")) else "Untitled"
-    author = str(a.string) if (a := bs.find("dc:creator")) else "Unnamed"
-    c = bs.find("opf:meta", attrs={"name": "cover"}).attrs["content"]
-    cover_href = maindir + bs.find(id=c).attrs["href"]
+    title = t if (t := bs.title.text) else "Untitled"
+    author = a if (a := bs.creator.text) else "Unnamed"
+    c = bs.find("meta", attrs={"name": "cover"}).attrs["content"]
+    cover_href = _merge_dir(maindir, bs.find(id=c).attrs["href"])
     return title, author, cover_href
 
 
@@ -213,3 +234,10 @@ def _save_cover(z: zipfile.ZipFile, cover_href: str, path: Path) -> Path:
     new_path = path.parent / cover_href.rpartition("/")[-1]
     new_path.write_bytes(cover)
     return new_path
+
+
+def _merge_dir(fromdir: str, to: str) -> str:
+    if to.startswith("../"):
+        parentdir = Path(fromdir).parent.as_posix()
+        return _merge_dir("" if parentdir == "." else parentdir, to[3:])
+    return fromdir + to
