@@ -74,7 +74,7 @@ class BookManager:
             books_path.mkdir()
         self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
 
-    def add_book(self, src: Path) -> None:
+    def add_book(self, src: Path) -> dict[str, str]:
         """
         Add a book.
 
@@ -82,6 +82,11 @@ class BookManager:
         ----------
         src : Path
             Path of the book.
+
+        Returns
+        -------
+        dict[str, str]
+            Book metadata.
 
         Raises
         ------
@@ -92,11 +97,12 @@ class BookManager:
         if not src.exists():
             raise FileNotFoundError(f"no such file: {src}")
         bookid = self.get_new_bookid()
-        backup_path = self.datapath / "books" / bookid
-        backup_path.mkdir()
-        shutil.copyfile(src, backup_path / src.name)
+        dirpath = self.datapath / "books" / bookid
+        dirpath.mkdir()
+        shutil.copyfile(src, dirpath / src.name)
 
-        self.books[bookid] = Book(backup_path, self)
+        self.books[bookid] = (book := Book(dirpath, self))
+        return book.get_metadata()
 
     def del_book(self, bookid: str) -> None:
         """
