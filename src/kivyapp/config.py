@@ -40,7 +40,7 @@ def edit_config(cfg: "ConfigParser", *args) -> bool:
 Config.read("myapp.ini")
 commands = [
     edit_config(Config, "input", "mouse", "mouse,multitouch_on_demand"),
-    edit_config(Config, "graphics", "fullscreen", "auto"),
+    # edit_config(Config, "graphics", "window_state", "maximized"),
 ]
 if any(commands):
     Config.write()

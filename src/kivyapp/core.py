@@ -20,7 +20,7 @@ from kivymd.uix.card import MDCard
 __all__ = ["KivyApp"]
 
 
-LabelBase.register(name="msyh", fn_regular=r"C:\Users\yfpan\Desktop\msyh.ttc")
+LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
 
 
 def _on_key_up(key, *_):
@@ -33,6 +33,7 @@ def _on_key_up(key, *_):
 
 
 Window.on_key_up = _on_key_up
+Window.maximize()
 
 KV = """
 <MyCard>
@@ -57,7 +58,6 @@ KV = """
 
 
 MDScreen:
-    theme_bg_color: "Custom"
     md_bg_color: self.theme_cls.backgroundColor
 
     MDBoxLayout:
@@ -65,6 +65,7 @@ MDScreen:
         adaptive_size: True
         spacing: "12dp"
         pos_hint: {"center_x": .5, "center_y": .5}
+        
 """
 
 
@@ -82,6 +83,8 @@ class KivyApp(MDApp):
     """Kivy-App for ReadPub."""
 
     def build(self):
+        self.theme_cls.theme_style = "Dark"
+        # self.theme_cls.primary_palette = "Darkgoldenrod"
         return Builder.load_string(KV)
 
     def on_start(self):
