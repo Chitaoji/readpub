@@ -12,6 +12,12 @@ If you want to import from the module, use the main `readpub` namespace instead.
 """
 
 import argparse
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .kivyapp import KivyApp
+else:
+    from kivyapp import KivyApp
 
 parser = argparse.ArgumentParser(description="works as the launcher for readpub.")
 parser.add_argument(
@@ -27,4 +33,4 @@ if __name__ == "__main__":
     args = parser.parse_args()
     match args.frame:
         case "kivy":
-            print("kivy-app start")
+            KivyApp().run()
