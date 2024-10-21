@@ -7,9 +7,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import datetime
-import zipfile
 from pathlib import Path
 from typing import TYPE_CHECKING
+from zipfile import ZipFile
 
 import yaml
 from bs4 import BeautifulSoup
@@ -178,7 +178,7 @@ def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:
 
 
 def _read_epub(path: Path) -> dict[str, bytes]:
-    with zipfile.ZipFile(path) as z:
+    with ZipFile(path) as z:
         if opf_href := _find_opf(z):  # opf format
             return _get_opf_items(z, opf_href)
         else:
@@ -186,7 +186,7 @@ def _read_epub(path: Path) -> dict[str, bytes]:
 
 
 def _read_epub_metadata(path: Path) -> dict[str, str]:
-    with zipfile.ZipFile(path) as z:
+    with ZipFile(path) as z:
         if opf_href := _find_opf(z):  # opf format
             author, cover_href = _get_opf_info(z, opf_href)
             cover_path = _save_cover(z, cover_href, path)
@@ -200,14 +200,14 @@ def _read_epub_metadata(path: Path) -> dict[str, str]:
     }
 
 
-def _find_opf(z: zipfile.ZipFile) -> str:
+def _find_opf(z: ZipFile) -> str:
     for n in z.namelist():
         if n.endswith(".opf"):
             return n
     return ""
 
 
-def _get_opf_items(z: zipfile.ZipFile, opf_href: str) -> dict[str, bytes]:
+def _get_opf_items(z: ZipFile, opf_href: str) -> dict[str, bytes]:
     maindir = "".join(opf_href.rpartition("/")[:-1])
     bs = BeautifulSoup(z.read(opf_href), features="xml")
     idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
@@ -221,7 +221,7 @@ def _get_opf_items(z: zipfile.ZipFile, opf_href: str) -> dict[str, bytes]:
     return items
 
 
-def _get_opf_info(z: zipfile.ZipFile, opf_href: str):
+def _get_opf_info(z: ZipFile, opf_href: str):
     maindir = "".join(opf_href.rpartition("/")[:-1])
     bs = BeautifulSoup(z.read(opf_href), features="xml")
     author = a if (a := bs.creator.text) else "Unknown"
@@ -230,7 +230,7 @@ def _get_opf_info(z: zipfile.ZipFile, opf_href: str):
     return author, cover_href
 
 
-def _save_cover(z: zipfile.ZipFile, cover_href: str, path: Path) -> Path:
+def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
     cover = z.read(cover_href)
     for p in path.parent.iterdir():
         if p.stem == "cover":
