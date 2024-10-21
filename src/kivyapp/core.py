@@ -39,7 +39,7 @@ KV = """
 <MyCard>
     padding: "4dp"
     size_hint: None, None
-    size: "360dp", "150dp"
+    size: "480dp", "240dp"
 
     MDRelativeLayout:
 
@@ -60,11 +60,21 @@ KV = """
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
 
-    MDBoxLayout:
-        id: box
-        adaptive_size: True
-        spacing: "12dp"
-        pos_hint: {"center_x": .5, "center_y": .5}
+    MDScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+        scroll_x: .5
+        scroll_type: ["content", "bars"]
+        bar_width: "12dp"
+        bar_inactive_color: root.theme_cls.backgroundColor
+        
+        MDGridLayout:
+            id: box
+            cols: 3
+            adaptive_size: True
+            spacing: ["24dp", "24dp"]
+            padding: "360dp"
+            pos_hint: {"center_y": .9}
         
 """
 
@@ -83,12 +93,13 @@ class KivyApp(MDApp):
     """Kivy-App for ReadPub."""
 
     def build(self):
+        self.title = "ReadPub"
         self.theme_cls.theme_style = "Dark"
         # self.theme_cls.primary_palette = "Darkgoldenrod"
         return Builder.load_string(KV)
 
     def on_start(self):
-        for i in range(3):
+        for i in range(31):
             self.root.ids.box.add_widget(MyCard(style="elevated", text=f"卡片{i}"))
 
     def open_settings(self, *_): ...
