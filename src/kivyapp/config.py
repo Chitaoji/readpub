@@ -12,12 +12,12 @@ from kivy.config import Config
 
 from ..bookmanager import get_datapath
 
-__all__ = ["local_config"]
+__all__ = ["kivyconfig"]
 
 
-class LocalConfig:
+class KivyConfig:
     """
-    Local config parser for kivy-app.
+    Config parser for kivy-app.
 
     Parameters
     ----------
@@ -60,5 +60,5 @@ class LocalConfig:
         return False
 
 
-local_config = LocalConfig(get_datapath() / "kivyapp.ini")
-local_config.update([["input", "mouse", "mouse,multitouch_on_demand"]])
+kivyconfig = KivyConfig(get_datapath() / "kivy.config.ini")
+kivyconfig.update([["input", "mouse", "mouse,multitouch_on_demand"]])

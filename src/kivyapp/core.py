@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 try:
-    from .config import local_config
+    from .config import kivyconfig
 except ImportError as e:
     raise e
 
@@ -123,4 +123,4 @@ class KivyApp(MDApp):
     def open_settings(self, *_): ...
 
     def _update_local_config(self, commands: list[list]) -> None:
-        local_config.update(commands)
+        kivyconfig.update(commands)
