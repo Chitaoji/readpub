@@ -11,6 +11,8 @@ try:
 except ImportError as e:
     raise e
 
+from typing import Optional
+
 import asynckivy
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
@@ -104,16 +106,17 @@ class KivyApp(MDApp):
 
     def build(self):
         self.title = "ReadPub"
-        self.theme_cls.theme_style = "Dark"
+        # self.theme_cls.theme_style = "Dark"
         # self.theme_cls.primary_palette = "Green"
         return Builder.load_string(KV)
 
     def on_start(self):
-        async def set_cards():
+        async def set_cards(duration: Optional[float] = None):
             for i in range(31):
                 widget = MyCard(style="elevated", text=f"卡片{i}")
                 self.root.ids.grid.add_widget(widget)
-                await asynckivy.sleep(0)
+                if duration is not None:
+                    await asynckivy.sleep(duration)
 
         asynckivy.start(set_cards())
 
