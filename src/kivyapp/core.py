@@ -11,6 +11,7 @@ try:
 except ImportError as e:
     raise e
 
+import asynckivy
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -42,6 +43,13 @@ KV = """
     size_hint: None, None
     size: "480dp", "240dp"
 
+    # theme_shadow_offset: "Custom"
+    # shadow_offset: (1, -2)
+    # theme_shadow_offset: "Custom"
+    # shadow_offset: (1, -2)
+    # theme_shadow_softness: "Custom"
+    # shadow_softness: 1
+
     MDRelativeLayout:
 
         MDIconButton:
@@ -71,7 +79,7 @@ MDScreen:
         bar_inactive_color: root.theme_cls.backgroundColor
         
         MDGridLayout:
-            id: box
+            id: grid
             cols: 3
             adaptive_size: True
             spacing: ["24dp", "24dp"]
@@ -91,24 +99,23 @@ class MyCard(MDCard):
     # super().on_touch_down(*args)
 
 
-# async def set_panel_list():
-#     for i in range(12):
-#         await asynckivy.sleep(0)
-#         self.root.ids.container.add_widget(ExpansionPanelItem())
-
-
 class KivyApp(MDApp):
     """Kivy-App for ReadPub."""
 
     def build(self):
         self.title = "ReadPub"
         self.theme_cls.theme_style = "Dark"
-        # self.theme_cls.primary_palette = "Darkgoldenrod"
+        # self.theme_cls.primary_palette = "Green"
         return Builder.load_string(KV)
 
     def on_start(self):
-        for i in range(31):
-            self.root.ids.box.add_widget(MyCard(style="elevated", text=f"卡片{i}"))
+        async def set_cards():
+            for i in range(31):
+                widget = MyCard(style="elevated", text=f"卡片{i}")
+                self.root.ids.grid.add_widget(widget)
+                await asynckivy.sleep(0)
+
+        asynckivy.start(set_cards())
 
     def open_settings(self, *_): ...
 
