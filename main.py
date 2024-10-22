@@ -15,9 +15,9 @@ import argparse
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .kivyapp import KivyApp
+    from .src.kivyapp import KivyApp
 else:
-    from kivyapp import KivyApp
+    from src.kivyapp import KivyApp
 
 parser = argparse.ArgumentParser(description="works as the launcher for readpub.")
 parser.add_argument(

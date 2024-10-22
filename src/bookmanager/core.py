@@ -1,5 +1,5 @@
 """
-Contains the core of bookmanager: BookManager, etc.
+Contains the core of bookmanager: BookManager, get_datapath(), etc.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.

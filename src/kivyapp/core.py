@@ -7,9 +7,10 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 try:
-    from . import config as _
+    from .config import local_config
 except ImportError:
     ...
+
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -65,6 +66,7 @@ MDScreen:
         do_scroll_y: True
         scroll_x: .5
         scroll_type: ["content", "bars"]
+        scroll_wheel_distance: 80
         bar_width: "12dp"
         bar_inactive_color: root.theme_cls.backgroundColor
         
@@ -89,6 +91,12 @@ class MyCard(MDCard):
     # super().on_touch_down(*args)
 
 
+# async def set_panel_list():
+#     for i in range(12):
+#         await asynckivy.sleep(0)
+#         self.root.ids.container.add_widget(ExpansionPanelItem())
+
+
 class KivyApp(MDApp):
     """Kivy-App for ReadPub."""
 
@@ -103,3 +111,6 @@ class KivyApp(MDApp):
             self.root.ids.box.add_widget(MyCard(style="elevated", text=f"卡片{i}"))
 
     def open_settings(self, *_): ...
+
+    def _update_local_config(self, commands: list[list]) -> None:
+        local_config.update(commands)

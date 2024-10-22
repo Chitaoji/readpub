@@ -1,47 +1,59 @@
 """
-Config file.
+Contains the config parser: local_config.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
 
 """
 
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 from kivy.config import Config
 
-if TYPE_CHECKING:
-    from kivy.config import ConfigParser
+from ..bookmanager import get_datapath
 
-__all__ = []
+__all__ = ["local_config"]
 
 
-def edit_config(cfg: "ConfigParser", *args) -> bool:
+class LocalConfig:
     """
-    Edit the config.
+    Local config parser for kivy-app.
 
     Parameters
     ----------
-    cfg : ConfigParser
-        Config parser.
-
-    Returns
-    -------
-    bool
-        Whether the config has been changed.
+    path : Path
+        Config path.
 
     """
-    if cfg.get(*args[:-1]) != args[-1]:
-        cfg.set(*args)
-        return True
-    return False
+
+    def __init__(self, path: Path) -> None:
+        self.pathstr = path.as_posix()
+        self.parser = Config
+
+    def update(self, commands: list[list]) -> None:
+        """
+        Update config by commands.
+
+        Parameters
+        ----------
+        commands : list[list]
+            _description_.
+
+        """
+        self.parser.read(self.pathstr)
+        done = [self._edit(*c) for c in commands]
+        if any(done):
+            self.parser.write()
+            self.parser.read(self.pathstr)
+        elif not Path(self.pathstr).exists():
+            self.parser.write()
+
+    def _edit(self, *args) -> bool:
+        if self.parser.get(*args[:-1]) != args[-1]:
+            self.parser.set(*args)
+            return True
+        return False
 
 
-Config.read("myapp.ini")
-commands = [
-    edit_config(Config, "input", "mouse", "mouse,multitouch_on_demand"),
-    # edit_config(Config, "graphics", "window_state", "maximized"),
-]
-if any(commands):
-    Config.write()
-    Config.read("myapp.ini")
+local_config = LocalConfig(get_datapath() / "kivyapp.ini")
+local_config.update([["input", "mouse", "mouse,multitouch_on_demand"]])
