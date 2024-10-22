@@ -238,16 +238,20 @@ def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
             p.unlink()
     new_path = path.parent / cover_href.rpartition("/")[-1]
     new_path.write_bytes(cover)
-    _image_auto_crop(new_path)
+    _image_auto_crop(new_path, 248, 360)
     return new_path
 
 
-def _image_auto_crop(imagepath: Path) -> None:
+def _image_auto_crop(imagepath: Path, width: int, height: int) -> None:
     image = Image.open(imagepath)
     a, b = image.size
-    if a / b > 248 / 360:
-        pass
-    image = image.resize((int(360 * a / b), 360))
+    if a / b > width / height:
+        eps = int((a - b * width / height) / 2)
+        image = image.crop((eps, 0, a - eps, b))
+    elif a / b < width / height:
+        eps = int((b - a * height / width) / 2)
+        image = image.crop((0, eps, a, b - eps))
+    image = image.resize((width, height))
     image.save(imagepath, optimize=True)
 
 
