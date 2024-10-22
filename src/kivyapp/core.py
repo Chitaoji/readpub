@@ -8,8 +8,8 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 try:
     from .config import local_config
-except ImportError:
-    ...
+except ImportError as e:
+    raise e
 
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
