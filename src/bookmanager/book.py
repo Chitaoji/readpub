@@ -13,6 +13,7 @@ from zipfile import ZipFile
 
 import yaml
 from bs4 import BeautifulSoup
+from PIL import Image
 
 if TYPE_CHECKING:
     from .core import BookManager
@@ -237,7 +238,17 @@ def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
             p.unlink()
     new_path = path.parent / cover_href.rpartition("/")[-1]
     new_path.write_bytes(cover)
+    _image_auto_crop(new_path)
     return new_path
+
+
+def _image_auto_crop(imagepath: Path) -> None:
+    image = Image.open(imagepath)
+    a, b = image.size
+    if a / b > 248 / 360:
+        pass
+    image = image.resize((int(360 * a / b), 360))
+    image.save(imagepath, optimize=True)
 
 
 def _merge_dir(fromdir: str, to: str) -> str:

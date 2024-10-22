@@ -39,7 +39,7 @@ class BookManager:
         self.datapath = datapath
         self.opened_book = ""
         self.username = "testuser"
-        self.load_data()
+        self.find_books()
 
     def login(self, username: str = "", password: str = "") -> None:
         """
@@ -67,7 +67,7 @@ class BookManager:
         else:
             raise LoginError(f"wrong password for user: {username!r}")
 
-    def load_data(self) -> None:
+    def find_books(self) -> None:
         """Load data."""
         books_path = self.datapath / "books"
         if not books_path.exists():

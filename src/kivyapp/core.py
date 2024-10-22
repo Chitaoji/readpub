@@ -52,7 +52,6 @@ KV = """
     
         Image:
             source: root.image
-            size_hint_y: 0.98
             fit_mode: "scale-down"
             pos_hint: {"center_x": .2, "center_y": .5}
             
@@ -119,7 +118,6 @@ class KivyApp(MDApp):
 
     def on_start(self):
         m = BookManager(kivyconfig.path.parent)
-        m.load_data()
 
         async def set_cards(duration: Optional[float] = None):
             for bookid, book in m.books.items():
@@ -133,7 +131,7 @@ class KivyApp(MDApp):
                 if duration is not None:
                     await asynckivy.sleep(duration)
 
-        asynckivy.start(set_cards(0.1))
+        asynckivy.start(set_cards())
         self.bookmanager = m
 
     def open_settings(self, *_): ...
