@@ -6,7 +6,11 @@ HOMEPAGE: https://github.com/Chitaoji/readpub/
 AUTHOR: Chitaoji
 AUTHOR_EMAIL: 2360742040@qq.com
 REQUIRES_PYTHON: ">=3.12.4"
-REQUIRES: []
+REQUIRES: 
+    - pyyaml
+    - BeautifulSoup4
+    - kivy
+    - kivymd2
 EXTRAS: {}
 SOURCE: src
 SUBMODULES: []

@@ -18,8 +18,11 @@ from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
+from kivy.uix.image import Image
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
+
+from ..bookmanager import BookManager
 
 __all__ = ["KivyApp"]
 
@@ -40,20 +43,21 @@ Window.on_key_up = _on_key_up
 Window.maximize()
 
 KV = """
-<MyCard>
+<BookCard>
     padding: "4dp"
     size_hint: None, None
     size: "480dp", "240dp"
-
-    # theme_shadow_offset: "Custom"
-    # shadow_offset: (1, -2)
-    # theme_shadow_offset: "Custom"
-    # shadow_offset: (1, -2)
-    # theme_shadow_softness: "Custom"
-    # shadow_softness: 1
-
+    
     MDRelativeLayout:
+    
+        Image:
+            source: root.image
+            size_hint_y: 0.98
+            fit_mode: "scale-down"
+            pos_hint: {"center_x": .2, "center_y": .5}
+            
 
+    
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"top": 1, "right": 1}
@@ -62,7 +66,7 @@ KV = """
             text: root.text
             adaptive_size: True
             color: "grey"
-            pos: "12dp", "12dp"
+            pos_hint: {"x": .4}
             bold: True
             theme_font_name: "Custom"
             font_name: 'msyh'
@@ -86,15 +90,15 @@ MDScreen:
             adaptive_size: True
             spacing: ["24dp", "24dp"]
             padding: "360dp"
-            pos_hint: {"center_y": .9}
         
 """
 
 
-class MyCard(MDCard):
+class BookCard(MDCard):
     """Implements a material card."""
 
     text = StringProperty()
+    image = StringProperty()
 
     # def on_touch_down(self, *args):
     #     print(args)
@@ -104,23 +108,32 @@ class MyCard(MDCard):
 class KivyApp(MDApp):
     """Kivy-App for ReadPub."""
 
+    bookmanager: BookManager
+
     def build(self):
         self.title = "ReadPub"
         # self.theme_cls.theme_style = "Dark"
         # self.theme_cls.primary_palette = "Green"
+
         return Builder.load_string(KV)
 
     def on_start(self):
+        m = BookManager(kivyconfig.path.parent)
+        m.load_data()
+
         async def set_cards(duration: Optional[float] = None):
-            for i in range(31):
-                widget = MyCard(style="elevated", text=f"卡片{i}")
+            for bookid, book in m.books.items():
+                metadata = book.get_metadata()
+                widget = BookCard(
+                    style="elevated",
+                    text=metadata["title"],
+                    image=metadata["coverpath"],
+                )
                 self.root.ids.grid.add_widget(widget)
                 if duration is not None:
                     await asynckivy.sleep(duration)
 
-        asynckivy.start(set_cards())
+        asynckivy.start(set_cards(0.1))
+        self.bookmanager = m
 
     def open_settings(self, *_): ...
-
-    def _update_local_config(self, commands: list[list]) -> None:
-        kivyconfig.update(commands)
