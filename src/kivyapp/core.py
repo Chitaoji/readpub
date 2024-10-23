@@ -83,7 +83,7 @@ KV = """
                 color: "grey"
                 
         MDLabel:
-            text: "已读完√"
+            text: root.progress
             font_style: "BookCover"
             role: "small"
             color: "grey"
@@ -121,6 +121,7 @@ class BookCard(MDCard):
     image = StringProperty()
     title = StringProperty()
     author = StringProperty()
+    progress = StringProperty()
 
     # def on_touch_down(self, *args):
     #     print(args)
@@ -161,12 +162,21 @@ class KivyApp(MDApp):
         async def set_cards(duration: Optional[float] = None):
             for bookid, book in m.books.items():
                 metadata = book.get_metadata()
+                pagenow, pagemax = metadata["progress"]
+                match pagenow / pagemax:
+                    case 0.0:
+                        progress = "待阅读"
+                    case 1.0:
+                        progress = "已读完√"
+                    case _ as x:
+                        progress = f"阅读到 {x:.2%}"
                 widget = BookCard(
                     style="elevated",
                     bookid=bookid,
                     image=metadata["coverpath"],
                     title=metadata["title"],
                     author=metadata["author"],
+                    progress=progress,
                 )
                 self.root.ids.grid.add_widget(widget)
                 if duration is not None:
