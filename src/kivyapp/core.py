@@ -17,6 +17,7 @@ import asynckivy
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivy.metrics import sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
@@ -27,6 +28,8 @@ __all__ = ["KivyApp"]
 
 
 LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
+LabelBase.register(name="msyhbd", fn_regular=r"C:\Windows\Fonts\msyhbd.ttc")
+LabelBase.register(name="simhei", fn_regular=r"C:\Windows\Fonts\simhei.ttf")
 
 
 def _on_key_up(key, *_):
@@ -48,7 +51,7 @@ KV = """
     size: "480dp", "240dp"
     
     MDRelativeLayout:
-    
+
         Image:
             source: root.image
             fit_mode: "scale-down"
@@ -57,17 +60,25 @@ KV = """
 
         MDIconButton:
             icon: "dots-vertical"
-            pos_hint: {"top": 1, "right": 1}
+            pos_hint: {"bottom": 1, "right": 1}
 
         MDLabel:
-            text: root.text
-            adaptive_size: True
-            color: "grey"
-            pos_hint: {"x": .4}
-            bold: True
-            theme_font_name: "Custom"
-            font_name: 'msyh'
-
+            text: root.title
+            font_style: "BookCover"
+            role: "large"
+            
+            adaptive_height: True
+            padding: "190dp", "0dp", "10dp", "0dp"
+            pos_hint: {"top": .93}
+            
+        MDLabel:
+            text: root.author
+            font_style: "BookCover"
+            role: "small"
+            
+            adaptive_height: True
+            padding: "190dp", "10dp", "10dp", "0dp"
+            pos_hint: {"top": .7}
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
@@ -94,8 +105,9 @@ MDScreen:
 class BookCard(MDCard):
     """Implements a material card."""
 
-    text = StringProperty()
     image = StringProperty()
+    title = StringProperty()
+    author = StringProperty()
 
     # def on_touch_down(self, *args):
     #     print(args)
@@ -111,7 +123,23 @@ class KivyApp(MDApp):
         self.title = "ReadPub"
         # self.theme_cls.theme_style = "Dark"
         # self.theme_cls.primary_palette = "Green"
-
+        self.theme_cls.font_styles["BookCover"] = {
+            "large": {
+                "line-height": 1.28,
+                "font-name": "msyhbd",
+                "font-size": sp(21),
+            },
+            "medium": {
+                "line-height": 1.24,
+                "font-name": "msyh",
+                "font-size": sp(20),
+            },
+            "small": {
+                "line-height": 1.2,
+                "font-name": "msyh",
+                "font-size": sp(16),
+            },
+        }
         return Builder.load_string(KV)
 
     def on_start(self):
@@ -122,8 +150,9 @@ class KivyApp(MDApp):
                 metadata = book.get_metadata()
                 widget = BookCard(
                     style="elevated",
-                    text=metadata["title"],
                     image=metadata["coverpath"],
+                    title=metadata["title"],
+                    author=metadata["author"],
                 )
                 self.root.ids.grid.add_widget(widget)
                 if duration is not None:
