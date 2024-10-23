@@ -65,8 +65,8 @@ KV = """
             adaptive_height: True
             orientation: "vertical"
             padding: "190dp", "0dp", "10dp", "0dp"
-            pos_hint: {"top": .9}
-            spacing: "25dp"
+            pos_hint: {"top": .88}
+            spacing: "26dp"
             
             MDLabel:
                 text: root.title
@@ -80,8 +80,17 @@ KV = """
                 text: root.author
                 font_style: "BookCover"
                 role: "small"
+                color: "grey"
                 
-
+        MDLabel:
+            text: "已读完√"
+            font_style: "BookCover"
+            role: "small"
+            color: "grey"
+            adaptive_height: True
+            padding: "190dp", "0dp", "10dp", "16dp"
+            pos_hint: {"bottom": 1}
+                
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
@@ -108,6 +117,7 @@ MDScreen:
 class BookCard(MDCard):
     """Implements a material card."""
 
+    bookid = StringProperty()
     image = StringProperty()
     title = StringProperty()
     author = StringProperty()
@@ -140,7 +150,7 @@ class KivyApp(MDApp):
             "small": {
                 "line-height": 1.2,
                 "font-name": "msyh",
-                "font-size": sp(15),
+                "font-size": sp(16),
             },
         }
         return Builder.load_string(KV)
@@ -153,6 +163,7 @@ class KivyApp(MDApp):
                 metadata = book.get_metadata()
                 widget = BookCard(
                     style="elevated",
+                    bookid=bookid,
                     image=metadata["coverpath"],
                     title=metadata["title"],
                     author=metadata["author"],
