@@ -239,11 +239,11 @@ def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
             p.unlink()
     savepath = path.parent / cover_href.rpartition("/")[-1]
     with Image.open(io.BytesIO(cover)) as image:
-        _image_auto_crop(image, 248, 360).save(savepath, optimize=True)
+        _image_auto_resize(image, 248, 360).save(savepath, optimize=True)
     return savepath
 
 
-def _image_auto_crop(image: Image.Image, width: int, height: int) -> Image.Image:
+def _image_auto_resize(image: Image.Image, width: int, height: int) -> Image.Image:
     a, b = image.size
     if a / b > width / height:
         eps = int((a - b * width / height) / 2)
@@ -253,6 +253,20 @@ def _image_auto_crop(image: Image.Image, width: int, height: int) -> Image.Image
         box = (0, eps, a, b - eps)
     image = image.resize((width, height), box=box, reducing_gap=1.1)
     return image
+
+
+# def _cv2_auto_resize(cover: bytes, width: int, height: int) -> np.ndarray:
+#     img_nuffer = np.frombuffer(cover, dtype=np.uint8)
+#     mat = cv2.imdecode(img_nuffer, 1)
+
+#     b, a, _ = mat.shape
+#     if a / b > width / height:
+#         eps = int((a - b * width / height) / 2)
+#         mat = mat[0:b, eps : a - eps]
+#     else:
+#         eps = int((b - a * height / width) / 2)
+#         mat = mat[eps : b - eps, 0:a]
+#     return cv2.resize(mat, (width, height))
 
 
 def _merge_dir(fromdir: str, to: str) -> str:
