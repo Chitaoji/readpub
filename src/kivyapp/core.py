@@ -21,6 +21,7 @@ from kivy.metrics import sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
+from kivymd.uix.menu import MDDropdownMenu
 
 from ..bookmanager import BookManager
 
@@ -60,7 +61,8 @@ KV = """
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"bottom": 1, "right": 1}
-            
+            on_release: app.menu_open(self)
+
         MDBoxLayout:
             adaptive_height: True
             orientation: "vertical"
@@ -185,3 +187,16 @@ class KivyApp(MDApp):
         self.bookmanager = m
 
     def open_settings(self, *_): ...
+
+    def menu_open(self, button):
+        menu_items = [
+            {
+                "text": f"Item {i}",
+                "on_release": lambda x=f"Item {i}": self.menu_callback(x),
+            }
+            for i in range(5)
+        ]
+        MDDropdownMenu(caller=button, items=menu_items, ver_growth="up").open()
+
+    def menu_callback(self, text_item):
+        print(text_item)
