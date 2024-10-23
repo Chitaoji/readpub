@@ -18,7 +18,6 @@ from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
-from kivy.uix.image import Image
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
 
@@ -56,7 +55,6 @@ KV = """
             pos_hint: {"center_x": .2, "center_y": .5}
             
 
-    
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"top": 1, "right": 1}
@@ -88,7 +86,7 @@ MDScreen:
             cols: 3
             adaptive_size: True
             spacing: ["24dp", "24dp"]
-            padding: "360dp"
+            padding: "240dp"
         
 """
 

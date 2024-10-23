@@ -7,6 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import datetime
+import io
 from pathlib import Path
 from typing import TYPE_CHECKING
 from zipfile import ZipFile
@@ -236,23 +237,22 @@ def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
     for p in path.parent.iterdir():
         if p.stem == "cover":
             p.unlink()
-    new_path = path.parent / cover_href.rpartition("/")[-1]
-    new_path.write_bytes(cover)
-    _image_auto_crop(new_path, 248, 360)
-    return new_path
+    savepath = path.parent / cover_href.rpartition("/")[-1]
+    with Image.open(io.BytesIO(cover)) as image:
+        _image_auto_crop(image, 248, 360).save(savepath, optimize=True)
+    return savepath
 
 
-def _image_auto_crop(imagepath: Path, width: int, height: int) -> None:
-    image = Image.open(imagepath)
+def _image_auto_crop(image: Image.Image, width: int, height: int) -> Image.Image:
     a, b = image.size
     if a / b > width / height:
         eps = int((a - b * width / height) / 2)
-        image = image.crop((eps, 0, a - eps, b))
-    elif a / b < width / height:
+        box = (eps, 0, a - eps, b)
+    else:
         eps = int((b - a * height / width) / 2)
-        image = image.crop((0, eps, a, b - eps))
-    image = image.resize((width, height))
-    image.save(imagepath, optimize=True)
+        box = (0, eps, a, b - eps)
+    image = image.resize((width, height), box=box, reducing_gap=1.1)
+    return image
 
 
 def _merge_dir(fromdir: str, to: str) -> str:
