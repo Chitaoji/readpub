@@ -17,6 +17,7 @@ from bs4 import BeautifulSoup
 from PIL import Image
 
 if TYPE_CHECKING:
+    from ._typing import MetaData
     from .core import BookManager
 
 
@@ -35,6 +36,7 @@ class Book:
         self.dirpath = dirpath
         self.bookid = dirpath.name
         self.manager = manager
+        self.pagemax = 0
         self.__page_now = -1
         self.__filedict: dict[str, bytes] = {}
 
@@ -43,7 +45,7 @@ class Book:
         title, author = metadata["title"], metadata["author"]
         return f"{self.__class__.__name__}({title=}, {author=})"
 
-    def get_metadata(self) -> dict[str, str]:
+    def get_metadata(self) -> "MetaData":
         """Get the metadata from the book."""
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.exists():
@@ -54,24 +56,24 @@ class Book:
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
                 "status": "normal",
+                "progress": (0.0, 1.0),
             }
         )
         with open(yml_path, "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
         return metadata
 
-    def update_metadata(self, metadata: dict[str, str]) -> None:
+    def update_metadata(self, newdata: dict[str, str]) -> None:
         """
         Update the metadata.
 
         Parameters
         ----------
-        metadata : dict[str, str]
-            New metadata.
+        newdata : dict[str, str]
+            New data.
 
         """
-        oldmeta = self.get_metadata()
-        oldmeta.update(metadata)
+        metadata = self.get_metadata() | newdata
         with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
 
@@ -114,7 +116,7 @@ class Book:
 
     def turn_to_page(self, n: int) -> str:
         """Turn to page n."""
-        if self.__page_now == -1:
+        if self.__page_now < 0:
             raise RuntimeError("book is closed, run '.open()' first.")
         self.__page_now = n
 
