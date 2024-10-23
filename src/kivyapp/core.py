@@ -123,9 +123,8 @@ class BookCard(MDCard):
     author = StringProperty()
     progress = StringProperty()
 
-    # def on_touch_down(self, *args):
-    #     print(args)
-    # super().on_touch_down(*args)
+    # def on_release(self, *args):
+    #     super().on_release(*args)
 
 
 class KivyApp(MDApp):
