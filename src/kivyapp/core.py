@@ -51,34 +51,37 @@ KV = """
     size: "480dp", "240dp"
     
     MDRelativeLayout:
-
+        
         Image:
             source: root.image
             fit_mode: "scale-down"
             pos_hint: {"center_x": .2, "center_y": .5}
-            
 
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"bottom": 1, "right": 1}
-
-        MDLabel:
-            text: root.title
-            font_style: "BookCover"
-            role: "large"
             
+        MDBoxLayout:
             adaptive_height: True
+            orientation: "vertical"
             padding: "190dp", "0dp", "10dp", "0dp"
-            pos_hint: {"top": .93}
+            pos_hint: {"top": .9}
+            spacing: "25dp"
             
-        MDLabel:
-            text: root.author
-            font_style: "BookCover"
-            role: "small"
-            
-            adaptive_height: True
-            padding: "190dp", "10dp", "10dp", "0dp"
-            pos_hint: {"top": .7}
+            MDLabel:
+                text: root.title
+                font_style: "BookCover"
+                role: "large"
+                
+                adaptive_height: True
+                pos_hint: {"top": 1}
+                
+            MDLabel:
+                text: root.author
+                font_style: "BookCover"
+                role: "small"
+                
+
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
@@ -137,7 +140,7 @@ class KivyApp(MDApp):
             "small": {
                 "line-height": 1.2,
                 "font-name": "msyh",
-                "font-size": sp(16),
+                "font-size": sp(15),
             },
         }
         return Builder.load_string(KV)
