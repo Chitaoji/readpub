@@ -17,11 +17,12 @@ import asynckivy
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
-from kivy.metrics import sp
+from kivy.metrics import dp, sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
 from kivymd.uix.menu import MDDropdownMenu
+from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
 
@@ -61,7 +62,7 @@ KV = """
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"bottom": 1, "right": 1}
-            on_release: app.menu_open(self)
+            on_release: app.open_cover_menu(self)
 
         MDBoxLayout:
             adaptive_height: True
@@ -93,7 +94,35 @@ KV = """
             padding: "190dp", "0dp", "10dp", "16dp"
             pos_hint: {"bottom": 1}
                 
+<CoverDropdownTextItem>
+    orientation: "vertical"
+    
+    MDLabel:
+        text: root.text
+        valign: "center"
+        halign: "center"
+        padding_x: "12dp"
+        shorten: True
+        shorten_from: "right"
+        theme_text_color: "Custom"
+        text_color:
+            app.theme_cls.onSurfaceVariantColor \
+            if not root.text_color else \
+            root.text_color
 
+        font_style: "BookCover"
+        role: "small"
+
+    MDDivider:
+        md_bg_color:
+            ( \
+            app.theme_cls.outlineVariantColor \
+            if not root.divider_color \
+            else root.divider_color \
+            ) \
+            if root.divider else \
+            (0, 0, 0, 0)
+            
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
 
@@ -127,6 +156,14 @@ class BookCard(MDCard):
 
     # def on_release(self, *args):
     #     super().on_release(*args)
+
+
+class CoverDropdownTextItem(BaseDropdownItem):
+    """Implements a menu item with text without leading and trailing icons."""
+
+
+class CoverDeleteDropdownTextItem(CoverDropdownTextItem):
+    """Implements a menu item with text without leading and trailing icons."""
 
 
 class KivyApp(MDApp):
@@ -188,22 +225,63 @@ class KivyApp(MDApp):
 
     def open_settings(self, *_): ...
 
-    def menu_open(self, button):
+    def open_cover_menu(self, button):
+        """Open a menu on the book cover."""
         menu_items = [
             {
-                "text": f"Item {i}",
-                "on_release": lambda x=f"Item {i}": self.menu_callback(x),
-            }
-            for i in range(5)
+                "viewclass": "CoverDropdownTextItem",
+                "text": "编辑封面",
+                "height": dp(40),
+                "on_release": lambda: self.cover_menu_callback("delete"),
+            },
+            {
+                "viewclass": "CoverDropdownTextItem",
+                "text": "书籍信息",
+                "height": dp(40),
+                "on_release": lambda: self.cover_menu_callback("delete"),
+            },
+            {
+                "viewclass": "CoverDeleteDropdownTextItem",
+                "text": "删除书籍",
+                "text_color": "red",
+                "height": dp(40),
+                "on_release": lambda: self.cover_menu_callback("delete"),
+            },
         ]
         menu = MDDropdownMenu(
             caller=button,
             items=menu_items,
-            show_duration=0.0,
-            hide_duration=0.0,
-            ver_growth="up",
+            show_duration=0.1,
+            hide_duration=0.1,
+            hor_growth="right",
         )
-        menu.open()
+        # pylint: disable=protected-access
+        menu.set_menu_properties()
 
-    def menu_callback(self, text_item):
+        # check ver_growth
+        menu.ver_growth = "up"
+        if menu.target_height > menu._start_coords[1] - menu.border_margin:
+            menu.ver_growth = "up"
+        elif (
+            menu._start_coords[1]
+            > Window.height - menu.border_margin - menu.target_height
+        ):
+            menu.ver_growth = "down"
+
+        Window.add_widget(menu)
+        menu.position = menu.adjust_position()
+
+        menu.width = dp(160)
+
+        menu.height = menu.target_height
+        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        menu.x = menu._tar_x + 10
+        menu.y = menu._tar_y - menu.target_height
+        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
+        menu.set_menu_pos()
+        menu.on_open()
+        # pylint: enable=protected-access
+
+    def cover_menu_callback(self, text_item):
+        """Callback of the cover menu."""
         print(text_item)
