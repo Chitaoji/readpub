@@ -196,7 +196,14 @@ class KivyApp(MDApp):
             }
             for i in range(5)
         ]
-        MDDropdownMenu(caller=button, items=menu_items, ver_growth="up").open()
+        menu = MDDropdownMenu(
+            caller=button,
+            items=menu_items,
+            show_duration=0.0,
+            hide_duration=0.0,
+            ver_growth="up",
+        )
+        menu.open()
 
     def menu_callback(self, text_item):
         print(text_item)
