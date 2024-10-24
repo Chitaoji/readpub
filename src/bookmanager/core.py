@@ -116,7 +116,7 @@ class BookManager:
             Book id.
 
         """
-        self.books[bookid].update_metadata({"status": "deleted"})
+        self.books[bookid].update_metadata(status="deleted")
 
     def recover_book(self, bookid: str) -> None:
         """
@@ -128,7 +128,7 @@ class BookManager:
             Book id.
 
         """
-        self.books[bookid].update_metadata({"status": "normal"})
+        self.books[bookid].update_metadata(status="normal")
 
     def del_book_entirely(self, bookid: str) -> None:
         """

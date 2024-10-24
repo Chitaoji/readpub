@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TypedDict
+from typing import Literal, TypedDict
 
 logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "
@@ -24,6 +24,5 @@ class MetaData(TypedDict):
     coverpath: str
     uploader: str
     uploadtime: str
-    pinned: bool
-    status: str
+    status: Literal["normal", "deleted", "pinned"]
     progress: tuple[float, float]

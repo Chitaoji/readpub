@@ -182,8 +182,7 @@ class MainApp(MDApp):
             },
         ]
         menu.items.extend(menu_items)
-        _open(menu)
-        # pylint: enable=protected-access
+        _menu_open(menu)
 
     def pin_bookcard(self, button: str):
         """Pin the bookcard containing the button."""
@@ -193,11 +192,13 @@ class MainApp(MDApp):
 
     def delete_bookcard(self, button, menu):
         """Delete the bookcard."""
+        book = self.bookmanager.books[button.parent.parent.bookid]
+        book.update_metadata(status="deleted")
         self.root.ids.grid.remove_widget(button.parent.parent)
         menu.dismiss()
 
 
-def _open(menu: MDDropdownMenu):
+def _menu_open(menu: MDDropdownMenu):
     # pylint: disable=protected-access
     menu.set_menu_properties()
 
@@ -221,13 +222,13 @@ def _open(menu: MDDropdownMenu):
     menu.y = menu._tar_y - menu.target_height
     menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
     menu.set_menu_pos()
-    _on_open(menu)
+    # pylint: enable=protected-access
+    _menu_on_open(menu)
 
 
-def _on_open(menu: MDDropdownMenu):
+def _menu_on_open(menu: MDDropdownMenu):
     anim = Animation(
         _scale_y=1,
-        # _opacity=1,
         duration=menu.show_duration,
         transition=menu.show_transition,
     )

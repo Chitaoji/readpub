@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import datetime
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Unpack
 from zipfile import ZipFile
 
 import yaml
@@ -39,6 +39,7 @@ class Book:
         self.pagemax = 0
         self.__page_now = -1
         self.__filedict: dict[str, bytes] = {}
+        self.__metadata: MetaData | None = None
 
     def __repr__(self) -> str:
         metadata = self.get_metadata()
@@ -47,6 +48,8 @@ class Book:
 
     def get_metadata(self) -> "MetaData":
         """Get the metadata from the book."""
+        if self.__metadata is not None:
+            return self.__metadata
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.exists():
             return yaml.safe_load(yml_path.read_text())
@@ -55,16 +58,22 @@ class Book:
             {
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
-                "pinned": False,
                 "status": "normal",
                 "progress": (0.0, 1.0),
             }
         )
         with open(yml_path, "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
-        return metadata
+        self.__metadata = metadata
+        return self.__metadata
 
-    def update_metadata(self, newdata: dict[str, str]) -> None:
+    def save_metadata(self) -> None:
+        """Save the metadata."""
+        yml_path = self.dirpath / "metadata.yml"
+        with open(yml_path, "w+", encoding="utf-8") as stream:
+            yaml.safe_dump(self.__metadata, stream)
+
+    def update_metadata(self, **kwargs: Unpack["MetaData"]) -> None:
         """
         Update the metadata.
 
@@ -74,7 +83,7 @@ class Book:
             New data.
 
         """
-        metadata = self.get_metadata() | newdata
+        metadata = self.get_metadata() | kwargs
         with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
 
