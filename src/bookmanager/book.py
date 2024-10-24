@@ -55,6 +55,7 @@ class Book:
             {
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
+                "pinned": False,
                 "status": "normal",
                 "progress": (0.0, 1.0),
             }

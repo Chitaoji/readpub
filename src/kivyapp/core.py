@@ -11,9 +11,11 @@ try:
 except ImportError as e:
     raise e
 
+from functools import partial
 from typing import Optional
 
 import asynckivy
+from kivy.animation import Animation
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.lang import Builder
@@ -151,61 +153,87 @@ class MainApp(MDApp):
 
     def open_cover_menu(self, button):
         """Open a menu on the book cover."""
+        menu = MDDropdownMenu(
+            caller=button,
+            items=[],
+            show_duration=0.1,
+            hide_duration=0.1,
+            hor_growth="right",
+        )
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "↑ 置顶 ↑",
                 "height": dp(40),
-                "on_release": lambda: self.cover_menu_callback("pin"),
+                "on_release": lambda: self.pin_bookcard("pin"),
             },
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "书籍信息",
                 "height": dp(40),
-                "on_release": lambda: self.cover_menu_callback("info"),
+                "on_release": lambda: self.get_bookcard_info("info"),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
                 "text": "删除本书",
                 "text_color": "red",
                 "height": dp(40),
-                "on_release": lambda: self.cover_menu_callback("delete"),
+                "on_release": partial(self.delete_bookcard, button, menu),
             },
         ]
-        menu = MDDropdownMenu(
-            caller=button,
-            items=menu_items,
-            show_duration=0.1,
-            hide_duration=0.1,
-            hor_growth="right",
-        )
-        # pylint: disable=protected-access
-        menu.set_menu_properties()
-
-        # check ver_growth
-        menu.ver_growth = "up"
-        if menu.target_height > menu._start_coords[1] - menu.border_margin:
-            menu.ver_growth = "up"
-        elif (
-            menu._start_coords[1]
-            > Window.height - menu.border_margin - menu.target_height
-        ):
-            menu.ver_growth = "down"
-
-        Window.add_widget(menu)
-        menu.position = menu.adjust_position()
-
-        menu.width = dp(160)
-
-        menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = menu.get_target_pos()
-        menu.x = menu._tar_x + 10
-        menu.y = menu._tar_y - menu.target_height
-        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
-        menu.set_menu_pos()
-        menu.on_open()
+        menu.items.extend(menu_items)
+        _open(menu)
         # pylint: enable=protected-access
 
-    def cover_menu_callback(self, text_item):
-        """Callback of the cover menu."""
-        print(text_item)
+    def pin_bookcard(self, button: str):
+        """Pin the bookcard containing the button."""
+
+    def get_bookcard_info(self, button: str):
+        """Pin the bookcard containing the button."""
+
+    def delete_bookcard(self, button, menu):
+        """Delete the bookcard."""
+        self.root.ids.grid.remove_widget(button.parent.parent)
+        menu.dismiss()
+
+
+def _open(menu: MDDropdownMenu):
+    # pylint: disable=protected-access
+    menu.set_menu_properties()
+
+    # check ver_growth
+    menu.ver_growth = "up"
+    if menu.target_height > menu._start_coords[1] - menu.border_margin:
+        menu.ver_growth = "up"
+    elif (
+        menu._start_coords[1] > Window.height - menu.border_margin - menu.target_height
+    ):
+        menu.ver_growth = "down"
+
+    Window.add_widget(menu)
+    menu.position = menu.adjust_position()
+
+    menu.width = dp(160)
+
+    menu.height = menu.target_height
+    menu._tar_x, menu._tar_y = menu.get_target_pos()
+    menu.x = menu._tar_x + 10
+    menu.y = menu._tar_y - menu.target_height
+    menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
+    menu.set_menu_pos()
+    _on_open(menu)
+
+
+def _on_open(menu: MDDropdownMenu):
+    anim = Animation(
+        _scale_y=1,
+        # _opacity=1,
+        duration=menu.show_duration,
+        transition=menu.show_transition,
+    )
+    anim &= Animation(
+        _scale_x=1,
+        duration=max(menu.show_duration - 0.3, 0.0),
+        transition="out_quad",
+    )
+    anim.start(menu)

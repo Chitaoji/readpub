@@ -24,5 +24,6 @@ class MetaData(TypedDict):
     coverpath: str
     uploader: str
     uploadtime: str
+    pinned: bool
     status: str
     progress: tuple[float, float]
