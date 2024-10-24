@@ -52,7 +52,8 @@ class Book:
             return self.__metadata
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.exists():
-            return yaml.safe_load(yml_path.read_text())
+            self.__metadata = yaml.safe_load(yml_path.read_text())
+            return self.__metadata
         metadata = read_ebook(self.dirpath, only_metadata=True)
         metadata.update(
             {
@@ -69,8 +70,7 @@ class Book:
 
     def save_metadata(self) -> None:
         """Save the metadata."""
-        yml_path = self.dirpath / "metadata.yml"
-        with open(yml_path, "w+", encoding="utf-8") as stream:
+        with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
             yaml.safe_dump(self.__metadata, stream)
 
     def update_metadata(self, **kwargs: Unpack["MetaData"]) -> None:
@@ -79,13 +79,11 @@ class Book:
 
         Parameters
         ----------
-        newdata : dict[str, str]
-            New data.
+        **kwargs : **MetaData
+            New metadata.
 
         """
-        metadata = self.get_metadata() | kwargs
-        with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
-            yaml.safe_dump(metadata, stream)
+        self.__metadata |= kwargs
 
     def del_metadata(self) -> None:
         """Delete the saved metadata."""
@@ -156,7 +154,7 @@ class Book:
         return self.__filedict
 
 
-def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:
+def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData|dict[str, str]":
     """
     Read an e-book from the path.
 
@@ -170,7 +168,7 @@ def read_ebook(path: Path, only_metadata: bool = False) -> dict[str, str]:
 
     Returns
     -------
-    dict[str, str]
+    MetaData|dict[str, str]
         A dict of files or paths.
 
     Raises
@@ -199,7 +197,7 @@ def _read_epub(path: Path) -> dict[str, bytes]:
             raise NotImplementedError(f"unsupported epub format: {path}")
 
 
-def _read_epub_metadata(path: Path) -> dict[str, str]:
+def _read_epub_metadata(path: Path) -> "MetaData":
     with ZipFile(path) as z:
         if opf_href := _find_opf(z):  # opf format
             author, cover_href = _get_opf_info(z, opf_href)

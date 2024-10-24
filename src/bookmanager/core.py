@@ -9,9 +9,12 @@ NOTE: this module is private. All functions and objects are available in the mai
 import secrets
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import TYPE_CHECKING, Optional, Unpack
 
 from .book import Book
+
+if TYPE_CHECKING:
+    from ._typing import MetaData
 
 __all__ = ["BookManager", "get_datapath"]
 
@@ -179,6 +182,28 @@ class BookManager:
             else:
                 raise RuntimeError(f"can't find a legal book id after {maxruns} runs")
         return bookid
+
+    def find(self, **kwargs: Unpack["MetaData"]) -> dict[str, Book]:
+        """
+        Find books with specified metadata.
+
+        Parameters
+        ----------
+        **kwargs : **MetaData
+            Specified metada.
+
+        Returns
+        -------
+        dict[str,Book]
+            Books found.
+
+        """
+        books: dict[str, Book] = {}
+        for bookid, book in self.books.items():
+            metadata = book.get_metadata()
+            if all(metadata[k] == v for k, v in kwargs.items()):
+                books[bookid] = book
+        return books
 
 
 def get_datapath(datapath: Optional[Path] = None) -> Path:

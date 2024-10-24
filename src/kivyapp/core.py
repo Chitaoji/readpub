@@ -12,7 +12,7 @@ except ImportError as e:
     raise e
 
 from functools import partial
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 import asynckivy
 from kivy.animation import Animation
@@ -27,6 +27,9 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
+
+if TYPE_CHECKING:
+    from ..bookmanager._typing import StatusHint
 
 __all__ = ["MainApp"]
 
@@ -74,11 +77,12 @@ MDScreen:
 class BookCard(MDCard):
     """Implements a material card."""
 
-    bookid = StringProperty()
-    image = StringProperty()
-    title = StringProperty()
-    author = StringProperty()
-    progress = StringProperty()
+    bookid: str = StringProperty()
+    image: str = StringProperty()
+    title: str = StringProperty()
+    author: str = StringProperty()
+    progress: str = StringProperty()
+    status: "StatusHint" = StringProperty()
 
     # def on_release(self, *args):
     #     super().on_release(*args)
@@ -124,7 +128,9 @@ class MainApp(MDApp):
         m = BookManager(kivyconfig.path.parent)
 
         async def set_cards(duration: Optional[float] = None):
-            for bookid, book in m.books.items():
+            pinned_books = m.find(status="pinned")
+            normal_books = m.find(status="normal")
+            for bookid, book in (pinned_books | normal_books).items():
                 metadata = book.get_metadata()
                 pagenow, pagemax = metadata["progress"]
                 match pagenow / pagemax:
@@ -141,6 +147,7 @@ class MainApp(MDApp):
                     title=metadata["title"],
                     author=metadata["author"],
                     progress=progress,
+                    status=metadata["status"],
                 )
                 self.root.ids.grid.add_widget(widget)
                 if duration is not None:
@@ -160,18 +167,23 @@ class MainApp(MDApp):
             hide_duration=0.1,
             hor_growth="right",
         )
+        is_normal = btnparent(button).status == "normal"
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "↑ 置顶 ↑",
+                "text": "↑ 置顶 ↑" if is_normal else "取消置顶",
                 "height": dp(40),
-                "on_release": lambda: self.pin_bookcard("pin"),
+                "on_release": (
+                    partial(self.pin_bookcard, button, menu)
+                    if is_normal
+                    else partial(self.unpin_bookcard, button, menu)
+                ),
             },
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "书籍信息",
                 "height": dp(40),
-                "on_release": lambda: self.get_bookcard_info("info"),
+                "on_release": partial(self.get_bookcard_info, button, menu),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
@@ -184,18 +196,43 @@ class MainApp(MDApp):
         menu.items.extend(menu_items)
         _menu_open(menu)
 
-    def pin_bookcard(self, button: str):
+    def pin_bookcard(self, button, menu):
         """Pin the bookcard containing the button."""
+        book = self.bookmanager.books[btnparent(button).bookid]
+        book.update_metadata(status="pinned")
+        btnparent(button).status = "pinned"
+        self.root.ids.grid.remove_widget(btnparent(button))
+        self.root.ids.grid.add_widget(
+            btnparent(button), len(self.root.ids.grid.children)
+        )
+        menu.dismiss()
+        book.save_metadata()
 
-    def get_bookcard_info(self, button: str):
+    def unpin_bookcard(self, button, menu):
+        """Unpin the bookcard containing the button."""
+        book = self.bookmanager.books[btnparent(button).bookid]
+        book.update_metadata(status="normal")
+        btnparent(button).status = "normal"
+        self.root.ids.grid.remove_widget(btnparent(button))
+        self.root.ids.grid.add_widget(btnparent(button), 0)
+        menu.dismiss()
+        book.save_metadata()
+
+    def get_bookcard_info(self, button):
         """Pin the bookcard containing the button."""
 
     def delete_bookcard(self, button, menu):
         """Delete the bookcard."""
-        book = self.bookmanager.books[button.parent.parent.bookid]
+        book = self.bookmanager.books[btnparent(button).bookid]
         book.update_metadata(status="deleted")
-        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.root.ids.grid.remove_widget(btnparent(button))
         menu.dismiss()
+        book.save_metadata()
+
+
+def btnparent(button) -> BookCard:
+    """Button parent."""
+    return button.parent.parent
 
 
 def _menu_open(menu: MDDropdownMenu):
