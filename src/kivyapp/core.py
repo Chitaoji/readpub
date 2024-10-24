@@ -26,7 +26,7 @@ from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
 
-__all__ = ["KivyApp"]
+__all__ = ["MainApp"]
 
 
 LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
@@ -47,82 +47,6 @@ Window.on_key_up = _on_key_up
 Window.maximize()
 
 KV = """
-<BookCard>
-    padding: "4dp"
-    size_hint: None, None
-    size: "480dp", "240dp"
-    
-    MDRelativeLayout:
-        
-        Image:
-            source: root.image
-            fit_mode: "scale-down"
-            pos_hint: {"center_x": .2, "center_y": .5}
-
-        MDIconButton:
-            icon: "dots-vertical"
-            pos_hint: {"bottom": 1, "right": 1}
-            on_release: app.open_cover_menu(self)
-
-        MDBoxLayout:
-            adaptive_height: True
-            orientation: "vertical"
-            padding: "190dp", "0dp", "10dp", "0dp"
-            pos_hint: {"top": .88}
-            spacing: "26dp"
-            
-            MDLabel:
-                text: root.title
-                font_style: "BookCover"
-                role: "large"
-                
-                adaptive_height: True
-                pos_hint: {"top": 1}
-                
-            MDLabel:
-                text: root.author
-                font_style: "BookCover"
-                role: "small"
-                color: "grey"
-                
-        MDLabel:
-            text: root.progress
-            font_style: "BookCover"
-            role: "small"
-            color: "grey"
-            adaptive_height: True
-            padding: "190dp", "0dp", "10dp", "16dp"
-            pos_hint: {"bottom": 1}
-                
-<CoverDropdownTextItem>
-    orientation: "vertical"
-    
-    MDLabel:
-        text: root.text
-        valign: "center"
-        halign: "center"
-        padding_x: "12dp"
-        shorten: True
-        shorten_from: "right"
-        theme_text_color: "Custom"
-        text_color:
-            app.theme_cls.onSurfaceVariantColor \
-            if not root.text_color else \
-            root.text_color
-
-        font_style: "BookCover"
-        role: "small"
-
-    MDDivider:
-        md_bg_color:
-            ( \
-            app.theme_cls.outlineVariantColor \
-            if not root.divider_color \
-            else root.divider_color \
-            ) \
-            if root.divider else \
-            (0, 0, 0, 0)
-            
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
 
@@ -141,7 +65,7 @@ MDScreen:
             adaptive_size: True
             spacing: ["24dp", "24dp"]
             padding: "240dp"
-        
+
 """
 
 
@@ -166,7 +90,7 @@ class CoverDeleteDropdownTextItem(CoverDropdownTextItem):
     """Implements a menu item with text without leading and trailing icons."""
 
 
-class KivyApp(MDApp):
+class MainApp(MDApp):
     """Kivy-App for ReadPub."""
 
     bookmanager: BookManager
@@ -230,19 +154,19 @@ class KivyApp(MDApp):
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "编辑封面",
+                "text": "↑ 置顶 ↑",
                 "height": dp(40),
-                "on_release": lambda: self.cover_menu_callback("delete"),
+                "on_release": lambda: self.cover_menu_callback("pin"),
             },
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "书籍信息",
                 "height": dp(40),
-                "on_release": lambda: self.cover_menu_callback("delete"),
+                "on_release": lambda: self.cover_menu_callback("info"),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
-                "text": "删除书籍",
+                "text": "删除本书",
                 "text_color": "red",
                 "height": dp(40),
                 "on_release": lambda: self.cover_menu_callback("delete"),
