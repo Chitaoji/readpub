@@ -18,9 +18,11 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
+from kivymd.font_definitions import theme_font_styles
 from kivymd.uix.card import MDCard
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
@@ -32,8 +34,43 @@ if TYPE_CHECKING:
 
     from ..bookmanager._typing import StatusHint
 
+
 __all__ = ["MainApp"]
 
+theme_font_styles["BookCover"] = {
+    "large": {
+        "line-height": 1.28,
+        "font-name": "msyhbd",
+        "font-size": sp(21),
+    },
+    "medium": {
+        "line-height": 1.24,
+        "font-name": "msyh",
+        "font-size": sp(18),
+    },
+    "small": {
+        "line-height": 1.2,
+        "font-name": "msyh",
+        "font-size": sp(16),
+    },
+}
+theme_font_styles["BookHintText"] = {
+    "large": {
+        "line-height": 1.28,
+        "font-name": "msyh",
+        "font-size": sp(15),
+    },
+    "medium": {
+        "line-height": 1.24,
+        "font-name": "msyh",
+        "font-size": sp(14),
+    },
+    "small": {
+        "line-height": 1.2,
+        "font-name": "msyh",
+        "font-size": sp(13),
+    },
+}
 
 LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
 LabelBase.register(name="msyhbd", fn_regular=r"C:\Windows\Fonts\msyhbd.ttc")
@@ -96,23 +133,7 @@ class MainApp(MDApp):
 
     def build(self):
         self.title = "ReadPub"
-        self.theme_cls.font_styles["BookCover"] = {
-            "large": {
-                "line-height": 1.28,
-                "font-name": "msyhbd",
-                "font-size": sp(21),
-            },
-            "medium": {
-                "line-height": 1.24,
-                "font-name": "msyh",
-                "font-size": sp(20),
-            },
-            "small": {
-                "line-height": 1.2,
-                "font-name": "msyh",
-                "font-size": sp(16),
-            },
-        }
+
         self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"

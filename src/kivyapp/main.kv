@@ -1,4 +1,5 @@
 #:kivy 2.3.0
+#:import sp kivy.metrics.sp
 <BookCard>
     padding: "4dp"
     size_hint: None, None
@@ -64,7 +65,7 @@
         MDIcon:
             id: leading_icon
             icon: root.leading_icon
-            pos_hint: {"center_y": 0.5}
+            pos_hint: {"center_y": .5}
             theme_text_color: "Custom"
             text_color:
                 app.theme_cls.onSurfaceVariantColor \
@@ -98,6 +99,40 @@
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
 
+    MDIconButton:
+        icon: "menu"
+        pos_hint: {"top": .95, "right": .23}
+        theme_font_size: "Custom"
+        font_size: sp(48)
+        size: 80, 80
+
+    MDIconButton:
+        icon: "plus"
+        pos_hint: {"top": .95, "right": .795}
+        theme_font_size: "Custom"
+        font_size: sp(48)
+        size: 80, 80
+        # on_release: app.open_cover_menu(self)
+
+    MDTextField:
+        mode: "outlined"
+        size_hint_x: None
+        width: "1370dp"
+        height: "240dp"
+        pos_hint: {"top": .95, "center_x": .505}
+
+        MDTextFieldLeadingIcon:
+            icon: "magnify"
+
+        MDTextFieldHintText:
+            text: "搜索书架"
+            font_style: "BookHintText"
+
+        MDTextFieldHelperText:
+            text: "请输入书籍名或作者名..."
+            font_style: "BookHintText"
+
+
     MDScrollView:
         do_scroll_x: False
         do_scroll_y: True
@@ -114,7 +149,4 @@ MDScreen:
             spacing: ["24dp", "24dp"]
             padding: "240dp"
 
-    MDIconButton:
-        icon: "dots-vertical"
-        pos_hint: {"bottom": 1, "right": 1}
-        on_release: app.open_cover_menu(self)
+
