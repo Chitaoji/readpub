@@ -291,16 +291,19 @@ class BookManager:
             Index to insert the new bookid.
 
         """
+        cnt = 0
         to_cmp = tuple(self.books[bookid].get_metadata()[a] for a in args)
         if ascending:
-            for i, b in enumerate(iditer):
+            for b in iditer:
                 if to_cmp < tuple(self.books[b].get_metadata()[a] for a in args):
-                    return i
+                    return cnt
+                cnt += 1
         else:
-            for i, b in enumerate(iditer):
+            for cnt, b in enumerate(iditer):
                 if to_cmp > tuple(self.books[b].get_metadata()[a] for a in args):
-                    return i
-        return len(iditer) + 1
+                    return cnt
+                cnt += 1
+        return cnt + 1
 
 
 class TempBookManager:
