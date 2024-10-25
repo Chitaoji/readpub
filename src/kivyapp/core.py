@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 try:
-    from .config import kivyconfig
+    from .config import kvconfig
 except ImportError as e:
     raise e
 
@@ -29,6 +29,8 @@ from kivymd.uix.menu.menu import BaseDropdownItem
 from ..bookmanager import BookManager
 
 if TYPE_CHECKING:
+    from kivy.config import ConfigParser
+
     from ..bookmanager._typing import StatusHint
 
 __all__ = ["MainApp"]
@@ -103,8 +105,6 @@ class MainApp(MDApp):
 
     def build(self):
         self.title = "ReadPub"
-        # self.theme_cls.theme_style = "Dark"
-        # self.theme_cls.primary_palette = "Green"
         self.theme_cls.font_styles["BookCover"] = {
             "large": {
                 "line-height": 1.28,
@@ -124,8 +124,24 @@ class MainApp(MDApp):
         }
         return Builder.load_string(KV)
 
-    def on_start(self):
-        m = BookManager(kivyconfig.path.parent)
+    def get_application_config(self, defaultpath="") -> str:
+        return kvconfig.get_inipath(self).as_posix()
+
+    def build_config(self, config: "ConfigParser") -> None:
+        kvconfig.resgister(self, config)
+        kvconfig[self].set_defaults(
+            [
+                ["theme-cls", "theme_style", "Light"],
+                ["theme-cls", "primary_palette", "White"],
+            ]
+        )
+        self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
+        self.theme_cls.primary_palette = kvconfig[self].get(
+            "theme-cls", "primary_palette"
+        )
+
+    def on_start(self) -> None:
+        m = BookManager(kvconfig.path.parent)
 
         async def set_cards(duration: Optional[float] = None):
             pinned_books = m.find(status="pinned")
@@ -156,9 +172,9 @@ class MainApp(MDApp):
         asynckivy.start(set_cards())
         self.bookmanager = m
 
-    def open_settings(self, *_): ...
+    def open_settings(self, *_) -> None: ...
 
-    def open_cover_menu(self, button):
+    def open_cover_menu(self, button) -> None:
         """Open a menu on the book cover."""
         menu = MDDropdownMenu(
             caller=button,
@@ -167,7 +183,7 @@ class MainApp(MDApp):
             hide_duration=0.1,
             hor_growth="right",
         )
-        is_normal = btnparent(button).status == "normal"
+        is_normal = button.parent.parent.status == "normal"
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
@@ -196,46 +212,41 @@ class MainApp(MDApp):
         menu.items.extend(menu_items)
         _menu_open(menu)
 
-    def pin_bookcard(self, button, menu):
+    def pin_bookcard(self, button, menu) -> None:
         """Pin the bookcard containing the button."""
-        book = self.bookmanager.books[btnparent(button).bookid]
+        book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="pinned")
-        btnparent(button).status = "pinned"
-        self.root.ids.grid.remove_widget(btnparent(button))
+        button.parent.parent.status = "pinned"
+        self.root.ids.grid.remove_widget(button.parent.parent)
         self.root.ids.grid.add_widget(
-            btnparent(button), len(self.root.ids.grid.children)
+            button.parent.parent, len(self.root.ids.grid.children)
         )
         menu.dismiss()
         book.save_metadata()
 
-    def unpin_bookcard(self, button, menu):
+    def unpin_bookcard(self, button, menu) -> None:
         """Unpin the bookcard containing the button."""
-        book = self.bookmanager.books[btnparent(button).bookid]
+        book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="normal")
-        btnparent(button).status = "normal"
-        self.root.ids.grid.remove_widget(btnparent(button))
-        self.root.ids.grid.add_widget(btnparent(button), 0)
+        button.parent.parent.status = "normal"
+        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.root.ids.grid.add_widget(button.parent.parent, 0)
         menu.dismiss()
         book.save_metadata()
 
-    def get_bookcard_info(self, button):
+    def get_bookcard_info(self, button, menu) -> None:
         """Pin the bookcard containing the button."""
 
-    def delete_bookcard(self, button, menu):
+    def delete_bookcard(self, button, menu) -> None:
         """Delete the bookcard."""
-        book = self.bookmanager.books[btnparent(button).bookid]
+        book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="deleted")
-        self.root.ids.grid.remove_widget(btnparent(button))
+        self.root.ids.grid.remove_widget(button.parent.parent)
         menu.dismiss()
         book.save_metadata()
 
 
-def btnparent(button) -> BookCard:
-    """Button parent."""
-    return button.parent.parent
-
-
-def _menu_open(menu: MDDropdownMenu):
+def _menu_open(menu: MDDropdownMenu) -> None:
     # pylint: disable=protected-access
     menu.set_menu_properties()
 
@@ -263,7 +274,7 @@ def _menu_open(menu: MDDropdownMenu):
     _menu_on_open(menu)
 
 
-def _menu_on_open(menu: MDDropdownMenu):
+def _menu_on_open(menu: MDDropdownMenu) -> None:
     anim = Animation(
         _scale_y=1,
         duration=menu.show_duration,
