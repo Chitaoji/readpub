@@ -163,7 +163,8 @@ class MainApp(MDApp):
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "↑ 置顶 ↑" if is_normal else "取消置顶",
+                "text": "置顶" if is_normal else "取消置顶",
+                "leading_icon": "pin" if is_normal else "pin-off",
                 "height": dp(40),
                 "on_release": (
                     partial(self.pin_bookcard, button, menu)
@@ -174,12 +175,15 @@ class MainApp(MDApp):
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "书籍信息",
+                "leading_icon": "information-outline",
                 "height": dp(40),
                 "on_release": partial(self.get_bookcard_info, button, menu),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
                 "text": "删除本书",
+                "leading_icon": "delete",
+                "leading_icon_color": "red",
                 "text_color": "red",
                 "height": dp(40),
                 "on_release": partial(self.delete_bookcard, button, menu),
@@ -200,14 +204,15 @@ class MainApp(MDApp):
         menu.dismiss()
         book.save_metadata()
 
-    def unpin_bookcard(self, button, menu) -> None:
+    def unpin_bookcard(self, button, menu=None) -> None:
         """Unpin the bookcard containing the button."""
         book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="normal")
         button.parent.parent.status = "normal"
         self.root.ids.grid.remove_widget(button.parent.parent)
         self.root.ids.grid.add_widget(button.parent.parent, 0)
-        menu.dismiss()
+        if menu:
+            menu.dismiss()
         book.save_metadata()
 
     def get_bookcard_info(self, button, menu) -> None:

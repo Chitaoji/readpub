@@ -16,6 +16,11 @@
             pos_hint: {"bottom": 1, "right": 1}
             on_release: app.open_cover_menu(self)
 
+        MDIcon:
+            icon: "pin" if root.status == "pinned" else ""
+            pos_hint: {"top": .98, "right": 1}
+            disabled: root.status != "pinned"
+        
         MDBoxLayout:
             adaptive_height: True
             orientation: "vertical"
@@ -50,21 +55,35 @@
 <CoverDropdownTextItem>
     orientation: "vertical"
     
-    MDLabel:
-        text: root.text
-        valign: "center"
-        halign: "center"
-        padding_x: "12dp"
-        shorten: True
-        shorten_from: "right"
-        theme_text_color: "Custom"
-        text_color:
-            app.theme_cls.onSurfaceVariantColor \
-            if not root.text_color else \
-            root.text_color
+    MDBoxLayout:
+        padding: "28dp"
+        spacing: 
+            (self.width - trailing_text.width)/2 - self.padding[0] \
+            - leading_icon.width + 8
 
-        font_style: "BookCover"
-        role: "small"
+        MDIcon:
+            id: leading_icon
+            icon: root.leading_icon
+            pos_hint: {"center_y": 0.5}
+            theme_text_color: "Custom"
+            text_color:
+                app.theme_cls.onSurfaceVariantColor \
+                if not root.leading_icon_color else \
+                root.leading_icon_color
+
+        MDLabel:
+            id: trailing_text
+            text: root.text
+            pos_hint: {"center_y": .5}
+            theme_text_color: "Custom"
+            text_color:
+                app.theme_cls.onSurfaceVariantColor \
+                if not root.text_color else \
+                root.text_color
+            adaptive_width: True
+            font_style: "BookCover"
+            role: "small"
+
 
     MDDivider:
         md_bg_color:
