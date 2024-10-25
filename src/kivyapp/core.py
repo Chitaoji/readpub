@@ -18,7 +18,6 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
-from kivy.lang import Builder
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
@@ -100,8 +99,21 @@ class BookCard(MDCard):
     progress: str = StringProperty()
     status: "StatusHint" = StringProperty()
 
-    # def on_release(self, *args):
-    #     super().on_release(*args)
+    def check_border(self) -> None:
+        """
+        Check whether the widget itself is out of border. If True,
+        set disabled=True; otherwise, set disabled=False
+
+        """
+        self.disabled = self._is_out_of_border()
+
+    def _is_out_of_border(self) -> bool:
+        return (
+            self.to_window(0, self.pos[1] + self.height)[1]
+            > self.parent.parent.to_window(
+                0, self.parent.parent.pos[1] + self.parent.parent.height
+            )[1]
+        )
 
 
 class CoverDropdownTextItem(BaseDropdownItem):

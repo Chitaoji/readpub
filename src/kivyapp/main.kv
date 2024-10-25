@@ -4,7 +4,7 @@
     padding: "4dp"
     size_hint: None, None
     size: "480dp", "240dp"
-    
+
     MDRelativeLayout:
         
         Image:
@@ -96,8 +96,10 @@
             if root.divider else \
             (0, 0, 0, 0)
 
+
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
+
     MDBoxLayout:
         orientation: "vertical"
         spacing: "0dp"
@@ -106,22 +108,22 @@ MDScreen:
         MDBoxLayout:
             adaptive_size: True
             padding: "0dp", "70dp", "0dp", "24dp"
-            spacing: "30dp"
+            spacing: "20dp"
             pos_hint: {"center_x":.5, "top":1}
 
             MDIconButton:
                 icon: "menu"
                 theme_font_size: "Custom"
                 font_size: sp(48)
-                size: textfield.height, textfield.height
+                size: search_field.height, search_field.height
 
             MDTextField:
-                id: textfield
+                id: search_field
                 mode: "outlined"
                 size_hint_x: None
-                width: "1370dp"
+                width: "1380dp"
                 height: "240dp"
-
+                radius: 40
                 MDTextFieldLeadingIcon:
                     icon: "magnify"
 
@@ -137,7 +139,7 @@ MDScreen:
                 icon: "plus"
                 theme_font_size: "Custom"
                 font_size: sp(48)
-                size: 80, 80
+                size: search_field.height, search_field.height
 
         MDScrollView:
             do_scroll_x: False
@@ -147,7 +149,10 @@ MDScreen:
             scroll_wheel_distance: 80
             bar_width: "12dp"
             bar_inactive_color: root.theme_cls.backgroundColor
-            
+            # on_scroll_start: [x.check_border() for x in self.children[0].children]
+            # on_scroll_move: [x.check_border() for x in self.children[0].children]
+            on_scroll_stop: [x.check_border() for x in self.children[0].children]
+
             MDGridLayout:
                 id: grid
                 cols: 3
