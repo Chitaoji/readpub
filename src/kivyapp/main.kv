@@ -75,3 +75,22 @@
             ) \
             if root.divider else \
             (0, 0, 0, 0)
+
+MDScreen:
+    md_bg_color: self.theme_cls.backgroundColor
+
+    MDScrollView:
+        do_scroll_x: False
+        do_scroll_y: True
+        scroll_x: .5
+        scroll_type: ["content", "bars"]
+        scroll_wheel_distance: 80
+        bar_width: "12dp"
+        bar_inactive_color: root.theme_cls.backgroundColor
+        
+        MDGridLayout:
+            id: grid
+            cols: 3
+            adaptive_size: True
+            spacing: ["24dp", "24dp"]
+            padding: "240dp"

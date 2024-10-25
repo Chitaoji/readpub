@@ -18,7 +18,6 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.text import LabelBase
 from kivy.core.window import Window
-from kivy.lang import Builder
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
@@ -53,28 +52,6 @@ def _on_key_up(key, *_):
 Window.on_key_up = _on_key_up
 Window.maximize()
 
-KV = """
-MDScreen:
-    md_bg_color: self.theme_cls.backgroundColor
-
-    MDScrollView:
-        do_scroll_x: False
-        do_scroll_y: True
-        scroll_x: .5
-        scroll_type: ["content", "bars"]
-        scroll_wheel_distance: 80
-        bar_width: "12dp"
-        bar_inactive_color: root.theme_cls.backgroundColor
-        
-        MDGridLayout:
-            id: grid
-            cols: 3
-            adaptive_size: True
-            spacing: ["24dp", "24dp"]
-            padding: "240dp"
-
-"""
-
 
 class BookCard(MDCard):
     """Implements a material card."""
@@ -103,6 +80,18 @@ class MainApp(MDApp):
 
     bookmanager: BookManager
 
+    def get_application_config(self, defaultpath="") -> str:
+        return kvconfig.get_inipath(self).as_posix()
+
+    def build_config(self, config: "ConfigParser") -> None:
+        kvconfig.resgister(self, config)
+        kvconfig[self].set_defaults(
+            [
+                ["theme-cls", "theme_style", "Light"],
+                ["theme-cls", "primary_palette", "White"],
+            ]
+        )
+
     def build(self):
         self.title = "ReadPub"
         self.theme_cls.font_styles["BookCover"] = {
@@ -122,19 +111,6 @@ class MainApp(MDApp):
                 "font-size": sp(16),
             },
         }
-        return Builder.load_string(KV)
-
-    def get_application_config(self, defaultpath="") -> str:
-        return kvconfig.get_inipath(self).as_posix()
-
-    def build_config(self, config: "ConfigParser") -> None:
-        kvconfig.resgister(self, config)
-        kvconfig[self].set_defaults(
-            [
-                ["theme-cls", "theme_style", "Light"],
-                ["theme-cls", "primary_palette", "White"],
-            ]
-        )
         self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"
