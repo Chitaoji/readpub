@@ -56,10 +56,10 @@
     orientation: "vertical"
     
     MDBoxLayout:
-        padding: "28dp"
+        padding: "30dp"
         spacing: 
             (self.width - trailing_text.width)/2 - self.padding[0] \
-            - leading_icon.width + 8
+            - leading_icon.width + 10
 
         MDIcon:
             id: leading_icon
@@ -113,3 +113,8 @@ MDScreen:
             adaptive_size: True
             spacing: ["24dp", "24dp"]
             padding: "240dp"
+
+    MDIconButton:
+        icon: "dots-vertical"
+        pos_hint: {"bottom": 1, "right": 1}
+        on_release: app.open_cover_menu(self)
