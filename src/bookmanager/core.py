@@ -292,9 +292,14 @@ class BookManager:
 
         """
         to_cmp = tuple(self.books[bookid].get_metadata()[a] for a in args)
-        for i, b in enumerate(iditer):
-            if to_cmp < tuple(self.books[b].get_metadata()[a] for a in args):
-                return i
+        if ascending:
+            for i, b in enumerate(iditer):
+                if to_cmp < tuple(self.books[b].get_metadata()[a] for a in args):
+                    return i
+        else:
+            for i, b in enumerate(iditer):
+                if to_cmp > tuple(self.books[b].get_metadata()[a] for a in args):
+                    return i
         return len(iditer) + 1
 
 
