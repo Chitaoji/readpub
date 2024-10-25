@@ -9,12 +9,12 @@ NOTE: this module is private. All functions and objects are available in the mai
 import secrets
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional, Unpack
+from typing import TYPE_CHECKING, Iterable, Optional, Self, Unpack
 
 from .book import Book
 
 if TYPE_CHECKING:
-    from ._typing import MetaData
+    from ._typing import MetaData, MetaDataKey
 
 __all__ = ["BookManager", "get_datapath"]
 
@@ -42,7 +42,7 @@ class BookManager:
         self.datapath = datapath
         self.opened_book = ""
         self.username = "testuser"
-        self.find_books()
+        self.__init_books()
 
     def login(self, username: str = "", password: str = "") -> None:
         """
@@ -70,7 +70,7 @@ class BookManager:
         else:
             raise LoginError(f"wrong password for user: {username!r}")
 
-    def find_books(self) -> None:
+    def __init_books(self) -> None:
         """Load data."""
         books_path = self.datapath / "books"
         if not books_path.exists():
@@ -183,19 +183,21 @@ class BookManager:
                 raise RuntimeError(f"can't find a legal book id after {maxruns} runs")
         return bookid
 
-    def find(self, **kwargs: Unpack["MetaData"]) -> dict[str, Book]:
+    def find(self, **kwargs: Unpack["MetaData"]) -> "TempBookManager":
         """
-        Find books with specified metadata.
+        Find books with certain metadata equal to specific values.
 
         Parameters
         ----------
         **kwargs : **MetaData
-            Specified metada.
+            Specifies the metadata keys and values. Only the books
+            that meet `book[key] = value` for all the `(key, value)
+            in kwargs.items()` will be returned.
 
         Returns
         -------
-        dict[str,Book]
-            Books found.
+        TempBookManager
+            Contains the books found.
 
         """
         books: dict[str, Book] = {}
@@ -203,7 +205,125 @@ class BookManager:
             metadata = book.get_metadata()
             if all(metadata[k] == v for k, v in kwargs.items()):
                 books[bookid] = book
-        return books
+        return TempBookManager(books)
+
+    def findnot(self, **kwargs: Unpack["MetaData"]) -> "TempBookManager":
+        """
+        Find books with certain metadata not equal to specific
+        values.
+
+        Parameters
+        ----------
+        **kwargs : **MetaData
+            Specifies the metadata keys and values. Only the books
+            that meet `book[key] != value` for any of the `(key,
+            value) in kwargs.items()` will be returned.
+
+        Returns
+        -------
+        TempBookManager
+            Contains the books found.
+
+        """
+        books: dict[str, Book] = {}
+        for bookid, book in self.books.items():
+            metadata = book.get_metadata()
+            if any(metadata[k] != v for k, v in kwargs.items()):
+                books[bookid] = book
+        return TempBookManager(books)
+
+    def sort(self, *args: "MetaDataKey", ascending: bool = False) -> "TempBookManager":
+        """
+        Return a new dict of books sorted by its metadata.
+
+        Parameters
+        ----------
+        *arg : *MetaDataKey
+            Specifies by which key(s) the books should be sorted.
+        ascending : bool, optional
+            If True, the first element will be the one with the
+            smallest values; if False, it will be the one with the
+            largest values. By default False.
+
+        Returns
+        -------
+        TempBookManager
+            Contains the sorted books.
+
+        """
+        ids = list(self.books)
+        sortids = sorted(
+            ids,
+            key=lambda x: tuple(self.books[x].get_metadata()[a] for a in args),
+            reverse=not ascending,
+        )
+        books = {bookid: self.books[bookid] for bookid in sortids}
+        return TempBookManager(books)
+
+    def where_to_insert(
+        self,
+        bookid: str,
+        iditer: Iterable[str],
+        *args: "MetaDataKey",
+        ascending: bool = False,
+    ) -> int:
+        """
+        Given a bookid and an Iterable of bookids, find where to insert
+        the bookid according to the sorting rules.
+
+        Parameters
+        ----------
+        bookid : str
+            Bookid to be inserted.
+        iditer : Iterable[str]
+            Iterable of bookids.
+        *args : *MetaDataKey
+            Sorting rules. Specifies by which metadata-key(s) the bookids
+            should be sorted.
+        ascending : bool, optional
+            If True, the first element will be the one with the
+            smallest values; if False, it will be the one with the
+            largest values. By default False.
+
+        Returns
+        -------
+        int
+            Index to insert the new bookid.
+
+        """
+        to_cmp = tuple(self.books[bookid].get_metadata()[a] for a in args)
+        for i, b in enumerate(iditer):
+            if to_cmp < tuple(self.books[b].get_metadata()[a] for a in args):
+                return i
+        return len(iditer) + 1
+
+
+class TempBookManager:
+    """
+    Works as a result of `Bookmanager.find()`, `.fondnot()`,
+    `.sort()`, etc.
+
+    Parameters
+    ----------
+    books : dict[str, Book]
+        Dict of books.
+
+    """
+
+    def __init__(self, books: dict[str, Book]) -> None:
+        self.books = books
+
+    def find(self, **kwargs: Unpack["MetaData"]) -> Self:
+        """See BookManager.find()."""
+        return BookManager.find(self, **kwargs)
+
+    def findnot(self, **kwargs: Unpack["MetaData"]) -> Self:
+        """See BookManager.findnot()."""
+        return BookManager.findnot(self, **kwargs)
+
+    def sort(self, *args: "MetaDataKey", ascending: bool = False) -> Self:
+        """See BookManager.sort()."""
+        return BookManager.sort(self, *args, ascending=ascending)
 
 
 def get_datapath(datapath: Optional[Path] = None) -> Path:

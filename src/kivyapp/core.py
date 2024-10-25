@@ -79,6 +79,8 @@ class MainApp(MDApp):
     """Kivy-App for ReadPub."""
 
     bookmanager: BookManager
+    current_sort_rule: list[str]
+    current_category: str
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -118,11 +120,12 @@ class MainApp(MDApp):
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent)
+        self.current_sort_rule = ["status", "uploadtime"]
 
         async def set_cards(duration: Optional[float] = None):
-            pinned_books = m.find(status="pinned")
-            normal_books = m.find(status="normal")
-            for bookid, book in (pinned_books | normal_books).items():
+            for bookid, book in (
+                m.findnot(status="deleted").sort(*self.current_sort_rule).books.items()
+            ):
                 metadata = book.get_metadata()
                 pagenow, pagemax = metadata["progress"]
                 match pagenow / pagemax:
@@ -192,16 +195,22 @@ class MainApp(MDApp):
         menu.items.extend(menu_items)
         _menu_open(menu)
 
-    def pin_bookcard(self, button, menu) -> None:
+    def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
         book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="pinned")
         button.parent.parent.status = "pinned"
         self.root.ids.grid.remove_widget(button.parent.parent)
-        self.root.ids.grid.add_widget(
-            button.parent.parent, len(self.root.ids.grid.children)
+
+        idx = self.bookmanager.where_to_insert(
+            book.bookid,
+            (x.bookid for x in self.root.ids.grid.children),
+            *self.current_sort_rule,
+            ascending=True,
         )
-        menu.dismiss()
+        self.root.ids.grid.add_widget(button.parent.parent, idx)
+        if menu:
+            menu.dismiss()
         book.save_metadata()
 
     def unpin_bookcard(self, button, menu=None) -> None:
@@ -210,20 +219,28 @@ class MainApp(MDApp):
         book.update_metadata(status="normal")
         button.parent.parent.status = "normal"
         self.root.ids.grid.remove_widget(button.parent.parent)
-        self.root.ids.grid.add_widget(button.parent.parent, 0)
+
+        idx = self.bookmanager.where_to_insert(
+            book.bookid,
+            (x.bookid for x in self.root.ids.grid.children),
+            *self.current_sort_rule,
+            ascending=True,
+        )
+        self.root.ids.grid.add_widget(button.parent.parent, idx)
         if menu:
             menu.dismiss()
         book.save_metadata()
 
-    def get_bookcard_info(self, button, menu) -> None:
+    def get_bookcard_info(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
 
-    def delete_bookcard(self, button, menu) -> None:
+    def delete_bookcard(self, button, menu=None) -> None:
         """Delete the bookcard."""
         book = self.bookmanager.books[button.parent.parent.bookid]
         book.update_metadata(status="deleted")
         self.root.ids.grid.remove_widget(button.parent.parent)
-        menu.dismiss()
+        if menu:
+            menu.dismiss()
         book.save_metadata()
 
 

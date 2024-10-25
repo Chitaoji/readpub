@@ -15,6 +15,16 @@ logging.warning(
 )
 
 StatusHint = Literal["normal", "deleted", "pinned"]
+MetaDataKey = Literal[
+    "title",
+    "author",
+    "filepath",
+    "coverpath",
+    "uploader",
+    "uploadtime",
+    "status",
+    "progress",
+]
 
 
 class MetaData(TypedDict):
