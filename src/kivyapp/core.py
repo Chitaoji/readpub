@@ -12,6 +12,7 @@ except ImportError as e:
     raise e
 
 import os
+import time
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
@@ -26,6 +27,7 @@ from kivymd.app import MDApp
 from kivymd.font_definitions import theme_font_styles
 from kivymd.uix.card import MDCard
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.label import MDLabel
 from kivymd.uix.list.list import MDListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
@@ -40,6 +42,11 @@ if TYPE_CHECKING:
 
 
 __all__ = ["MainApp"]
+
+LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
+LabelBase.register(name="msyhbd", fn_regular=r"C:\Windows\Fonts\msyhbd.ttc")
+LabelBase.register(name="simhei", fn_regular=r"C:\Windows\Fonts\simhei.ttf")
+
 
 theme_font_styles["BookCover"] = {
     "large": {
@@ -92,10 +99,6 @@ theme_font_styles["NavText"] = {
         "font-size": sp(12),
     },
 }
-
-LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
-LabelBase.register(name="msyhbd", fn_regular=r"C:\Windows\Fonts\msyhbd.ttc")
-LabelBase.register(name="simhei", fn_regular=r"C:\Windows\Fonts\simhei.ttf")
 
 
 def _on_key_up(key, *_):
@@ -269,6 +272,7 @@ class MainApp(MDApp):
     current_category: str
     nav_width: int = 0
     has_filemanager: bool = False
+    prev_snackbar: MDSnackbar | None = None
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -313,14 +317,23 @@ class MainApp(MDApp):
         """
 
         self.filemanager_exit()
-        MDSnackbar(
+        if self.bookmanager.check_book(Path(path)):
+            snack = "已上传电子书: " + path
+        else:
+            snack = "无法读取文件格式: " + path
+        if self.prev_snackbar:
+            self.prev_snackbar.dismiss()
+        self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=path,
+                text=snack,
+                font_style="NavText",
+                role="medium",
             ),
-            y=dp(24),
+            y=dp(40),
             pos_hint={"center_x": 0.5},
-            size_hint_x=0.8,
-        ).open()
+            size_hint_x=0.5,
+        )
+        self.prev_snackbar.open()
 
     def filemanager_exit(self, *args):
         """Called when the user reaches the root of the directory tree."""
