@@ -38,7 +38,7 @@ from ..bookmanager import BookManager
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
 
-    from ..bookmanager._typing import StatusHint
+    from ..bookmanager._typing import Book, StatusHint
 
 
 __all__ = ["MainApp"]
@@ -317,9 +317,11 @@ class MainApp(MDApp):
         """
         self.filemanager_exit()
         if self.bookmanager.check_book(p := Path(path)):
-            snack = "已加载新书: " + path
+            snack = "已导入新书: " + path
         else:
             snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
+
+        # open snackbar
         if self.prev_snackbar:
             self.prev_snackbar.dismiss()
         self.prev_snackbar = MDSnackbar(
@@ -333,6 +335,35 @@ class MainApp(MDApp):
             size_hint_x=0.5,
         )
         self.prev_snackbar.open()
+        self.set_card(self.bookmanager.add_book(p))
+
+    def set_card(self, book: "Book") -> None:
+        """Set a new book card."""
+        metadata = book.get_metadata()
+        pagenow, pagemax = metadata["progress"]
+        match pagenow / pagemax:
+            case 0.0:
+                progress = "待阅读"
+            case 1.0:
+                progress = "已读完√"
+            case _ as x:
+                progress = f"阅读到 {x:.2%}"
+        widget = BookCard(
+            style="elevated",
+            bookid=book.bookid,
+            image=metadata["coverpath"],
+            title=metadata["title"],
+            author=metadata["author"],
+            progress=progress,
+            status=metadata["status"],
+        )
+        idx = self.bookmanager.where_to_insert(
+            book.bookid,
+            (x.bookid for x in self.root.ids.grid.children),
+            *self.current_sort_rule,
+            ascending=True,
+        )
+        self.root.ids.grid.add_widget(widget, idx)
 
     def filemanager_exit(self, *args):
         """Called when the user reaches the root of the directory tree."""
@@ -441,7 +472,7 @@ class MainApp(MDApp):
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "上传新书",
+                "text": "导入新书",
                 "leading_icon": "upload",
                 "height": dp(50),
                 "on_release": self.filemanager_open,

@@ -1,5 +1,5 @@
 """
-Contains tools for measuring and dividing texts: , etc.
+Contains tools for text measuring and wrapping: TextMeasure, TextMaster, etc.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -11,7 +11,7 @@ from pathlib import Path
 
 from PIL import ImageFont
 
-__all__ = ["TextMeasure"]
+__all__ = ["TextMeasure", "TextMaster"]
 
 
 @dataclass
@@ -41,3 +41,20 @@ class TextMeasure:
     def getbbox(self, text: str) -> tuple[float, float, float, float]:
         """Get (left, top, right, bottom) bounding box."""
         return self.typefont.getbbox(text)
+
+
+@dataclass
+class TextMaster:
+    """
+    Divide and wrap text.
+
+    Parameters
+    ----------
+    font : str | Path
+        Font name, or the path of the font file.
+    size : float
+        Text size.
+
+    """
+
+    measure: TextMeasure

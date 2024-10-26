@@ -20,6 +20,8 @@ if TYPE_CHECKING:
     from ._typing import MetaData
     from .core import BookManager
 
+__all__ = []
+
 
 class Book:
     """

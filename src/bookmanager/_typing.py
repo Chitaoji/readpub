@@ -7,7 +7,10 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import Literal, NotRequired, Optional, TypedDict
+from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict
+
+if TYPE_CHECKING:
+    from .book import Book
 
 logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "

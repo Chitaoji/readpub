@@ -105,7 +105,7 @@ class BookManager:
         shutil.copyfile(src, dirpath / src.name)
 
         self.books[bookid] = (book := Book(dirpath, self))
-        return book.get_metadata()
+        return book
 
     def check_book(self, src: Path) -> bool:
         """Check whether the source file is an e-book."""
