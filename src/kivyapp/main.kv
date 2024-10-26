@@ -255,8 +255,6 @@ MDScreen:
             scroll_wheel_distance: 80
             bar_width: "12dp"
             bar_inactive_color: root.theme_cls.backgroundColor
-            # on_scroll_start: [x.check_border() for x in self.children[0].children]
-            # on_scroll_move: [x.check_border() for x in self.children[0].children]
             on_scroll_stop: [x.check_border() for x in self.children[0].children]
 
             MDGridLayout:

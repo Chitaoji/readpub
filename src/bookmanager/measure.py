@@ -17,7 +17,7 @@ __all__ = ["TextMeasure", "TextMaster"]
 @dataclass
 class TextMeasure:
     """
-    Text measure tools.
+    Provides tools for text measuring.
 
     Parameters
     ----------
@@ -58,3 +58,26 @@ class TextMaster:
     """
 
     measure: TextMeasure
+
+    def divide_into_pages(
+        self, text: str, height: float, width: float
+    ) -> list[list[str]]:
+        """
+        Divide the text into pages according to the page-height and
+        page-width. The original "\\n" in the text will be respected.
+
+        Parameters
+        ----------
+        text : str
+            Text.
+        height : float
+            Maximum page-height in digits.
+        width : float
+            Maximum page-width in digits.
+
+        Returns
+        -------
+        list[str]
+            List of divided lines.
+
+        """
