@@ -12,7 +12,7 @@ except ImportError as e:
     raise e
 
 from functools import partial
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Any, Optional
 
 import asynckivy
 from kivy.animation import Animation
@@ -194,6 +194,8 @@ class MainApp(MDApp):
             show_duration=0.1,
             hide_duration=0.1,
             hor_growth="right",
+            radius=button.parent.parent.radius,
+            shadow_radius=button.parent.parent.shadow_radius,
         )
         is_normal = button.parent.parent.status == "normal"
         menu_items = [
@@ -226,7 +228,46 @@ class MainApp(MDApp):
             },
         ]
         menu.items.extend(menu_items)
-        _menu_open(menu)
+        _menu_open(menu, button)
+
+    def open_plus_menu(self, button) -> None:
+        menu = MDDropdownMenu(
+            caller=button,
+            items=[],
+            show_duration=0.4,
+            hide_duration=0.4,
+            hor_growth="left",
+            ver_growth="down",
+            radius=dp(24),
+        )
+        menu_items = [
+            {
+                "viewclass": "CoverDropdownTextItem",
+                "text": "置顶",
+                "leading_icon": "pin",
+                "height": dp(40),
+                "on_release": (partial(self.pin_bookcard, button, menu)),
+            },
+            {
+                "viewclass": "CoverDropdownTextItem",
+                "text": "书籍信息",
+                "leading_icon": "information-outline",
+                "height": dp(40),
+                "on_release": partial(self.get_bookcard_info, button, menu),
+            },
+            {
+                "viewclass": "CoverDeleteDropdownTextItem",
+                "text": "删除本书",
+                "leading_icon": "delete",
+                "leading_icon_color": self.theme_cls.errorColor,
+                "text_color": self.theme_cls.errorColor,
+                "height": dp(40),
+                "on_release": partial(self.delete_bookcard, button, menu),
+            },
+        ]
+        menu.items.extend(menu_items)
+        menu.radius = dp(100)
+        menu.open()
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
@@ -277,7 +318,7 @@ class MainApp(MDApp):
         book.save_metadata()
 
 
-def _menu_open(menu: MDDropdownMenu) -> None:
+def _menu_open(menu: MDDropdownMenu, caller: Any) -> None:
     # pylint: disable=protected-access
     menu.set_menu_properties()
 
@@ -297,8 +338,8 @@ def _menu_open(menu: MDDropdownMenu) -> None:
 
     menu.height = menu.target_height
     menu._tar_x, menu._tar_y = menu.get_target_pos()
-    menu.x = menu._tar_x + 10
-    menu.y = menu._tar_y - menu.target_height
+    menu.x = menu._tar_x + 50
+    menu.y = caller.parent.parent.to_window(*caller.parent.parent.pos)[1]
     menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
     menu.set_menu_pos()
     # pylint: enable=protected-access
