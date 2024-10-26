@@ -315,12 +315,11 @@ class MainApp(MDApp):
 
         :param path: path to the selected directory or file;
         """
-
         self.filemanager_exit()
-        if self.bookmanager.check_book(Path(path)):
-            snack = "已上传电子书: " + path
+        if self.bookmanager.check_book(p := Path(path)):
+            snack = "已加载新书: " + path
         else:
-            snack = "无法读取文件格式: " + path
+            snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
         if self.prev_snackbar:
             self.prev_snackbar.dismiss()
         self.prev_snackbar = MDSnackbar(
@@ -445,7 +444,7 @@ class MainApp(MDApp):
                 "text": "上传新书",
                 "leading_icon": "upload",
                 "height": dp(50),
-                "on_release": lambda: self.filemanager_open(),
+                "on_release": self.filemanager_open,
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",

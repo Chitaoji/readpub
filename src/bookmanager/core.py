@@ -107,6 +107,12 @@ class BookManager:
         self.books[bookid] = (book := Book(dirpath, self))
         return book.get_metadata()
 
+    def check_book(self, src: Path) -> bool:
+        """Check whether the source file is an e-book."""
+        if src.suffix in {".epub"}:
+            return True
+        return False
+
     def del_book(self, bookid: str) -> None:
         """
         Delete a book.

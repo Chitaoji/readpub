@@ -70,22 +70,25 @@
                 if app.get_ancastor(self, 4) else app.theme_cls.backgroundColor
 
             MDTopAppBarLeadingButtonContainer:
-                padding: "12dp", 0, 0, 0
+                padding: "12dp", 0, 0, root_label.height / 2 - self.height * 0.35
 
                 MDActionTopAppBarButton:
                     icon: "chevron-left"
                     on_release: root.back()
 
-            MDTopAppBarTitle:
+            MDLabel:
+                padding: 0, 0, "12dp", 0
                 text: root.current_path
+                id: root_label
+                adaptive_height: True
                 font_style: "NavText"
                 role: "large"
 
-            MDTopAppBarTrailingButtonContainer:
+            # MDTopAppBarTrailingButtonContainer:
 
-                MDActionTopAppBarButton:
-                    icon: "close-box"
-                    on_release: root.exit_manager(1)
+            #     MDActionTopAppBarButton:
+            #         icon: "close-box"
+            #         on_release: root.exit_manager(1)
 
         RecycleView:
             id: rv
@@ -311,4 +314,4 @@ MDScreen:
             radius: app.get_radius(root=root, nav="right")[0]
             anchor: "right"
 
-            MDRecycleView:
+            MDRelativeLayout:
