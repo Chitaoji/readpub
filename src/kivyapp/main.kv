@@ -62,12 +62,12 @@
         orientation: "vertical"
         spacing: dp(5)
 
-        MDTopAppBar:
+        MDBoxLayout:
             id: toolbar
-
-            # md_bg_color: 
-            #     self.parent.parent.parent.parent.md_bg_color \
-            #     if app.get_ancastor(self, 4) else app.theme_cls.backgroundColor
+            adaptive_height: True
+            md_bg_color: 
+                self.parent.parent.parent.parent.md_bg_color \
+                if app.get_ancastor(self, 4) else app.theme_cls.backgroundColor
 
             MDTopAppBarLeadingButtonContainer:
                 padding: "12dp", 0, 0, 0
@@ -292,7 +292,9 @@ MDScreen:
                         icon: "theme-light-dark"
 
                     MDButtonText:
-                        text: "夜间模式" if app.theme_cls.theme_style == "Light" else "白天模式"
+                        text: 
+                            "夜间模式" if app.theme_cls.theme_style == "Light" \
+                            else "白天模式"
                         font_style: "NavText"
                         role: "medium"
 
@@ -309,8 +311,4 @@ MDScreen:
             radius: app.get_radius(root=root, nav="right")[0]
             anchor: "right"
 
-            MDBoxLayout:
-                orientation: "vertical"
-                pos_hint: {"top": 1, "left":1}
-                spacing: "20dp"
-
+            MDRecycleView:
