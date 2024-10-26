@@ -1,5 +1,108 @@
 #:kivy 2.3.0
 #:import sp kivy.metrics.sp
+<UploadFileManagerItem>
+    icon: "folder"
+    path: ""
+    background_normal: ""
+    background_down: ""
+    dir_or_file_name: ""
+    icon_color: 0, 0, 0, 0
+    _selected: False
+    on_release: root.events_callback(root.path, root)
+
+    MDListItemLeadingIcon:
+        icon: root.icon
+        theme_icon_color: "Custom"
+        icon_color: root.icon_color
+
+    MDListItemSupportingText:
+        text: root.dir_or_file_name
+        font_style: "NavText"
+        role: "medium"
+
+<UploadFileManagerItemPreview>
+    name: ""
+    path: ""
+    realpath: ""
+    type: "folder"
+    events_callback: lambda x: None
+    _selected: False
+    orientation: "vertical"
+    size_hint_y: None
+    height: root.height
+    padding: "20dp"
+    spacing: "12dp"
+
+    MDFileManagerThumbnail:
+        mipmap: True
+        source: root.path
+        on_release:
+            root.events_callback( \
+            os.path.join(root.path if root.type != "folder" \
+            else root.realpath, root.name), root)
+
+    MDLabel:
+        text: root.name
+        adaptive_height: True
+        shorten: True
+        shorten_from: "center"
+        halign: "center"
+        text_size: self.width, None
+
+
+<UploadFIleManager>
+    canvas:
+        Color:
+            rgba: app.theme_cls.backgroundColor
+        Rectangle:
+            pos: self.pos
+            size: self.size
+
+    BoxLayout:
+        orientation: "vertical"
+        spacing: dp(5)
+
+        MDTopAppBar:
+            id: toolbar
+
+            # md_bg_color: 
+            #     self.parent.parent.parent.parent.md_bg_color \
+            #     if app.get_ancastor(self, 4) else app.theme_cls.backgroundColor
+
+            MDTopAppBarLeadingButtonContainer:
+                padding: "12dp", 0, 0, 0
+
+                MDActionTopAppBarButton:
+                    icon: "chevron-left"
+                    on_release: root.back()
+
+            MDTopAppBarTitle:
+                text: root.current_path
+                font_style: "NavText"
+                role: "large"
+
+            MDTopAppBarTrailingButtonContainer:
+
+                MDActionTopAppBarButton:
+                    icon: "close-box"
+                    on_release: root.exit_manager(1)
+
+        RecycleView:
+            id: rv
+            key_viewclass: "viewclass"
+            key_size: "height"
+            bar_width: dp(4)
+            bar_color: "green"
+
+            RecycleGridLayout:
+                padding: "10dp"
+                spacing: "2dp"
+                cols: 3 if root.preview else 1
+                default_size: None, dp(48)
+                default_size_hint: 1, None
+                size_hint_y: None
+                height: self.minimum_height
+
 <BookCard>
     padding: "4dp"
     size_hint: None, None
@@ -85,7 +188,6 @@
             font_style: "BookCover"
             role: "small"
 
-
     MDDivider:
         md_bg_color:
             ( \
@@ -103,7 +205,6 @@ MDScreen:
     MDBoxLayout:
         orientation: "vertical"
         spacing: "0dp"
-
         
         MDBoxLayout:
             adaptive_size: True
@@ -116,6 +217,7 @@ MDScreen:
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: search_field.height, search_field.height
+                on_release: app.open_nav_drawer()
 
             MDTextField:
                 id: search_field
@@ -129,11 +231,11 @@ MDScreen:
 
                 MDTextFieldHintText:
                     text: "搜索书架"
-                    font_style: "BookHintText"
+                    font_style: "BookHint"
 
                 MDTextFieldHelperText:
                     text: "请输入书籍名或作者名..."
-                    font_style: "BookHintText"
+                    font_style: "BookHint"
 
             MDIconButton:
                 icon: "plus"
@@ -161,4 +263,54 @@ MDScreen:
                 spacing: ["24dp", "24dp"]
                 padding: "24dp"
 
+    MDNavigationLayout:
+
+        MDScreenManager:
+
+        MDNavigationDrawer:
+            id: nav_drawer
+            drawer_type: "modal"
+            radius: app.get_radius(root=root, nav="left")[0]
+
+            MDBoxLayout:
+                adaptive_height: True
+                orientation: "vertical"
+                pos_hint: {"top": 1, "left":1}
+                spacing: "20dp"
+
+                MDNavigationDrawerLabel:
+                    text: "设置"
+                    font_style: "NavText"
+                    role: "large"
+
+                MDButton:
+                    on_release: app.switch_theme_style()
+                    adaptive_size: True
+                    pos_hint: {"center_x": .5}
+
+                    MDButtonIcon:
+                        icon: "theme-light-dark"
+
+                    MDButtonText:
+                        text: "夜间模式" if app.theme_cls.theme_style == "Light" else "白天模式"
+                        font_style: "NavText"
+                        role: "medium"
+
+                MDNavigationDrawerDivider:
+                # MDNavigationDrawerDivider:
+
+    MDNavigationLayout:
+
+        MDScreenManager:
+
+        MDNavigationDrawer:
+            id: nav_files
+            drawer_type: "modal"
+            radius: app.get_radius(root=root, nav="right")[0]
+            anchor: "right"
+
+            MDBoxLayout:
+                orientation: "vertical"
+                pos_hint: {"top": 1, "left":1}
+                spacing: "20dp"
 

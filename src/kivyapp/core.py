@@ -11,8 +11,10 @@ try:
 except ImportError as e:
     raise e
 
+import os
 from functools import partial
-from typing import TYPE_CHECKING, Any, Optional
+from pathlib import Path
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import asynckivy
 from kivy.animation import Animation
@@ -23,8 +25,11 @@ from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.font_definitions import theme_font_styles
 from kivymd.uix.card import MDCard
+from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.list.list import MDListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
+from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import BookManager
 
@@ -53,7 +58,7 @@ theme_font_styles["BookCover"] = {
         "font-size": sp(16),
     },
 }
-theme_font_styles["BookHintText"] = {
+theme_font_styles["BookHint"] = {
     "large": {
         "line-height": 1.28,
         "font-name": "msyh",
@@ -68,6 +73,23 @@ theme_font_styles["BookHintText"] = {
         "line-height": 1.2,
         "font-name": "msyh",
         "font-size": sp(13),
+    },
+}
+theme_font_styles["NavText"] = {
+    "large": {
+        "line-height": 1.28,
+        "font-name": "msyh",
+        "font-size": sp(20),
+    },
+    "medium": {
+        "line-height": 1.24,
+        "font-name": "msyh",
+        "font-size": sp(16),
+    },
+    "small": {
+        "line-height": 1.2,
+        "font-name": "msyh",
+        "font-size": sp(12),
     },
 }
 
@@ -124,12 +146,129 @@ class CoverDeleteDropdownTextItem(CoverDropdownTextItem):
     """Implements a menu item with text without leading and trailing icons."""
 
 
+class UploadFileManagerItem(MDListItem):
+    """Base class for folders and files icons."""
+
+
+class UploadFileManagerItemPreview(MDListItem):
+    """Base class for folder icons and thumbnails images in `preview` mode."""
+
+
+class UploadFileManager(MDFileManager):
+    """File manger for uploading books."""
+
+    def show(self, path: str) -> None:
+        """
+        Forms the body of a directory tree.
+
+        :param path:
+            The path to the directory that will be opened in the file manager.
+        """
+
+        self.current_path = path
+        self.selection = []
+        dirs, files = self.get_content()
+        manager_list = []
+
+        if dirs == [] and files == []:  # selected directory
+            pass
+        elif not dirs and not files:  # directory is unavailable
+            return
+
+        if self.preview:
+            for name_dir in self._MDFileManager__sort_files(dirs):
+                manager_list.append(
+                    {
+                        "viewclass": "UploadFileManagerItemPreview",
+                        "path": self.icon_folder,
+                        "realpath": os.path.join(path),
+                        "type": "folder",
+                        "name": name_dir,
+                        "events_callback": self.select_dir_or_file,
+                        "height": dp(150),
+                        "_selected": False,
+                    }
+                )
+            for name_file in self._MDFileManager__sort_files(files):
+                if os.path.splitext(os.path.join(path, name_file))[1] in self.ext:
+                    manager_list.append(
+                        {
+                            "viewclass": "UploadFileManagerItemPreview",
+                            "path": os.path.join(path, name_file),
+                            "name": name_file,
+                            "type": "files",
+                            "events_callback": self.select_dir_or_file,
+                            "height": dp(150),
+                            "_selected": False,
+                        }
+                    )
+        else:
+            for name in self._MDFileManager__sort_files(dirs):
+                _path = os.path.join(path, name)
+                access_string = self.get_access_string(_path)
+                if "r" not in access_string:
+                    icon = "folder-lock"
+                else:
+                    icon = "folder"
+
+                manager_list.append(
+                    {
+                        "viewclass": "UploadFileManagerItem",
+                        "path": _path,
+                        "icon": icon,
+                        "dir_or_file_name": name,
+                        "events_callback": self.select_dir_or_file,
+                        "icon_color": (
+                            self.theme_cls.primaryColor
+                            if not self.icon_color
+                            else self.icon_color
+                        ),
+                        "_selected": False,
+                    }
+                )
+            for name in self._MDFileManager__sort_files(files):
+                if self.ext and os.path.splitext(name)[1] not in self.ext:
+                    continue
+
+                manager_list.append(
+                    {
+                        "viewclass": "UploadFileManagerItem",
+                        "path": name,
+                        "icon": "file-outline",
+                        "dir_or_file_name": os.path.split(name)[1],
+                        "events_callback": self.select_dir_or_file,
+                        "icon_color": (
+                            self.theme_cls.primaryColor
+                            if not self.icon_color
+                            else self.icon_color
+                        ),
+                        "_selected": False,
+                    }
+                )
+
+        self.ids.rv.data = manager_list
+        self._show()
+
+
+class FakeModalView:
+    """A fake view."""
+
+    def open(self):
+        """Open?"""
+
+    def dismiss(self):
+        """Dismiss?"""
+
+
 class MainApp(MDApp):
     """Kivy-App for ReadPub."""
 
     bookmanager: BookManager
+    filemanager: UploadFileManager
     current_sort_rule: list[str]
     current_category: str
+    nav_width: int = 0
+    has_filemanager: bool = False
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -139,7 +278,7 @@ class MainApp(MDApp):
         kvconfig[self].set_defaults(
             [
                 ["theme-cls", "theme_style", "Light"],
-                ["theme-cls", "primary_palette", "White"],
+                ["theme-cls", "primary_palette", "Blue"],
             ]
         )
 
@@ -150,6 +289,42 @@ class MainApp(MDApp):
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"
         )
+        self.filemanager = UploadFileManager(
+            exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
+        )
+        self.filemanager._window_manager = (  # pylint: disable=protected-access
+            FakeModalView()
+        )
+
+    def filemanager_open(self):
+        """Open filemanager."""
+        self.open_nav_drawer("nav_files")
+        if not self.has_filemanager:
+            self.root.ids.nav_files.children[0].add_widget(self.filemanager)
+            self.has_filemanager = True
+        self.filemanager.show(os.path.expanduser(r"~\DeskTop"))
+
+    def filemanager_select_path(self, path: str):
+        """
+        It will be called when you click on the file name
+        or the catalog selection button.
+
+        :param path: path to the selected directory or file;
+        """
+
+        self.filemanager_exit()
+        MDSnackbar(
+            MDSnackbarText(
+                text=path,
+            ),
+            y=dp(24),
+            pos_hint={"center_x": 0.5},
+            size_hint_x=0.8,
+        ).open()
+
+    def filemanager_exit(self, *args):
+        """Called when the user reaches the root of the directory tree."""
+        self.filemanager.close()
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent)
@@ -183,6 +358,12 @@ class MainApp(MDApp):
 
         asynckivy.start(set_cards())
         self.bookmanager = m
+
+    def switch_theme_style(self):
+        """Switch the theme-style."""
+        self.theme_cls.theme_style = (
+            "Dark" if self.theme_cls.theme_style == "Light" else "Light"
+        )
 
     def open_settings(self, *_) -> None: ...
 
@@ -228,46 +409,41 @@ class MainApp(MDApp):
             },
         ]
         menu.items.extend(menu_items)
-        _menu_open(menu, button)
+        menu.on_enter = menu.on_leave
+        self._cover_menu_open(menu, button)
 
     def open_plus_menu(self, button) -> None:
+        """Open the menu on releasing the plus button."""
+        radius, shadow_radius = self.get_radius()
         menu = MDDropdownMenu(
             caller=button,
             items=[],
-            show_duration=0.4,
-            hide_duration=0.4,
+            show_duration=0.3,
+            hide_duration=0.3,
             hor_growth="left",
             ver_growth="down",
-            radius=dp(24),
+            # position="bottom",
+            radius=radius,
+            shadow_radius=shadow_radius,
         )
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "置顶",
-                "leading_icon": "pin",
-                "height": dp(40),
-                "on_release": (partial(self.pin_bookcard, button, menu)),
-            },
-            {
-                "viewclass": "CoverDropdownTextItem",
-                "text": "书籍信息",
-                "leading_icon": "information-outline",
-                "height": dp(40),
-                "on_release": partial(self.get_bookcard_info, button, menu),
+                "text": "上传新书",
+                "leading_icon": "upload",
+                "height": dp(50),
+                "on_release": lambda: self.filemanager_open(),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
-                "text": "删除本书",
-                "leading_icon": "delete",
-                "leading_icon_color": self.theme_cls.errorColor,
-                "text_color": self.theme_cls.errorColor,
-                "height": dp(40),
-                "on_release": partial(self.delete_bookcard, button, menu),
+                "text": "回收站",
+                "leading_icon": "trash-can",
+                "height": dp(50),
             },
         ]
         menu.items.extend(menu_items)
-        menu.radius = dp(100)
-        menu.open()
+        menu.on_enter = menu.on_leave
+        self._plus_menu_open(menu, button)
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
@@ -317,33 +493,107 @@ class MainApp(MDApp):
             menu.dismiss()
         book.save_metadata()
 
+    def get_radius(
+        self, root=None, nav: Optional[Literal["left", "right"]] = None
+    ) -> tuple[list, list]:
+        """Get the radius and the shadow-radius."""
+        if root is None:
+            root = self.root
+        if len(children := root.ids.grid.children) > 0:
+            bookcard = children[0]
+        else:
+            bookcard = BookCard(style="elevated")
+        match nav:
+            case "left":
+                bookcard.radius[0] = 0
+                bookcard.radius[3] = 0
+            case "right":
+                bookcard.radius[1] = 0
+                bookcard.radius[2] = 0
+        return bookcard.radius, bookcard.shadow_radius
 
-def _menu_open(menu: MDDropdownMenu, caller: Any) -> None:
-    # pylint: disable=protected-access
-    menu.set_menu_properties()
+    def open_nav_drawer(self, name: str = "nav_drawer") -> None:
+        """Open the nav-drawer."""
+        nav_drawer = getattr(self.root.ids, name)
+        if self.nav_width == 0:
+            self.nav_width = nav_drawer.width * 1.5
+        nav_drawer.width = self.nav_width
+        nav_drawer.set_state("toggle")
 
-    # check ver_growth
-    menu.ver_growth = "up"
-    if menu.target_height > menu._start_coords[1] - menu.border_margin:
+    def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
+        # pylint: disable=protected-access
+        menu.set_menu_properties()
+
+        # check ver_growth
         menu.ver_growth = "up"
-    elif (
-        menu._start_coords[1] > Window.height - menu.border_margin - menu.target_height
-    ):
-        menu.ver_growth = "down"
+        if menu.target_height > menu._start_coords[1] - menu.border_margin:
+            menu.ver_growth = "up"
+        elif (
+            menu._start_coords[1]
+            > Window.height - menu.border_margin - menu.target_height
+        ):
+            menu.ver_growth = "down"
 
-    Window.add_widget(menu)
-    menu.position = menu.adjust_position()
+        Window.add_widget(menu)
+        menu.position = menu.adjust_position()
 
-    menu.width = dp(160)
+        menu.width = dp(160)
 
-    menu.height = menu.target_height
-    menu._tar_x, menu._tar_y = menu.get_target_pos()
-    menu.x = menu._tar_x + 50
-    menu.y = caller.parent.parent.to_window(*caller.parent.parent.pos)[1]
-    menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
-    menu.set_menu_pos()
-    # pylint: enable=protected-access
-    _menu_on_open(menu)
+        menu.height = menu.target_height
+        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        bookcard_pos = caller.parent.parent.to_window(*caller.parent.parent.pos)
+        menu.x = (
+            bookcard_pos[0]
+            + caller.parent.parent.width
+            + self.root.ids.grid.spacing[0] / 2
+        )
+        menu.y = bookcard_pos[1]
+        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
+        menu.set_menu_pos()
+        # pylint: enable=protected-access
+        _menu_on_open(menu)
+
+    def get_ancastor(self, obj: object, n: int = 1) -> object | None:
+        """
+        Get the n-th ancastor (counting from the direct parent = 1). If
+        not exist, return None.
+
+        """
+        try:
+            for _ in range(n):
+                obj = obj.parent
+            return obj
+        except AttributeError:
+            return None
+
+    def _plus_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
+        # pylint: disable=protected-access
+        menu.set_menu_properties()
+
+        # check ver_growth
+        menu.ver_growth = "up"
+        if menu.target_height > menu._start_coords[1] - menu.border_margin:
+            menu.ver_growth = "up"
+        elif (
+            menu._start_coords[1]
+            > Window.height - menu.border_margin - menu.target_height
+        ):
+            menu.ver_growth = "down"
+
+        Window.add_widget(menu)
+        menu.position = menu.adjust_position()
+
+        menu.width = dp(160)
+
+        menu.height = menu.target_height
+        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        button_pos = caller.to_window(*caller.pos)
+        menu.x = button_pos[0] + caller.width * 0.8 - menu.width
+        menu.y = button_pos[1] - menu.height - caller.height * 0.1
+        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
+        menu.set_menu_pos()
+        # pylint: enable=protected-access
+        _menu_on_open(menu)
 
 
 def _menu_on_open(menu: MDDropdownMenu) -> None:
