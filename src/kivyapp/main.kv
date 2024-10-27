@@ -9,6 +9,8 @@
     icon_color: 0, 0, 0, 0
     _selected: False
     on_release: root.events_callback(root.path, root)
+    theme_bg_color: "Custom"
+    md_bg_color: app.theme_cls.surfaceContainerLowColor
 
     MDListItemLeadingIcon:
         icon: root.icon
@@ -32,6 +34,8 @@
     height: root.height
     padding: "20dp"
     spacing: "12dp"
+    theme_bg_color: "Custom"
+    md_bg_color: app.theme_cls.surfaceContainerLowColor
 
     MDFileManagerThumbnail:
         mipmap: True
@@ -53,21 +57,21 @@
 <UploadFIleManager>
     canvas:
         Color:
-            rgba: app.theme_cls.backgroundColor
+            rgba: app.theme_cls.surfaceContainerLowColor
         Rectangle:
             pos: self.pos
             size: self.size
 
     BoxLayout:
         orientation: "vertical"
-        spacing: dp(5)
+        spacing: dp(12)
+        padding: 0, 0, 0, dp(4)
 
         MDBoxLayout:
             id: toolbar
             adaptive_height: True
-            md_bg_color: 
-                self.parent.parent.parent.parent.md_bg_color \
-                if app.get_ancastor(self, 4) else app.theme_cls.backgroundColor
+            theme_bg_color: "Custom"
+            md_bg_color: app.theme_cls.surfaceContainerLowColor
 
             MDTopAppBarLeadingButtonContainer:
                 padding: "12dp", 0, 0, root_label.height / 2 - self.height * 0.35
@@ -89,7 +93,6 @@
             key_viewclass: "viewclass"
             key_size: "height"
             bar_width: dp(4)
-            bar_color: "green"
             scroll_wheel_distance: 120
 
             RecycleGridLayout:
@@ -215,7 +218,7 @@ MDScreen:
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: search_field.height, search_field.height
-                on_release: app.open_nav_drawer()
+                on_release: app.open_nav_drawer(name="nav_menu")
 
             MDTextField:
                 id: search_field
@@ -264,7 +267,7 @@ MDScreen:
         MDScreenManager:
 
         MDNavigationDrawer:
-            id: nav_drawer
+            id: nav_menu
             drawer_type: "modal"
             radius: app.get_radius(root=root, nav="left")[0]
 
@@ -295,16 +298,75 @@ MDScreen:
                         role: "medium"
 
                 MDNavigationDrawerDivider:
-                # MDNavigationDrawerDivider:
 
     MDNavigationLayout:
 
         MDScreenManager:
 
         MDNavigationDrawer:
-            id: nav_files
+            id: nav_upload
             drawer_type: "modal"
             radius: app.get_radius(root=root, nav="right")[0]
             anchor: "right"
 
             MDRelativeLayout:
+
+    MDNavigationLayout:
+
+        MDScreenManager:
+
+        MDNavigationDrawer:
+            id: nav_trash_can
+            drawer_type: "modal"
+            radius: app.get_radius(root=root, nav="right")[0]
+            anchor: "right"
+
+
+            MDScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+                scroll_x: .5
+                scroll_type: ["content", "bars"]
+                scroll_wheel_distance: 120
+                bar_width: "12dp"
+                bar_inactive_color: app.theme_cls.surfaceContainerLowColor
+
+                MDGridLayout:
+                    cols: 1
+                    adaptive_height: True
+                    spacing: ["24dp", "24dp"]
+                    padding: "24dp"
+
+                    MDListItem:
+                        adaptive_height: True
+                        theme_bg_color: "Custom"
+                        md_bg_color: app.theme_cls.surfaceContainerLowColor
+                        
+                        MDListItemLeadingIcon:
+                            icon: "folder"
+
+                        MDListItemSupportingText:
+                            text: "test"
+                            font_style: "NavText"
+
+                    MDListItem:
+                        adaptive_height: True
+                        theme_bg_color: "Custom"
+                        md_bg_color: "green" 
+                        MDListItemLeadingIcon:
+                            icon: "folder"
+
+                        MDListItemSupportingText:
+                            text: "test"
+                            font_style: "NavText"
+                            role: "medium"
+
+                    MDListItem:
+                        adaptive_height: True
+                        MDListItemLeadingIcon:
+                            icon: "folder"
+
+                        MDListItemSupportingText:
+                            text: "test"
+                            font_style: "NavText"
+                            role: "medium"

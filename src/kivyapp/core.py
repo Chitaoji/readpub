@@ -195,9 +195,9 @@ class MainApp(MDApp):
 
     def filemanager_open(self):
         """Open filemanager."""
-        self.open_nav_drawer("nav_files")
+        self.open_nav_drawer("nav_upload")
         if not self.has_filemanager:
-            self.root.ids.nav_files.children[0].add_widget(self.filemanager)
+            self.root.ids.nav_upload.children[0].add_widget(self.filemanager)
             self.has_filemanager = True
         self.filemanager.show(os.path.expanduser(r"~\DeskTop"))
 
@@ -301,6 +301,9 @@ class MainApp(MDApp):
         self.theme_cls.theme_style = (
             "Dark" if self.theme_cls.theme_style == "Light" else "Light"
         )
+        kvconfig[self].update(
+            [["theme-cls", "theme_style", self.theme_cls.theme_style]]
+        )
 
     def open_settings(self, *_) -> None: ...
 
@@ -369,13 +372,17 @@ class MainApp(MDApp):
                 "text": "导入新书",
                 "leading_icon": "upload",
                 "height": dp(50),
-                "on_release": self.filemanager_open,
+                "on_release": lambda: (self.filemanager_open(), menu.dismiss()),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
                 "text": "回收站",
                 "leading_icon": "trash-can",
                 "height": dp(50),
+                "on_release": lambda: (
+                    self.open_nav_drawer("nav_trash_can"),
+                    menu.dismiss(),
+                ),
             },
         ]
         menu.items.extend(menu_items)
@@ -449,7 +456,7 @@ class MainApp(MDApp):
                 bookcard.radius[2] = 0
         return bookcard.radius, bookcard.shadow_radius
 
-    def open_nav_drawer(self, name: str = "nav_drawer") -> None:
+    def open_nav_drawer(self, name: str) -> None:
         """Open the nav-drawer."""
         nav_drawer = getattr(self.root.ids, name)
         if self.nav_width == 0:
