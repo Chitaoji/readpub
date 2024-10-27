@@ -12,7 +12,6 @@ except ImportError as e:
     raise e
 
 import os
-import time
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
@@ -26,14 +25,12 @@ from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.font_definitions import theme_font_styles
 from kivymd.uix.card import MDCard
-from kivymd.uix.filemanager import MDFileManager
-from kivymd.uix.label import MDLabel
-from kivymd.uix.list.list import MDListItem
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import BookManager
+from .filemanager import UploadFileManager
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -149,110 +146,6 @@ class CoverDeleteDropdownTextItem(CoverDropdownTextItem):
     """Implements a menu item with text without leading and trailing icons."""
 
 
-class UploadFileManagerItem(MDListItem):
-    """Base class for folders and files icons."""
-
-
-class UploadFileManagerItemPreview(MDListItem):
-    """Base class for folder icons and thumbnails images in `preview` mode."""
-
-
-class UploadFileManager(MDFileManager):
-    """File manger for uploading books."""
-
-    def show(self, path: str) -> None:
-        """
-        Forms the body of a directory tree.
-
-        :param path:
-            The path to the directory that will be opened in the file manager.
-        """
-
-        self.current_path = path
-        self.selection = []
-        dirs, files = self.get_content()
-        manager_list = []
-
-        if dirs == [] and files == []:  # selected directory
-            pass
-        elif not dirs and not files:  # directory is unavailable
-            return
-
-        if self.preview:
-            for name_dir in self._MDFileManager__sort_files(dirs):
-                manager_list.append(
-                    {
-                        "viewclass": "UploadFileManagerItemPreview",
-                        "path": self.icon_folder,
-                        "realpath": os.path.join(path),
-                        "type": "folder",
-                        "name": name_dir,
-                        "events_callback": self.select_dir_or_file,
-                        "height": dp(150),
-                        "_selected": False,
-                    }
-                )
-            for name_file in self._MDFileManager__sort_files(files):
-                if os.path.splitext(os.path.join(path, name_file))[1] in self.ext:
-                    manager_list.append(
-                        {
-                            "viewclass": "UploadFileManagerItemPreview",
-                            "path": os.path.join(path, name_file),
-                            "name": name_file,
-                            "type": "files",
-                            "events_callback": self.select_dir_or_file,
-                            "height": dp(150),
-                            "_selected": False,
-                        }
-                    )
-        else:
-            for name in self._MDFileManager__sort_files(dirs):
-                _path = os.path.join(path, name)
-                access_string = self.get_access_string(_path)
-                if "r" not in access_string:
-                    icon = "folder-lock"
-                else:
-                    icon = "folder"
-
-                manager_list.append(
-                    {
-                        "viewclass": "UploadFileManagerItem",
-                        "path": _path,
-                        "icon": icon,
-                        "dir_or_file_name": name,
-                        "events_callback": self.select_dir_or_file,
-                        "icon_color": (
-                            self.theme_cls.primaryColor
-                            if not self.icon_color
-                            else self.icon_color
-                        ),
-                        "_selected": False,
-                    }
-                )
-            for name in self._MDFileManager__sort_files(files):
-                if self.ext and os.path.splitext(name)[1] not in self.ext:
-                    continue
-
-                manager_list.append(
-                    {
-                        "viewclass": "UploadFileManagerItem",
-                        "path": name,
-                        "icon": "file-outline",
-                        "dir_or_file_name": os.path.split(name)[1],
-                        "events_callback": self.select_dir_or_file,
-                        "icon_color": (
-                            self.theme_cls.primaryColor
-                            if not self.icon_color
-                            else self.icon_color
-                        ),
-                        "_selected": False,
-                    }
-                )
-
-        self.ids.rv.data = manager_list
-        self._show()
-
-
 class FakeModalView:
     """A fake view."""
 
@@ -316,7 +209,7 @@ class MainApp(MDApp):
         :param path: path to the selected directory or file;
         """
         self.filemanager_exit()
-        if self.bookmanager.check_book(p := Path(path)):
+        if checked := self.bookmanager.check_book(p := Path(path)):
             snack = "已导入新书: " + path
         else:
             snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
@@ -335,7 +228,8 @@ class MainApp(MDApp):
             size_hint_x=0.5,
         )
         self.prev_snackbar.open()
-        self.set_card(self.bookmanager.add_book(p))
+        if checked:
+            self.set_card(self.bookmanager.add_book(p))
 
     def set_card(self, book: "Book") -> None:
         """Set a new book card."""
@@ -365,7 +259,7 @@ class MainApp(MDApp):
         )
         self.root.ids.grid.add_widget(widget, idx)
 
-    def filemanager_exit(self, *args):
+    def filemanager_exit(self, *_):
         """Called when the user reaches the root of the directory tree."""
         self.filemanager.close()
 

@@ -1,5 +1,5 @@
 """
-Contains a book manager.
+Contains a book manager: BookManager.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
