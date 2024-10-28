@@ -220,7 +220,7 @@ MDScreen:
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: search_field.height, search_field.height
-                on_release: app.open_nav_drawer(name="nav_menu")
+                on_release: app.open_nav_drawer(name="nav_setting")
 
             MDTextField:
                 id: search_field
@@ -270,7 +270,7 @@ MDScreen:
         MDScreenManager:
 
         MDNavigationDrawer:
-            id: nav_menu
+            id: nav_setting
             drawer_type: "modal"
             radius: app.get_radius(root=root, nav="left")[0]
             enable_swiping: False
