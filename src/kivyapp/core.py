@@ -30,7 +30,7 @@ from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import BookManager, TextMaster
-from .filemanager import UploadFileManager
+from .fileimport import FileImportManager
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -160,7 +160,7 @@ class MainApp(MDApp):
     """Kivy-App for ReadPub."""
 
     bookmanager: BookManager
-    filemanager: UploadFileManager
+    filemanager: FileImportManager
     current_sort_rule: list[str]
     current_category: str
     nav_width: int = 0
@@ -186,7 +186,7 @@ class MainApp(MDApp):
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"
         )
-        self.filemanager = UploadFileManager(
+        self.filemanager = FileImportManager(
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
         )
         self.filemanager._window_manager = (  # pylint: disable=protected-access

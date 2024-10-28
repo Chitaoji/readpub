@@ -1,5 +1,5 @@
 """
-Contains a kivymd class for file management: UploadFileManager.
+Contains a kivymd class for file management: FileImportManager.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -13,15 +13,15 @@ from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list.list import MDListItem
 
 
-class UploadFileManagerItem(MDListItem):
+class FileImportManagerItem(MDListItem):
     """Base class for folders and files icons."""
 
 
-class UploadFileManagerItemPreview(MDListItem):
+class FileImportManagerItemPreview(MDListItem):
     """Base class for folder icons and thumbnails images in `preview` mode."""
 
 
-class UploadFileManager(MDFileManager):
+class FileImportManager(MDFileManager):
     """File manager."""
 
     def show(self, path: str) -> None:
@@ -46,7 +46,7 @@ class UploadFileManager(MDFileManager):
             for name_dir in self._MDFileManager__sort_files(dirs):
                 manager_list.append(
                     {
-                        "viewclass": "UploadFileManagerItemPreview",
+                        "viewclass": "FileImportManagerItemPreview",
                         "path": self.icon_folder,
                         "realpath": os.path.join(path),
                         "type": "folder",
@@ -60,7 +60,7 @@ class UploadFileManager(MDFileManager):
                 if os.path.splitext(os.path.join(path, name_file))[1] in self.ext:
                     manager_list.append(
                         {
-                            "viewclass": "UploadFileManagerItemPreview",
+                            "viewclass": "FileImportManagerItemPreview",
                             "path": os.path.join(path, name_file),
                             "name": name_file,
                             "type": "files",
@@ -80,7 +80,7 @@ class UploadFileManager(MDFileManager):
 
                 manager_list.append(
                     {
-                        "viewclass": "UploadFileManagerItem",
+                        "viewclass": "FileImportManagerItem",
                         "path": _path,
                         "icon": icon,
                         "dir_or_file_name": name,
@@ -99,7 +99,7 @@ class UploadFileManager(MDFileManager):
 
                 manager_list.append(
                     {
-                        "viewclass": "UploadFileManagerItem",
+                        "viewclass": "FileImportManagerItem",
                         "path": name,
                         "icon": "file-outline",
                         "dir_or_file_name": os.path.split(name)[1],

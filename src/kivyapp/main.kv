@@ -1,7 +1,7 @@
 #:kivy 2.3.0
 #:import sp kivy.metrics.sp
 #:import dp kivy.metrics.dp
-<UploadFileManagerItem>
+<FileImportManagerItem>
     icon: "folder"
     path: ""
     background_normal: ""
@@ -23,7 +23,7 @@
         font_style: "NavText"
         role: "medium"
 
-<UploadFileManagerItemPreview>
+<FileImportManagerItemPreview>
     name: ""
     path: ""
     realpath: ""
@@ -55,7 +55,7 @@
         text_size: self.width, None
 
 
-<UploadFIleManager>
+<FIleImportManager>
     canvas:
         Color:
             rgba: app.theme_cls.surfaceContainerLowColor
