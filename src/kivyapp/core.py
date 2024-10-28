@@ -18,12 +18,10 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import asynckivy
 from kivy.animation import Animation
-from kivy.core.text import LabelBase
 from kivy.core.window import Window
 from kivy.metrics import dp, sp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
-from kivymd.font_definitions import theme_font_styles
 from kivymd.uix.card import MDCard
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
@@ -31,6 +29,7 @@ from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import BookManager, TextMaster
 from .fileimport import FileImportManager
+from .font import KivyFont
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -39,63 +38,6 @@ if TYPE_CHECKING:
 
 
 __all__ = ["MainApp"]
-
-LabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
-LabelBase.register(name="msyhbd", fn_regular=r"C:\Windows\Fonts\msyhbd.ttc")
-LabelBase.register(name="simhei", fn_regular=r"C:\Windows\Fonts\simhei.ttf")
-
-
-theme_font_styles["BookCover"] = {
-    "large": {
-        "line-height": 1.28,
-        "font-name": "msyhbd",
-        "font-size": sp(21),
-    },
-    "medium": {
-        "line-height": 1.24,
-        "font-name": "msyh",
-        "font-size": sp(18),
-    },
-    "small": {
-        "line-height": 1.2,
-        "font-name": "msyh",
-        "font-size": sp(16),
-    },
-}
-theme_font_styles["BookHint"] = {
-    "large": {
-        "line-height": 1.28,
-        "font-name": "msyh",
-        "font-size": sp(15),
-    },
-    "medium": {
-        "line-height": 1.24,
-        "font-name": "msyh",
-        "font-size": sp(14),
-    },
-    "small": {
-        "line-height": 1.2,
-        "font-name": "msyh",
-        "font-size": sp(13),
-    },
-}
-theme_font_styles["NavText"] = {
-    "large": {
-        "line-height": 1.28,
-        "font-name": "msyh",
-        "font-size": sp(20),
-    },
-    "medium": {
-        "line-height": 1.24,
-        "font-name": "msyh",
-        "font-size": sp(16),
-    },
-    "small": {
-        "line-height": 1.2,
-        "font-name": "msyh",
-        "font-size": sp(12),
-    },
-}
 
 
 def _on_key_up(key, *_):
@@ -161,6 +103,7 @@ class MainApp(MDApp):
 
     bookmanager: BookManager
     filemanager: FileImportManager
+    fontmanager: KivyFont
     current_sort_rule: list[str]
     current_category: str
     nav_width: int = 0
@@ -179,6 +122,8 @@ class MainApp(MDApp):
             ]
         )
 
+        self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"))
+
     def build(self):
         self.title = "ReadPub"
 
@@ -186,6 +131,7 @@ class MainApp(MDApp):
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"
         )
+
         self.filemanager = FileImportManager(
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
         )

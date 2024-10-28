@@ -22,7 +22,7 @@ class FileImportManagerItemPreview(MDListItem):
 
 
 class FileImportManager(MDFileManager):
-    """File manager."""
+    """File-import manager."""
 
     def show(self, path: str) -> None:
         """
