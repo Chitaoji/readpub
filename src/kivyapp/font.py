@@ -41,10 +41,12 @@ class KivyFont:
         self.__set_font_styles()
 
     def __find_sys_font(self):
-        for p in self.fontpath.iterdir():
-            if (stem := p.stem) in SYS_FONT_MAPPING:
+        for stem, name in SYS_FONT_MAPPING.items():
+            if (p := self.fontpath / f"{stem}.ttc").exists() or (
+                p := self.fontpath / f"{stem}.ttf"
+            ).exists():
                 LabelBase.register(name=stem, fn_regular=p.as_posix())
-                self.fonts[stem] = (p, SYS_FONT_MAPPING[stem])
+                self.fonts[stem] = (p, name)
 
     def __set_font_styles(self):
         self.font_styles = {

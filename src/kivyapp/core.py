@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
-from kivy.metrics import dp, sp
+from kivy.metrics import dp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
