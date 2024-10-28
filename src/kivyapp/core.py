@@ -23,6 +23,8 @@ from kivy.metrics import dp
 from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
+from kivymd.uix.label import MDLabel
+from kivymd.uix.list.list import MDListItem, MDListItemLeadingIcon
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
@@ -109,6 +111,7 @@ class MainApp(MDApp):
     nav_width: int = 0
     has_filemanager: bool = False
     prev_snackbar: MDSnackbar | None = None
+    category_status: str
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -208,6 +211,38 @@ class MainApp(MDApp):
         )
         self.root.ids.grid.add_widget(widget, idx)
 
+    async def set_cards(
+        self, books: dict[str, "Book"], duration: Optional[float] = None
+    ):
+        """Set cards."""
+        for bookid, book in books.items():
+            metadata = book.get_metadata()
+            pagenow, pagemax = metadata["progress"]
+            match pagenow / pagemax:
+                case 0.0:
+                    progress = "待阅读"
+                case 1.0:
+                    progress = "已读完√"
+                case _ as x:
+                    progress = f"阅读到 {x:.2%}"
+            widget = BookCard(
+                style="elevated",
+                bookid=bookid,
+                image=metadata["coverpath"],
+                title=metadata["title"],
+                author=metadata["author"],
+                progress=progress,
+                status=metadata["status"],
+            )
+            self.root.ids.grid.add_widget(widget)
+            if duration is not None:
+                await asynckivy.sleep(duration)
+
+    def remove_cards(self) -> None:
+        """Remove all the bookcards."""
+        for widget in list(self.root.ids.grid.children):
+            self.root.ids.grid.remove_widget(widget)
+
     def filemanager_exit(self, *_):
         """Called when the user reaches the root of the directory tree."""
         self.filemanager.close()
@@ -216,33 +251,12 @@ class MainApp(MDApp):
         m = BookManager(kvconfig.path.parent)
         self.current_sort_rule = ["status", "uploadtime"]
 
-        async def set_cards(duration: Optional[float] = None):
-            for bookid, book in (
-                m.findnot(status="deleted").sort(*self.current_sort_rule).books.items()
-            ):
-                metadata = book.get_metadata()
-                pagenow, pagemax = metadata["progress"]
-                match pagenow / pagemax:
-                    case 0.0:
-                        progress = "待阅读"
-                    case 1.0:
-                        progress = "已读完√"
-                    case _ as x:
-                        progress = f"阅读到 {x:.2%}"
-                widget = BookCard(
-                    style="elevated",
-                    bookid=bookid,
-                    image=metadata["coverpath"],
-                    title=metadata["title"],
-                    author=metadata["author"],
-                    progress=progress,
-                    status=metadata["status"],
-                )
-                self.root.ids.grid.add_widget(widget)
-                if duration is not None:
-                    await asynckivy.sleep(duration)
-
-        asynckivy.start(set_cards())
+        asynckivy.start(
+            self.set_cards(
+                m.findnot(status="deleted").sort(*self.current_sort_rule).books
+            )
+        )
+        self.category_status = "home"
         self.bookmanager = m
 
     def switch_theme_style(self):
@@ -267,17 +281,24 @@ class MainApp(MDApp):
             radius=button.parent.parent.radius,
             shadow_radius=button.parent.parent.shadow_radius,
         )
-        is_normal = button.parent.parent.status == "normal"
+        is_pinned = button.parent.parent.status == "pinned"
+        is_deleted = button.parent.parent.status == "deleted"
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
-                "text": "置顶" if is_normal else "取消置顶",
-                "leading_icon": "pin" if is_normal else "pin-off",
+                "text": "取消置顶" if is_pinned else ("恢复" if is_deleted else "置顶"),
+                "leading_icon": (
+                    "pin-off" if is_pinned else ("restore" if is_deleted else "pin")
+                ),
                 "height": dp(40),
                 "on_release": (
-                    partial(self.pin_bookcard, button, menu)
-                    if is_normal
-                    else partial(self.unpin_bookcard, button, menu)
+                    partial(self.unpin_bookcard, button, menu)
+                    if is_pinned
+                    else (
+                        partial(self.restore_bookcard, button, menu)
+                        if is_deleted
+                        else partial(self.pin_bookcard, button, menu)
+                    )
                 ),
             },
             {
@@ -289,14 +310,15 @@ class MainApp(MDApp):
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
-                "text": "删除本书",
-                "leading_icon": "delete",
+                "text": "完全删除" if is_deleted else "删除本书",
+                "leading_icon": "delete-alert" if is_deleted else "delete",
                 "leading_icon_color": self.theme_cls.errorColor,
                 "text_color": self.theme_cls.errorColor,
                 "height": dp(40),
                 "on_release": partial(self.delete_bookcard, button, menu),
             },
         ]
+
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
         self._cover_menu_open(menu, button)
@@ -307,11 +329,10 @@ class MainApp(MDApp):
         menu = MDDropdownMenu(
             caller=button,
             items=[],
-            show_duration=0.3,
-            hide_duration=0.3,
+            show_duration=0.2,
+            hide_duration=0.2,
             hor_growth="left",
             ver_growth="down",
-            # position="bottom",
             radius=radius,
             shadow_radius=shadow_radius,
         )
@@ -324,19 +345,132 @@ class MainApp(MDApp):
                 "on_release": lambda: (self.filemanager_open(), menu.dismiss()),
             },
             {
-                "viewclass": "CoverDeleteDropdownTextItem",
-                "text": "回收站",
-                "leading_icon": "trash-can",
+                "viewclass": "CoverDropdownTextItem",
+                "text": "回到首页",
+                "leading_icon": "home-outline",
                 "height": dp(50),
                 "on_release": lambda: (
-                    self.open_nav_drawer("nav_trash_can"),
-                    menu.dismiss(),
+                    (
+                        self.remove_cards(),
+                        asynckivy.start(
+                            self.set_cards(
+                                self.bookmanager.findnot(status="deleted")
+                                .sort(*self.current_sort_rule)
+                                .books,
+                                0,
+                            )
+                        ),
+                        self.set_category_status("home"),
+                    )
+                    if self.category_status != "home"
+                    else None
                 ),
+            },
+            {
+                "viewclass": "CoverDeleteDropdownTextItem",
+                "text": "全部分类",
+                "leading_icon": "folder-multiple-outline",
+                "height": dp(50),
+                "on_release": partial(self.open_category_menu, menu),
             },
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
         self._plus_menu_open(menu, button)
+
+    def open_category_menu(self, button) -> None:
+        """Open the category menu."""
+        radius, shadow_radius = self.get_radius()
+        menu = MDDropdownMenu(
+            caller=button,
+            items=[],
+            show_duration=0.1,
+            hide_duration=0.0,
+            hor_growth="left",
+            ver_growth="down",
+            radius=radius,
+            shadow_radius=shadow_radius,
+        )
+        # on_dismiss = menu.on_dismiss
+        # menu.on_dismiss = lambda: (
+        #     button.dismiss(),
+        #     on_dismiss(),
+        # )
+        menu_items = [
+            {
+                "viewclass": "CoverDropdownTextItem",
+                "text": "首页",
+                "leading_icon": "home-outline",
+                "height": dp(50),
+                "on_release": lambda: (
+                    (
+                        self.remove_cards(),
+                        asynckivy.start(
+                            self.set_cards(
+                                self.bookmanager.findnot(status="deleted")
+                                .sort(*self.current_sort_rule)
+                                .books,
+                                0,
+                            )
+                        ),
+                        self.set_category_status("home"),
+                    )
+                    if self.category_status != "home"
+                    else None
+                ),
+            },
+            {
+                "viewclass": "CoverDropdownTextItem",
+                "text": "已置顶",
+                "leading_icon": "pin",
+                "height": dp(50),
+                "on_release": lambda: (
+                    (
+                        self.remove_cards(),
+                        asynckivy.start(
+                            self.set_cards(
+                                self.bookmanager.find(status="pinned")
+                                .sort(*self.current_sort_rule)
+                                .books,
+                                0,
+                            )
+                        ),
+                        self.set_category_status("pinned"),
+                    )
+                    if self.category_status != "pinned"
+                    else None
+                ),
+            },
+            {
+                "viewclass": "CoverDeleteDropdownTextItem",
+                "text": "回收站",
+                "leading_icon": "trash-can",
+                "height": dp(50),
+                "on_release": lambda: (
+                    (
+                        self.remove_cards(),
+                        asynckivy.start(
+                            self.set_cards(
+                                self.bookmanager.find(status="deleted")
+                                .sort(*self.current_sort_rule)
+                                .books,
+                                0,
+                            )
+                        ),
+                        self.set_category_status("deleted"),
+                    )
+                    if self.category_status != "deleted"
+                    else None
+                ),
+            },
+        ]
+        menu.items.extend(menu_items)
+        menu.on_enter = menu.on_leave
+        self._category_menu_open(menu, button)
+
+    def set_category_status(self, category_status: str) -> None:
+        """Set the category status."""
+        self.category_status = category_status
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
@@ -370,6 +504,17 @@ class MainApp(MDApp):
             ascending=True,
         )
         self.root.ids.grid.add_widget(button.parent.parent, idx)
+        if menu:
+            menu.dismiss()
+        book.save_metadata()
+
+    def restore_bookcard(self, button, menu=None) -> None:
+        """Restore the bookcard containing the button."""
+        book = self.bookmanager.books[button.parent.parent.bookid]
+        book.update_metadata(status="normal")
+        button.parent.parent.status = "normal"
+        self.root.ids.grid.remove_widget(button.parent.parent)
+
         if menu:
             menu.dismiss()
         book.save_metadata()
@@ -446,32 +591,9 @@ class MainApp(MDApp):
         # pylint: enable=protected-access
         _menu_on_open(menu)
 
-    def get_ancastor(self, obj: object, n: int = 1) -> object | None:
-        """
-        Get the n-th ancastor (counting from the direct parent = 1). If
-        not exist, return None.
-
-        """
-        try:
-            for _ in range(n):
-                obj = obj.parent
-            return obj
-        except AttributeError:
-            return None
-
     def _plus_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
         # pylint: disable=protected-access
         menu.set_menu_properties()
-
-        # check ver_growth
-        menu.ver_growth = "up"
-        if menu.target_height > menu._start_coords[1] - menu.border_margin:
-            menu.ver_growth = "up"
-        elif (
-            menu._start_coords[1]
-            > Window.height - menu.border_margin - menu.target_height
-        ):
-            menu.ver_growth = "down"
 
         Window.add_widget(menu)
         menu.position = menu.adjust_position()
@@ -481,8 +603,27 @@ class MainApp(MDApp):
         menu.height = menu.target_height
         menu._tar_x, menu._tar_y = menu.get_target_pos()
         button_pos = caller.to_window(*caller.pos)
-        menu.x = button_pos[0] + caller.width * 0.8 - menu.width
-        menu.y = button_pos[1] - menu.height - caller.height * 0.1
+        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width - dp(5)
+        menu.y = button_pos[1] - menu.height - dp(5)
+        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
+        menu.set_menu_pos()
+        # pylint: enable=protected-access
+        _menu_on_open(menu)
+
+    def _category_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
+        # pylint: disable=protected-access
+        menu.set_menu_properties()
+
+        Window.add_widget(menu)
+        menu.position = menu.adjust_position()
+
+        menu.width = dp(160)
+
+        menu.height = menu.target_height
+        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        button_pos = caller.to_window(*caller.pos)
+        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width
+        menu.y = button_pos[1] - menu.height - dp(8)
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
         # pylint: enable=protected-access

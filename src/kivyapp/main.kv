@@ -95,6 +95,7 @@
             key_size: "height"
             bar_width: dp(4)
             scroll_wheel_distance: 120
+            bar_inactive_color: app.theme_cls.surfaceContainerLowColor
 
             RecycleGridLayout:
                 padding: "10dp"
@@ -165,7 +166,7 @@
         padding: "30dp"
         spacing: 
             (self.width - trailing_text.width)/2 - self.padding[0] \
-            - leading_icon.width + 10
+            - leading_icon.width + dp(10)
 
         MDIcon:
             id: leading_icon
@@ -272,6 +273,7 @@ MDScreen:
             id: nav_menu
             drawer_type: "modal"
             radius: app.get_radius(root=root, nav="left")[0]
+            enable_swiping: False
 
             MDBoxLayout:
                 adaptive_height: True
@@ -310,65 +312,8 @@ MDScreen:
             drawer_type: "modal"
             radius: app.get_radius(root=root, nav="right")[0]
             anchor: "right"
+            enable_swiping: False
 
             MDRelativeLayout:
 
-    MDNavigationLayout:
 
-        MDScreenManager:
-
-        MDNavigationDrawer:
-            id: nav_trash_can
-            drawer_type: "modal"
-            radius: app.get_radius(root=root, nav="right")[0]
-            anchor: "right"
-
-
-            MDScrollView:
-                do_scroll_x: False
-                do_scroll_y: True
-                scroll_x: .5
-                scroll_type: ["content", "bars"]
-                scroll_wheel_distance: 120
-                bar_width: "12dp"
-                bar_inactive_color: app.theme_cls.surfaceContainerLowColor
-
-                MDGridLayout:
-                    cols: 1
-                    adaptive_height: True
-                    spacing: ["24dp", "24dp"]
-                    padding: "24dp"
-
-                    MDListItem:
-                        adaptive_height: True
-                        theme_bg_color: "Custom"
-                        md_bg_color: app.theme_cls.surfaceContainerLowColor
-                        
-                        MDListItemLeadingIcon:
-                            icon: "folder"
-
-                        MDListItemSupportingText:
-                            text: "test"
-                            font_style: "NavText"
-
-                    MDListItem:
-                        adaptive_height: True
-                        theme_bg_color: "Custom"
-                        md_bg_color: "green" 
-                        MDListItemLeadingIcon:
-                            icon: "folder"
-
-                        MDListItemSupportingText:
-                            text: "test"
-                            font_style: "NavText"
-                            role: "medium"
-
-                    MDListItem:
-                        adaptive_height: True
-                        MDListItemLeadingIcon:
-                            icon: "folder"
-
-                        MDListItemSupportingText:
-                            text: "test"
-                            font_style: "NavText"
-                            role: "medium"
