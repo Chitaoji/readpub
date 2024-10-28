@@ -163,14 +163,14 @@ class MainApp(MDApp):
         # open snackbar
         if self.prev_snackbar:
             self.prev_snackbar.dismiss()
-
+        fs, role = "NavText", "medium"
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=TextMaster(r"C:\Windows\Fonts\msyh.ttc", 16).shorten(
+                text=TextMaster(*self.fontmanager.translate(fs, role)).shorten(
                     snack, Window.width / 2 - 20
                 ),
-                font_style="NavText",
-                role="medium",
+                font_style=fs,
+                role=role,
             ),
             y=dp(40),
             pos_hint={"center_x": 0.5},

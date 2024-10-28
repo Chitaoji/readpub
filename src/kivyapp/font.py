@@ -104,3 +104,24 @@ class KivyFont:
         }
         for fontstyle, properties in self.font_styles.items():
             theme_font_styles[fontstyle] = properties
+
+    def translate(self, fontstyle: str, role: str) -> tuple[Path, float]:
+        """
+        Translate the 2-tuple (fontstyle, role) into font-path and
+        font-size.
+
+        Parameters
+        ----------
+        fontstyle : str
+            Font style.
+        role : str
+            Font role.
+
+        Returns
+        -------
+        tuple[Path, float]
+            A 2-tuple (fontpath, fontsize).
+
+        """
+        role_properties = self.font_styles[fontstyle][role]
+        return self.fonts[role_properties["font-name"]][0], role_properties["font-size"]
