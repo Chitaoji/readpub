@@ -113,31 +113,31 @@ class BookManager:
             return True
         return False
 
-    def del_book(self, bookid: str) -> None:
+    def del_book(self, bookid: str) -> Book:
         """
-        Delete a book.
+        Delete a book and return itself.
 
         NOTE: you can use `.recover_book()` to recover it.
 
-        Parameters
-        ----------
-        bookid : str
-            Book id.
-
         """
-        self.books[bookid].update_metadata(status="deleted")
+        book = self.books[bookid]
+        book.update_metadata(status="deleted")
+        book.save_metadata()
+        return book
 
-    def recover_book(self, bookid: str) -> None:
-        """
-        Recover a book.
+    def restore_book(self, bookid: str) -> Book:
+        """Recover a book and return itself."""
+        book = self.books[bookid]
+        book.update_metadata(status="normal")
+        book.save_metadata()
+        return book
 
-        Parameters
-        ----------
-        bookid : str
-            Book id.
-
-        """
-        self.books[bookid].update_metadata(status="normal")
+    def pin_book(self, bookid: str) -> Book:
+        """Pin a book and return itself."""
+        book = self.books[bookid]
+        book.update_metadata(status="pinned")
+        book.save_metadata()
+        return book
 
     def del_book_entirely(self, bookid: str) -> None:
         """
@@ -145,11 +145,6 @@ class BookManager:
 
         NOTE: this will entirely delete all the files and records related
         to the book, so the book can not be recoverd again!!
-
-        Parameters
-        ----------
-        bookid : str
-            Book id.
 
         """
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)

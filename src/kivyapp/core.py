@@ -19,16 +19,29 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
+from kivy.lang import Builder
 from kivy.metrics import dp
 from kivy.properties import (  # pylint: disable=no-name-in-module
     ColorProperty,
     StringProperty,
 )
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.widget import Widget
 from kivy.utils import hex_colormap
 from kivymd.app import MDApp
+from kivymd.uix.button import MDButton, MDButtonText
 from kivymd.uix.card import MDCard
+from kivymd.uix.dialog import (
+    MDDialog,
+    MDDialogButtonContainer,
+    MDDialogContentContainer,
+    MDDialogHeadlineText,
+    MDDialogIcon,
+    MDDialogSupportingText,
+)
+from kivymd.uix.divider import MDDivider
 from kivymd.uix.label import MDLabel
+from kivymd.uix.list import MDListItem, MDListItemLeadingIcon, MDListItemSupportingText
 from kivymd.uix.list.list import MDListItem, MDListItemLeadingIcon
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
@@ -164,6 +177,7 @@ class MainApp(MDApp):
         self.category_status = "home"
         self.bookmanager = m
 
+    def open_settings(self, *_) -> None: ...
     def generate_cards(self, *args):
         self.root.ids.card_list.data = []
         for color in dir(self.theme_cls):
@@ -267,6 +281,9 @@ class MainApp(MDApp):
                 progress=progress,
                 status=metadata["status"],
             )
+            if metadata["status"] == "deleted":
+                widget.theme_bg_color = "Custom"
+                widget.md_bg_color = self.theme_cls.errorContainerColor
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
@@ -288,8 +305,6 @@ class MainApp(MDApp):
         kvconfig[self].update(
             [["theme-cls", "theme_style", self.theme_cls.theme_style]]
         )
-
-    def open_settings(self, *_) -> None: ...
 
     def open_cover_menu(self, button) -> None:
         """Open a menu on the book cover."""
@@ -331,12 +346,16 @@ class MainApp(MDApp):
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
-                "text": "完全删除" if is_deleted else "删除本书",
+                "text": "永久删除" if is_deleted else "删除本书",
                 "leading_icon": "delete-alert" if is_deleted else "delete",
                 "leading_icon_color": self.theme_cls.errorColor,
                 "text_color": self.theme_cls.errorColor,
                 "height": dp(40),
-                "on_release": partial(self.delete_bookcard, button, menu),
+                "on_release": partial(
+                    self.show_alert_dialog if is_deleted else self.delete_bookcard,
+                    button,
+                    menu,
+                ),
             },
         ]
 
@@ -412,11 +431,8 @@ class MainApp(MDApp):
             radius=radius,
             shadow_radius=shadow_radius,
         )
-        # on_dismiss = menu.on_dismiss
-        # menu.on_dismiss = lambda: (
-        #     button.dismiss(),
-        #     on_dismiss(),
-        # )
+
+        menu.on_dismiss = partial(_button_auto_dismiss, button, menu.on_dismiss)
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
@@ -495,8 +511,8 @@ class MainApp(MDApp):
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
-        book = self.bookmanager.books[button.parent.parent.bookid]
-        book.update_metadata(status="pinned")
+        book = self.bookmanager.pin_book(button.parent.parent.bookid)
+
         button.parent.parent.status = "pinned"
         self.root.ids.grid.remove_widget(button.parent.parent)
 
@@ -509,12 +525,11 @@ class MainApp(MDApp):
         self.root.ids.grid.add_widget(button.parent.parent, idx)
         if menu:
             menu.dismiss()
-        book.save_metadata()
 
     def unpin_bookcard(self, button, menu=None) -> None:
         """Unpin the bookcard containing the button."""
-        book = self.bookmanager.books[button.parent.parent.bookid]
-        book.update_metadata(status="normal")
+        book = self.bookmanager.restore_book(button.parent.parent.bookid)
+
         button.parent.parent.status = "normal"
         self.root.ids.grid.remove_widget(button.parent.parent)
 
@@ -527,30 +542,24 @@ class MainApp(MDApp):
         self.root.ids.grid.add_widget(button.parent.parent, idx)
         if menu:
             menu.dismiss()
-        book.save_metadata()
 
     def restore_bookcard(self, button, menu=None) -> None:
         """Restore the bookcard containing the button."""
-        book = self.bookmanager.books[button.parent.parent.bookid]
-        book.update_metadata(status="normal")
+        self.bookmanager.restore_book(button.parent.parent.bookid)
         button.parent.parent.status = "normal"
         self.root.ids.grid.remove_widget(button.parent.parent)
-
         if menu:
             menu.dismiss()
-        book.save_metadata()
 
     def get_bookcard_info(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
 
     def delete_bookcard(self, button, menu=None) -> None:
         """Delete the bookcard."""
-        book = self.bookmanager.books[button.parent.parent.bookid]
-        book.update_metadata(status="deleted")
+        self.bookmanager.del_book(button.parent.parent.bookid)
         self.root.ids.grid.remove_widget(button.parent.parent)
         if menu:
             menu.dismiss()
-        book.save_metadata()
 
     def get_radius(
         self, root=None, nav: Optional[Literal["left", "right"]] = None
@@ -578,6 +587,70 @@ class MainApp(MDApp):
             self.nav_width = nav_drawer.width * 1.5
         nav_drawer.width = self.nav_width
         nav_drawer.set_state("toggle")
+
+    def show_alert_dialog(self, button, menu):
+        """Show alert dialog on deleting a book."""
+        dialog = MDDialog(
+            # ----------------------------Icon-----------------------------
+            MDDialogIcon(icon="delete-alert"),
+            # -----------------------Headline text-------------------------
+            MDDialogHeadlineText(
+                text="永久删除此书？", font_style="NavText", role="large"
+            ),
+            # -----------------------Supporting text-----------------------
+            MDDialogSupportingText(
+                text="该书的所有本地文件和缓存也将被移除, 并且无法再度找回, 建议在此之前做"
+                "好书籍的备份工作:",
+                font_style="NavText",
+                role="small",
+            ),
+            # -----------------------Custom content------------------------
+            MDDialogContentContainer(
+                MDDivider(),
+                MDListItem(
+                    MDListItemLeadingIcon(
+                        icon="book-open-variant-outline",
+                    ),
+                    MDListItemSupportingText(
+                        text=button.parent.parent.title,
+                        font_style="NavText",
+                        role="small",
+                    ),
+                    theme_bg_color="Custom",
+                    md_bg_color=self.theme_cls.transparentColor,
+                ),
+                MDDivider(),
+                orientation="vertical",
+            ),
+            # ---------------------Button container------------------------
+            MDDialogButtonContainer(
+                Widget(),
+                MDButton(
+                    MDButtonText(
+                        text="确认删除",
+                        font_style="NavText",
+                        role="small",
+                        theme_text_color="Custom",
+                        text_color=self.theme_cls.errorColor,
+                    ),
+                    style="text",
+                    on_release=lambda _: (
+                        dialog.dismiss(),
+                        menu.dismiss(),
+                        self.bookmanager.del_book_entirely(button.parent.parent.bookid),
+                        self.root.ids.grid.remove_widget(button.parent.parent),
+                    ),
+                ),
+                MDButton(
+                    MDButtonText(text="取消", font_style="NavText", role="small"),
+                    style="text",
+                    on_release=lambda _: (dialog.dismiss(), menu.dismiss()),
+                ),
+                spacing="8dp",
+            ),
+            # -------------------------------------------------------------
+        )
+        dialog.open()
 
     def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
         # pylint: disable=protected-access
@@ -663,3 +736,13 @@ def _menu_on_open(menu: MDDropdownMenu) -> None:
         transition="out_quad",
     )
     anim.start(menu)
+
+
+def _button_auto_dismiss(button, on_dismiss):
+    x, y = Window.mouse_pos
+    x1, y1 = button.to_window(*button.pos)
+    x2 = x1 + button.to_window(button.width, 0)[0]
+    y2 = y1 + button.to_window(0, button.height)[1]
+    if not (x1 <= x <= x2 and y1 <= y <= y2):
+        button.dismiss()
+    on_dismiss()
