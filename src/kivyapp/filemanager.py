@@ -1,5 +1,5 @@
 """
-Contains a file manager: UploadFileManager.
+Contains a kivymd class for file management: UploadFileManager.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -22,7 +22,7 @@ class UploadFileManagerItemPreview(MDListItem):
 
 
 class UploadFileManager(MDFileManager):
-    """File manger for uploading books."""
+    """File manager."""
 
     def show(self, path: str) -> None:
         """

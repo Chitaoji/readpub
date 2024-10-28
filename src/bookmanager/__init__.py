@@ -6,10 +6,10 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-from . import core, measure
+from . import core, textmaster
 from .core import *
-from .measure import *
+from .textmaster import *
 
 __all__: list[str] = []
 __all__.extend(core.__all__)
-__all__.extend(measure.__all__)
+__all__.extend(textmaster.__all__)

@@ -83,7 +83,7 @@
 
             MDLabel:
                 padding: 0, 0, "12dp", 0
-                text: root.current_path
+                text: p if (p:=root.current_path) else "此电脑"
                 id: root_label
                 adaptive_height: True
                 font_style: "NavText"
@@ -254,6 +254,7 @@ MDScreen:
             scroll_wheel_distance: 80
             bar_width: "12dp"
             bar_inactive_color: root.theme_cls.backgroundColor
+            on_scroll_start: [x.check_border() for x in self.children[0].children]
             on_scroll_stop: [x.check_border() for x in self.children[0].children]
 
             MDGridLayout:

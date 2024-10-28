@@ -21,7 +21,7 @@ __all__ = ["BookManager", "get_datapath"]
 
 class BookManager:
     """
-    Book manager for readpub.
+    Book manager.
 
     Parameters
     ----------

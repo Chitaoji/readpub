@@ -11,6 +11,7 @@ REQUIRES:
     - BeautifulSoup4
     - kivy
     - kivymd2
+    - pillow
 EXTRAS: {}
 SOURCE: src
 SUBMODULES: []
