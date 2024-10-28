@@ -20,7 +20,12 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.metrics import dp
-from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
+from kivy.properties import (  # pylint: disable=no-name-in-module
+    ColorProperty,
+    StringProperty,
+)
+from kivy.uix.boxlayout import BoxLayout
+from kivy.utils import hex_colormap
 from kivymd.app import MDApp
 from kivymd.uix.card import MDCard
 from kivymd.uix.label import MDLabel
@@ -53,6 +58,11 @@ def _on_key_up(key, *_):
 
 Window.on_key_up = _on_key_up
 Window.maximize()
+
+
+class ColorCard(BoxLayout):
+    text = StringProperty()
+    bg_color = ColorProperty()
 
 
 class BookCard(MDCard):
@@ -141,6 +151,29 @@ class MainApp(MDApp):
         self.filemanager._window_manager = (  # pylint: disable=protected-access
             FakeModalView()
         )
+
+    def on_start(self) -> None:
+        m = BookManager(kvconfig.path.parent)
+        self.current_sort_rule = ["status", "uploadtime"]
+
+        asynckivy.start(
+            self.set_cards(
+                m.findnot(status="deleted").sort(*self.current_sort_rule).books
+            )
+        )
+        self.category_status = "home"
+        self.bookmanager = m
+
+    def generate_cards(self, *args):
+        self.root.ids.card_list.data = []
+        for color in dir(self.theme_cls):
+            if color.endswith("Color"):
+                self.root.ids.card_list.data.append(
+                    {
+                        "bg_color": getattr(self.theme_cls, color),
+                        "text": color,
+                    }
+                )
 
     def filemanager_open(self):
         """Open filemanager."""
@@ -246,18 +279,6 @@ class MainApp(MDApp):
     def filemanager_exit(self, *_):
         """Called when the user reaches the root of the directory tree."""
         self.filemanager.close()
-
-    def on_start(self) -> None:
-        m = BookManager(kvconfig.path.parent)
-        self.current_sort_rule = ["status", "uploadtime"]
-
-        asynckivy.start(
-            self.set_cards(
-                m.findnot(status="deleted").sort(*self.current_sort_rule).books
-            )
-        )
-        self.category_status = "home"
-        self.bookmanager = m
 
     def switch_theme_style(self):
         """Switch the theme-style."""

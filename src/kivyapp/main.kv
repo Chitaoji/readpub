@@ -1,6 +1,7 @@
 #:kivy 2.3.0
 #:import sp kivy.metrics.sp
 #:import dp kivy.metrics.dp
+
 <FileImportManagerItem>
     icon: "folder"
     path: ""
@@ -22,6 +23,7 @@
         text: root.dir_or_file_name
         font_style: "NavText"
         role: "medium"
+
 
 <FileImportManagerItemPreview>
     name: ""
@@ -105,6 +107,7 @@
                 default_size_hint: 1, None
                 size_hint_y: None
                 height: self.minimum_height
+
 
 <BookCard>
     padding: "4dp"
@@ -315,5 +318,18 @@ MDScreen:
             enable_swiping: False
 
             MDRelativeLayout:
+
+
+<ColorCard>
+    orientation: "vertical"
+
+    MDLabel:
+        text: root.text
+        color: "grey"
+        adaptive_height: True
+
+    MDCard:
+        theme_bg_color: "Custom"
+        md_bg_color: root.bg_color
 
 
