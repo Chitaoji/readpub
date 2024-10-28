@@ -62,7 +62,43 @@ class TextMaster:
             Shortened text.
 
         """
-        pass
+        if not ellipsis:
+            return self.fill(text, length)
+        ltextnow, text_with_ellipsis, textnow = 0, "", ""
+        lellip = self.fonttype.getlength(ellipsis)
+        for char in text:
+            ltextnow += self.fonttype.getlength(char)
+            if not text_with_ellipsis and (ltextnow + lellip > length):
+                text_with_ellipsis = textnow + ellipsis
+            if ltextnow > length:
+                return text_with_ellipsis
+            textnow += char
+        return textnow
+
+    def fill(self, text: str, length: float) -> str:
+        """
+        Equals to `.shorten(text, length, ellipsis="")` and is faster.
+
+        Parameters
+        ----------
+        text : str
+            Text.
+        length : float
+            Specifies the maximum length of text (in pixels).
+
+        Returns
+        -------
+        str
+            Shortened text.
+
+        """
+        ltextnow, textnow = 0, ""
+        for char in text:
+            ltextnow += self.fonttype.getlength(char)
+            if ltextnow > length:
+                return textnow
+            textnow += char
+        return textnow
 
     def divide_into_pages(
         self, text: str, height: float, width: float

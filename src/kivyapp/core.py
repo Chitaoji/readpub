@@ -29,7 +29,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
-from ..bookmanager import BookManager
+from ..bookmanager import BookManager, TextMaster
 from .filemanager import UploadFileManager
 
 if TYPE_CHECKING:
@@ -217,9 +217,12 @@ class MainApp(MDApp):
         # open snackbar
         if self.prev_snackbar:
             self.prev_snackbar.dismiss()
+
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=snack,
+                text=TextMaster(r"C:\Windows\Fonts\msyh.ttc", 16).shorten(
+                    snack, Window.width / 2 - 20
+                ),
                 font_style="NavText",
                 role="medium",
             ),
