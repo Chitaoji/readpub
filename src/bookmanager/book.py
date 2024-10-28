@@ -16,6 +16,8 @@ import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
 
+from .textmaster import TextMaster
+
 if TYPE_CHECKING:
     from ._typing import MetaData
     from .core import BookManager
@@ -39,6 +41,7 @@ class Book:
         self.bookid = dirpath.name
         self.manager = manager
         self.pagemax = 0
+        self.textmaster = TextMaster("msyh", 21)
         self.__page_now = -1
         self.__filedict: dict[str, bytes] = {}
         self.__metadata: MetaData | None = None
@@ -57,6 +60,7 @@ class Book:
             self.__metadata = yaml.safe_load(yml_path.read_text())
             return self.__metadata
         metadata = read_ebook(self.dirpath, only_metadata=True)
+        metadata["title"] = self.textmaster.shorten(metadata["title"], 600)
         metadata.update(
             {
                 "uploader": self.manager.username,
