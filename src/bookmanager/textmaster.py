@@ -7,6 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from dataclasses import dataclass
+from itertools import chain
 from pathlib import Path
 from typing import Iterator
 
@@ -43,15 +44,13 @@ class TextMaster:
         """Get the (left, top, right, bottom) bounding box."""
         return self.fonttype.getbbox(text)
 
-    def shorten(
-        self, text: str | Iterator[str], length: float, ellipsis: str = "..."
-    ) -> str:
+    def shorten(self, text: str, length: float, ellipsis: str = "...") -> str:
         """
         Shorten the text if it is longer than length (in pixels).
 
         Parameters
         ----------
-        text : str | Iterator[str]
+        text : str
             Text.
         length : float
             Specifies the maximum length of text (in pixels).
@@ -66,54 +65,84 @@ class TextMaster:
 
         """
         if not ellipsis:
-            return self.fill(text, length)
-        ltextnow, text_with_ellipsis, textnow = 0, "", ""
-        lellip = self.fonttype.getlength(ellipsis)
+            return self.fill(text, length)[0]
+        len_textnow, text_with_ellipsis, textnow = 0, "", ""
+        len_ellip = self.fonttype.getlength(ellipsis)
         for char in text:
-            ltextnow += self.fonttype.getlength(char)
-            if not text_with_ellipsis and (ltextnow + lellip > length):
+            len_textnow += self.fonttype.getlength(char)
+            if not text_with_ellipsis and (len_textnow + len_ellip > length):
                 text_with_ellipsis = textnow + ellipsis
-            if ltextnow > length:
+            if len_textnow > length:
                 return text_with_ellipsis
             textnow += char
         return textnow
 
-    def fill(self, text: str | Iterator[str], length: float) -> str:
+    def fill(self, text: Iterator[str], length: float) -> tuple[str, str]:
         """
-        Equals to `.shorten(text, length, ellipsis="")` and is faster.
+        Similar to `.shorten(text, length, ellipsis="")`, but accepts
+        an iterator of string.
 
         Parameters
         ----------
-        text : str | Iterator[str]
-            Text.
+        text : Iterator[str]
+            Iterator of text.
         length : float
             Specifies the maximum length of text (in pixels).
 
         Returns
         -------
-        str
-            Shortened text.
+        tuple[str, str]
+            2-tuple (shortened-text, remaining-character).
 
         """
-        ltextnow, textnow = 0, ""
+        len_textnow, textnow = 0, ""
         for char in text:
-            ltextnow += self.fonttype.getlength(char)
-            if ltextnow > length:
-                return textnow
+            len_textnow += self.fonttype.getlength(char)
+            if len_textnow > length:
+                return textnow, char
             textnow += char
-        return textnow
+        return textnow, ""
 
-    def divide_into_pages(
-        self, text: str | Iterator[str], height: float, width: float
-    ) -> list[list[list[str]]]:
+    def divide_into_lines(self, text: str, width: float) -> list[str]:
         """
-        Divide the text into pages according to the page-height and
-        page-width. The original "\\n" in the text will be respected.
+        Divide the text into lines according to the page-width. The
+        original "\\n" in the text will not be respected.
 
         Parameters
         ----------
         text : str | Iterator[str]
             Text.
+        width : float
+            Maximum page-width in pixels.
+
+        Returns
+        -------
+        ### -----list[-------str]
+        ### ----- ↑ --------- ↑
+        ### paragraph  ->   line
+
+        """
+        itertext = iter(text)
+        paragraph: list[str] = []
+        line, char = self.fill(itertext, width)
+        while line:
+            paragraph.append(line)
+            itertext = chain(char, itertext)
+            line, char = self.fill(itertext, width)
+        return paragraph
+
+    def divide_into_pages(
+        self, text: Iterator[str], height: float, width: float
+    ) -> list[list[list[str]]]:
+        """
+        Divide the text into pages according to the page-height and
+        page-width. The original "\\n" in the text will not be
+        respected.
+
+        Parameters
+        ----------
+        text : Iterator[str]
+            Iterator of original paragraphs.
         height : float
             Maximum page-height in pixels.
         width : float
@@ -121,8 +150,6 @@ class TextMaster:
 
         Returns
         -------
-        list[list[list[str]]]
-
         ###  list[---------list[----------list[-------str]]]
         ### -- ↑ ---------- ↑ ------------ ↑ --------- ↑
         ###   book   ->   chapter  ->  paragraph  ->  line

@@ -120,7 +120,7 @@ class KivyFont:
         Returns
         -------
         tuple[Path, float]
-            A 2-tuple (fontpath, fontsize).
+            2-tuple (fontpath, fontsize).
 
         """
         role_properties = self.font_styles[fontstyle][role]

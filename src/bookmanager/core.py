@@ -269,7 +269,7 @@ class BookManager:
         ascending: bool = False,
     ) -> int:
         """
-        Given a bookid and an Iterator of bookids, find where to insert
+        Given a bookid and an iterator of bookids, find where to insert
         the bookid according to the sorting rules.
 
         Parameters

@@ -641,8 +641,8 @@ class MainApp(MDApp):
             ),
             # -----------------------Supporting text-----------------------
             MDDialogSupportingText(
-                text="这将会移除该书的所有本地文件和缓存, 并且无法再次恢复, 建议您在此前保留"
-                "好书籍的备份:",
+                text="这将会移除该书的所有本地文件和缓存, 并且无法再次恢复, 建议您在此之前"
+                "保留好书籍的备份:",
                 font_style="NavText",
                 role="small",
             ),
