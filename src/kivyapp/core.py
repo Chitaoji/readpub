@@ -317,6 +317,7 @@ class MainApp(MDApp):
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""
+        self.root.ids.grid.parent.scroll_y = 1
         for widget in list(self.root.ids.grid.children):
             self.root.ids.grid.remove_widget(widget)
 

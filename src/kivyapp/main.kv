@@ -212,6 +212,7 @@
     on_release: app.switch_theme_palette(self.color.capitalize())
 
 MDScreen:
+
     md_bg_color: self.theme_cls.backgroundColor
 
     MDBoxLayout:
@@ -313,6 +314,7 @@ MDScreen:
 
                 MDGridLayout:
                     rows: 1
+                    padding: 0, dp(5), 0, 0
                     adaptive_width: True
                     spacing: dp(10), 0
                     pos_hint: {"center_x": .5}
@@ -335,12 +337,12 @@ MDScreen:
                     id: palette_grid_short
                     rows: 1
                     adaptive_width: True
-                    padding: 0, dp(24), 0, 0
+                    padding: 0, dp(40), 0, 0
                     spacing: dp(10), 0
                     pos_hint: {"center_x": .5}
 
                 MDNavigationDrawerDivider:
-                    padding: 0, dp(60), 0, 0
+                    padding: 0, dp(72), 0, 0
 
                 MDButton:
                     on_release: app.reset_theme()
