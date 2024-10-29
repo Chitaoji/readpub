@@ -185,15 +185,16 @@ class MainApp(MDApp):
 
     def open_settings(self, *_) -> None: ...
     def init_color_buttons(self):
+        """Initialize the clor buttons."""
         for color in [
-            "white",
             "red",
             "orange",
-            "olive",
+            "gold",
             "green",
             "cyan",
             "blue",
             "purple",
+            "olive",
         ]:
             self.root.ids.palette_grid_short.add_widget(ColorButton(color=color))
         self.theme_cls.bind(
