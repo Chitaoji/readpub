@@ -112,7 +112,7 @@ class TextMaster:
 
         Parameters
         ----------
-        text : str
+        text : str | Iterator[str]
             Text.
         height : float
             Maximum page-height in pixels.
@@ -121,7 +121,10 @@ class TextMaster:
 
         Returns
         -------
-        list[str]
-            List of divided lines.
+        list[list[list[str]]]
+
+        ###  list[---------list[----------list[-------str]]]
+        ### -- ↑ ---------- ↑ ------------ ↑ --------- ↑
+        ###   book   ->   chapter  ->  paragraph  ->  line
 
         """
