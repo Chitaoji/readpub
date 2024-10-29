@@ -204,6 +204,12 @@
             if root.divider else \
             (0, 0, 0, 0)
 
+<ColorButton>:
+    size: dp(30), dp(30)
+    theme_bg_color: "Custom"
+    md_bg_color: self.color
+    opacity: .5
+    on_release: app.switch_theme_palette(self.color.capitalize())
 
 MDScreen:
     md_bg_color: self.theme_cls.backgroundColor
@@ -232,6 +238,7 @@ MDScreen:
                 width: "1380dp"
                 height: "240dp"
                 radius: 20
+
                 MDTextFieldLeadingIcon:
                     icon: "magnify"
 
@@ -283,7 +290,7 @@ MDScreen:
                 orientation: "vertical"
                 pos_hint: {"top": 1, "left":1}
                 spacing: "20dp"
-
+                
                 MDNavigationDrawerLabel:
                     text: "设置"
                     font_style: "NavText"
@@ -304,7 +311,49 @@ MDScreen:
                         font_style: "NavText"
                         role: "medium"
 
+                MDGridLayout:
+                    rows: 1
+                    adaptive_width: True
+                    spacing: dp(10), 0
+                    pos_hint: {"center_x": .5}
+
+                    MDNavigationDrawerLabel:
+                        text: "主题颜色"
+                        font_style: "NavText"
+                        role: "medium"
+                        adaptive_width: True
+                        padding: 0, 0, 0, dp(4)
+
+                    MDButton:
+                        id: palette_now_button
+                        size: dp(30), dp(30)
+                        theme_bg_color: "Custom"
+                        md_bg_color: app.theme_cls.primary_palette.lower()
+                        opacity: .5
+
+                MDGridLayout:
+                    id: palette_grid_short
+                    rows: 1
+                    adaptive_width: True
+                    padding: 0, dp(24), 0, 0
+                    spacing: dp(10), 0
+                    pos_hint: {"center_x": .5}
+
                 MDNavigationDrawerDivider:
+                    padding: 0, dp(60), 0, 0
+
+                MDButton:
+                    on_release: app.reset_theme()
+                    adaptive_size: True
+                    pos_hint: {"center_x": .5}
+
+                    MDButtonIcon:
+                        icon: "restore"
+
+                    MDButtonText:
+                        text: "恢复默认"
+                        font_style: "NavText"
+                        role: "medium"
 
     MDNavigationLayout:
 
@@ -320,16 +369,5 @@ MDScreen:
             MDRelativeLayout:
 
 
-<ColorCard>
-    orientation: "vertical"
-
-    MDLabel:
-        text: root.text
-        color: "grey"
-        adaptive_height: True
-
-    MDCard:
-        theme_bg_color: "Custom"
-        md_bg_color: root.bg_color
 
 

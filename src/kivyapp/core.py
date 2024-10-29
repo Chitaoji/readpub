@@ -123,6 +123,12 @@ class FakeModalView:
         """Dismiss?"""
 
 
+class ColorButton(MDButton):
+    """Button with color."""
+
+    color: str = StringProperty()
+
+
 class MainApp(MDApp):
     """Kivy-App for ReadPub."""
 
@@ -149,14 +155,13 @@ class MainApp(MDApp):
         )
 
         self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"))
-
-    def build(self):
-        self.title = "ReadPub"
-
         self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"
         )
+
+    def build(self):
+        self.title = "ReadPub"
 
         self.filemanager = FileImportManager(
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
@@ -176,9 +181,30 @@ class MainApp(MDApp):
         )
         self.category_status = "home"
         self.bookmanager = m
+        self.init_color_buttons()
 
     def open_settings(self, *_) -> None: ...
-    def generate_cards(self, *args):
+    def init_color_buttons(self):
+        for color in [
+            "white",
+            "red",
+            "orange",
+            "olive",
+            "green",
+            "cyan",
+            "blue",
+            "purple",
+        ]:
+            self.root.ids.palette_grid_short.add_widget(ColorButton(color=color))
+        self.theme_cls.bind(
+            primary_palette=lambda _, c: setattr(
+                self.root.ids.palette_now_button,
+                "md_bg_color",
+                c.lower(),
+            )
+        )
+
+    def _(self):
         self.root.ids.card_list.data = []
         for color in dir(self.theme_cls):
             if color.endswith("Color"):
@@ -284,6 +310,7 @@ class MainApp(MDApp):
             if metadata["status"] == "deleted":
                 widget.theme_bg_color = "Custom"
                 widget.md_bg_color = self.theme_cls.errorContainerColor
+                self.theme_cls.bind(errorContainerColor=widget.setter("md_bg_color"))
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
@@ -297,14 +324,27 @@ class MainApp(MDApp):
         """Called when the user reaches the root of the directory tree."""
         self.filemanager.close()
 
-    def switch_theme_style(self):
+    def switch_theme_style(self, to: Optional[str] = None):
         """Switch the theme-style."""
-        self.theme_cls.theme_style = (
-            "Dark" if self.theme_cls.theme_style == "Light" else "Light"
-        )
+        if to:
+            self.theme_cls.theme_style = to
+        else:
+            self.theme_cls.theme_style = (
+                "Dark" if self.theme_cls.theme_style == "Light" else "Light"
+            )
         kvconfig[self].update(
             [["theme-cls", "theme_style", self.theme_cls.theme_style]]
         )
+
+    def switch_theme_palette(self, color: str):
+        """Switch the theme-palette."""
+        self.theme_cls.primary_palette = color
+        kvconfig[self].update([["theme-cls", "primary_palette", color]])
+
+    def reset_theme(self):
+        """Reset the theme."""
+        self.switch_theme_style(to="Light")
+        self.switch_theme_palette("Blue")
 
     def open_cover_menu(self, button) -> None:
         """Open a menu on the book cover."""
@@ -599,8 +639,8 @@ class MainApp(MDApp):
             ),
             # -----------------------Supporting text-----------------------
             MDDialogSupportingText(
-                text="该书的所有本地文件和缓存也将被移除, 并且无法再度找回, 建议在此之前做"
-                "好书籍的备份工作:",
+                text="这将会移除该书的所有本地文件和缓存, 并且无法再次恢复, 建议您在此前保留"
+                "好书籍的备份:",
                 font_style="NavText",
                 role="small",
             ),
