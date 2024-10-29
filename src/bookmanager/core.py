@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import secrets
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterable, Optional, Self, Unpack
+from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
 from .book import Book
 
@@ -264,20 +264,20 @@ class BookManager:
     def where_to_insert(
         self,
         bookid: str,
-        iditer: Iterable[str],
+        iditer: Iterator[str],
         *args: "MetaDataKey",
         ascending: bool = False,
     ) -> int:
         """
-        Given a bookid and an Iterable of bookids, find where to insert
+        Given a bookid and an Iterator of bookids, find where to insert
         the bookid according to the sorting rules.
 
         Parameters
         ----------
         bookid : str
             Bookid to be inserted.
-        iditer : Iterable[str]
-            Iterable of bookids.
+        iditer : Iterator[str]
+            Iterator of bookids.
         *args : *MetaDataKey
             Sorting rules. Specifies by which metadata-key(s) the bookids
             should be sorted.

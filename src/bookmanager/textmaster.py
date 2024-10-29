@@ -8,6 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Iterator
 
 from PIL import ImageFont
 
@@ -42,13 +43,15 @@ class TextMaster:
         """Get the (left, top, right, bottom) bounding box."""
         return self.fonttype.getbbox(text)
 
-    def shorten(self, text: str, length: float, ellipsis: str = "...") -> str:
+    def shorten(
+        self, text: str | Iterator[str], length: float, ellipsis: str = "..."
+    ) -> str:
         """
         Shorten the text if it is longer than length (in pixels).
 
         Parameters
         ----------
-        text : str
+        text : str | Iterator[str]
             Text.
         length : float
             Specifies the maximum length of text (in pixels).
@@ -75,13 +78,13 @@ class TextMaster:
             textnow += char
         return textnow
 
-    def fill(self, text: str, length: float) -> str:
+    def fill(self, text: str | Iterator[str], length: float) -> str:
         """
         Equals to `.shorten(text, length, ellipsis="")` and is faster.
 
         Parameters
         ----------
-        text : str
+        text : str | Iterator[str]
             Text.
         length : float
             Specifies the maximum length of text (in pixels).
@@ -101,8 +104,8 @@ class TextMaster:
         return textnow
 
     def divide_into_pages(
-        self, text: str, height: float, width: float
-    ) -> list[list[str]]:
+        self, text: str | Iterator[str], height: float, width: float
+    ) -> list[list[list[str]]]:
         """
         Divide the text into pages according to the page-height and
         page-width. The original "\\n" in the text will be respected.
