@@ -8,6 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import datetime
 import io
+from dataclasses import dataclass
 from pathlib import Path
 from typing import TYPE_CHECKING, Unpack
 from zipfile import ZipFile
@@ -19,10 +20,10 @@ from PIL import Image
 from .textmaster import TextMaster
 
 if TYPE_CHECKING:
-    from ._typing import MetaData
+    from ._typing import Chapter, MetaData, Page, Paragraph
     from .core import BookManager
 
-__all__ = []
+__all__ = ["view"]
 
 
 class Book:
@@ -158,6 +159,47 @@ class Book:
     def filedict(self) -> dict[str, bytes]:
         """Dictionary of book files."""
         return self.__filedict
+
+
+@dataclass
+class TextViewer:
+    """Text viewer."""
+
+    text: str
+
+    def __repr__(self) -> str:
+        return self.text
+
+
+def view(content: "Chapter | Page | Paragraph | str") -> TextViewer:
+    """View a chapter."""
+    if isinstance(content, str):
+        return TextViewer(content)
+    if isinstance(content, list):
+        if len(content) == 0:
+            return TextViewer("")
+        if isinstance(content[0], str):
+            return TextViewer("\n".join(content))
+        if len(content[0]) == 0:
+            return TextViewer("")  # empty page indicates empty chapter
+        if (not isinstance(content[0], list)) or isinstance(content[0][0], str):
+            return TextViewer(
+                "\n\n".join(
+                    "\n".join(para) if isinstance(para, list) else repr(para)
+                    for para in content
+                )
+            )
+        page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
+        return TextViewer(
+            page_split.join(
+                "\n\n".join(
+                    "\n".join(para) if isinstance(para, list) else repr(para)
+                    for para in page
+                )
+                for page in content
+            )
+        )
+    return TextViewer(repr(content))
 
 
 def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str, str]":

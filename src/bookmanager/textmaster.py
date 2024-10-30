@@ -307,18 +307,6 @@ class TextMaster:
                         continue
                 yield t
 
-    def view(self, chapter: "Chapter") -> "TextViewer":
-        """View a chapter."""
-        page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
-        view = page_split.join(
-            "\n\n".join(
-                repr(para) if isinstance(para, FakeParagraph) else "\n".join(para)
-                for para in page
-            )
-            for page in chapter
-        )
-        return TextViewer(view)
-
 
 @dataclass
 class FakeParagraph:
@@ -340,13 +328,3 @@ class BookImage(FakeParagraph):
     """Image in the book."""
 
     path: Path
-
-
-@dataclass
-class TextViewer:
-    """Text viewer."""
-
-    text: str
-
-    def __repr__(self) -> str:
-        return self.text
