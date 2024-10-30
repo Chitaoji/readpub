@@ -9,9 +9,12 @@ NOTE: this module is private. All functions and objects are available in the mai
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import Iterator
+from typing import TYPE_CHECKING, Iterator
 
 from PIL import ImageFont
+
+if TYPE_CHECKING:
+    from ._typing import para
 
 __all__ = ["TextMaster"]
 
@@ -30,8 +33,8 @@ class TextMaster:
 
     """
 
-    font: Path
-    size: float
+    font: str | Path = "msyh"
+    size: float = 21
 
     def __post_init__(self):
         self.fonttype = ImageFont.truetype(font=self.font, size=self.size)
@@ -117,9 +120,9 @@ class TextMaster:
 
         Returns
         -------
-        ### -----list[-------str]
-        ### ----- ↑ --------- ↑
-        ### paragraph  ->   line
+        ### list[ ----------- str]
+        ### - ↑ -------------- ↑
+        ### paragraph   ->    line
 
         """
         itertext = iter(text)
@@ -132,16 +135,21 @@ class TextMaster:
         return paragraph
 
     def divide_into_pages(
-        self, text: Iterator[str], height: float, width: float
-    ) -> list[list[list[str]]]:
+        self,
+        paraiter: Iterator["str | FakeParagraph"],
+        width: float,
+        height: float,
+        line_height: float,
+        para_gap: float,
+    ) -> list[list["para[str]"]]:
         """
-        Divide the text into pages according to the page-height and
-        page-width. The original "\\n" in the text will not be
-        respected.
+        Divide the iterator of paragraphs into pages according to the
+        page-height and page-width. The original "\\n" in the text
+        will not be respected.
 
         Parameters
         ----------
-        text : Iterator[str]
+        paraiter : Iterator[str | FakeParagraph]
             Iterator of original paragraphs.
         height : float
             Maximum page-height in pixels.
@@ -150,8 +158,29 @@ class TextMaster:
 
         Returns
         -------
-        ###  list[---------list[----------list[-------str]]]
-        ### -- ↑ ---------- ↑ ------------ ↑ --------- ↑
-        ###   book   ->   chapter  ->  paragraph  ->  line
+        ### list[ -------- list[ -------- para[ ----- str]]]
+        ### - ↑ ----------- ↑ ------------ ↑ --------- ↑
+        ### chapter   ->   page  ->  paragraph  ->  line
 
         """
+        chapter: list[list["para[str]"]] = []
+        pagenow: list["para[str]"] = []
+        height_remain = height
+        for para in paraiter:
+            if isinstance(para, FakeParagraph):
+                if (r := height_remain - para.height) >= 0:
+                    pagenow.append(para)
+                    height_remain = r - para_gap
+                else:
+                    pagenow = [para]
+                    chapter.append(pagenow)
+                    height_remain = height - para.height - para_gap
+            else:
+                divided = self.divide_into_lines(para, width)
+
+
+@dataclass
+class FakeParagraph:
+    """A fake string with specified length and width."""
+
+    height: float
