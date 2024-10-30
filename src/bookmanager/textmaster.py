@@ -9,14 +9,14 @@ NOTE: this module is private. All functions and objects are available in the mai
 from dataclasses import dataclass
 from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator
+from typing import TYPE_CHECKING, Iterator, Mapping
 
 from PIL import ImageFont
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
-    from ._typing import para
+    from ._typing import TitleLevel, para
 
 __all__ = ["TextMaster"]
 
@@ -147,7 +147,7 @@ class TextMaster:
         para_iter: Iterator["str | FakeParagraph"],
         width: float,
         height: float,
-        line_height: float,
+        hline: float,
         para_gap: float,
     ) -> list[list["para[str]"]]:
         """
@@ -180,9 +180,9 @@ class TextMaster:
             Raised when line-height is larger than page-height.
 
         """
-        if line_height > height:
+        if hline > height:
             raise ValueError(
-                f"line-height is larger than page-height: {line_height} > {height}"
+                f"line-height is larger than page-height: {hline} > {height}"
             )
         chapter: list[list["para[str]"]] = [[]]
         height_remain = height
@@ -197,30 +197,85 @@ class TextMaster:
             else:
                 divided = self.divide_into_lines(para, width)
                 while len(divided) > 0:
-                    if height_remain < line_height:
+                    if height_remain < hline:
                         chapter.append([])
                         height_remain = height
                     else:
-                        nline = min(height_remain // line_height, len(divided))
+                        nline = min(height_remain // hline, len(divided))
                         chapter[-1].append(divided[:nline])
                         divided = divided[nline:]
-                        height_remain -= nline * line_height + para_gap
+                        height_remain -= nline * hline + para_gap
         return chapter
 
     @staticmethod
-    def read_from_bs(bs: "BeautifulSoup") -> Iterator["str | FakeParagraph"]:
+    def read_from_bs(
+        bs: "BeautifulSoup",
+        htitle: Mapping["TitleLevel", float],
+        himage: float,
+        srcpath: Path,
+    ) -> Iterator["str | FakeParagraph"]:
         """
         Read from instance of `BeautifulSoup`. The return value
         can be directly passed to `.divide_into_pages()`.
 
-        """
+        Parameters
+        ----------
+        bs : BeautifulSoup
+            Instance of `BeautifulSoup`.
+        htitle : Mapping[&quot;TitleLevel&quot;, float]
+            Title-height in pixels.
+        himage : float
+            Image height in pixels.
+        srcpath : Path
+            Source path.
 
-        return bs
+        Yields
+        ------
+        str | FakeParagraph
+            Paragraphs.
+
+        """
+        for tag in bs.body.find_all():
+            if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+                yield BookTitle(htitle[n], n, tag.text)
+            elif n == "p":
+                if not (t := tag.text):
+                    if img := tag.img:
+                        yield BookImage(himage, srcpath / img.attrs["src"])
+                    else:
+                        continue
+                yield t
+
+    @staticmethod
+    def view(chapter: list[list["para[str]"]]) -> None:
+        """View a chapter."""
+        view = "\n\n============ NextPage ============\n\n".join(
+            "\n\n".join(
+                repr(para) if isinstance(para, FakeParagraph) else "\n".join(para)
+                for para in page
+            )
+            for page in chapter
+        )
+        print(view)
 
 
 @dataclass
 class FakeParagraph:
-    """A fake string with specified length and width."""
+    """Pretends to be a paragraph of the book."""
 
     height: float
+
+
+@dataclass
+class BookTitle(FakeParagraph):
+    """Title."""
+
+    level: "TitleLevel"
+    text: str
+
+
+@dataclass
+class BookImage(FakeParagraph):
+    """Image in the book."""
+
     path: Path
