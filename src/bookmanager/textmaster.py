@@ -349,29 +349,31 @@ def view(content: "Chapter | Page | Paragraph | str") -> TextViewer:
         if isinstance(content[0], str):
             return TextViewer("\n".join(content))
         if not isinstance(content[0], list):
-            return TextViewer(
-                "\n\n".join(
-                    "\n".join(para) if isinstance(para, list) else repr(para)
-                    for para in content
-                )
-            )
+            return __join_page(content)
         if len(content[0]) == 0:
             return TextViewer("")  # empty page indicates empty chapter
         if isinstance(content[0][0], str):
-            return TextViewer(
-                "\n\n".join(
-                    "\n".join(para) if isinstance(para, list) else repr(para)
-                    for para in content
-                )
-            )
-        page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
-        return TextViewer(
-            page_split.join(
-                "\n\n".join(
-                    "\n".join(para) if isinstance(para, list) else repr(para)
-                    for para in page
-                )
-                for page in content
-            )
-        )
+            return __join_page(content)
+        return __join_chapter(content)
     return TextViewer(repr(content))
+
+
+def __join_page(page: "Page") -> TextViewer:
+    return TextViewer(
+        "\n\n".join(
+            "\n".join(para) if isinstance(para, list) else repr(para) for para in page
+        )
+    )
+
+
+def __join_chapter(chapter: "Chapter") -> TextViewer:
+    page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
+    return TextViewer(
+        page_split.join(
+            "\n\n".join(
+                "\n".join(para) if isinstance(para, list) else repr(para)
+                for para in page
+            )
+            for page in chapter
+        )
+    )
