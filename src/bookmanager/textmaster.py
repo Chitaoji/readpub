@@ -1,5 +1,5 @@
 """
-Contains a tool class for text measuring and wrapping: TextMaster.
+Contains a tool class for text wrapping: TextMaster.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -16,21 +16,21 @@ from PIL import ImageFont
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
-    from ._typing import TitleLevel, para
+    from ._typing import TextMeasureType, TitleLevel, para
 
 __all__ = ["TextMaster"]
 
 
 @dataclass
-class TextMaster:
+class TextMesurePlain:
     """
-    Provides tools for text measuring and wrapping.
+    Provides tools for text measurement.
 
     Parameters
     ----------
-    font : str | Path
+    font : str | Path, optional
         Font name, or the path of the font file.
-    size : float
+    size : float, optional
         Text size.
 
     """
@@ -48,6 +48,67 @@ class TextMaster:
     def getbbox(self, text: str) -> tuple[float, float, float, float]:
         """Get the (left, top, right, bottom) bounding box."""
         return self.fonttype.getbbox(text)
+
+
+class TextMesureCached(TextMesurePlain):
+    """Measures text with cache."""
+
+    def __post_init__(self):
+        self.len_cache: dict[str, float] = {}
+        self.bbox_cache: dict[str, tuple[float, float, float, float]] = {}
+        super().__post_init__()
+
+    def getlength(self, text: str) -> float:
+        if text in self.len_cache:
+            return self.len_cache[text]
+        self.len_cache[text] = (length := self.fonttype.getlength(text))
+        return length
+
+    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+        if text in self.bbox_cache:
+            return self.bbox_cache[text]
+        self.bbox_cache[text] = (bbox := self.fonttype.getbbox(text))
+        return bbox
+
+
+class TextMesureSameSized(TextMesurePlain):
+    """Measures text assuming that they all have the same length."""
+
+    def getlength(self, text: str) -> float:
+        return self.size
+
+    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+        return (0, 5, self.size, 4 + self.size)
+
+
+@dataclass
+class TextMaster:
+    """
+    Provides tools for text wrapping.
+
+    Parameters
+    ----------
+    font : str | Path, optional
+        Font name, or the path of the font file.
+    size : float, optional
+        Text size.
+    measure_type : TextMeasureType, optional
+        Specifies the measuring tool, by default "cached".
+
+    """
+
+    font: str | Path = "msyh"
+    size: float = 21
+    measure_type: "TextMeasureType" = "cached"
+
+    def __post_init__(self):
+        match self.measure_type:
+            case "plain":
+                self.measure = TextMesurePlain(font=self.font, size=self.size)
+            case "cached":
+                self.measure = TextMesureCached(font=self.font, size=self.size)
+            case "same-sized":
+                self.measure = TextMesureSameSized(font=self.font, size=self.size)
 
     def shorten(self, text: str, length: float, ellipsis: str = "...") -> str:
         """
@@ -72,9 +133,9 @@ class TextMaster:
         if not ellipsis:
             return self.fill(text, length)[0]
         len_textnow, text_with_ellipsis, textnow = 0, "", ""
-        len_ellip = self.fonttype.getlength(ellipsis)
+        len_ellip = self.measure.getlength(ellipsis)
         for char in text:
-            len_textnow += self.fonttype.getlength(char)
+            len_textnow += self.measure.getlength(char)
             if not text_with_ellipsis and (len_textnow + len_ellip > length):
                 text_with_ellipsis = textnow + ellipsis
             if len_textnow > length:
@@ -102,7 +163,7 @@ class TextMaster:
         """
         len_textnow, textnow = 0, ""
         for char in text:
-            len_textnow += self.fonttype.getlength(char)
+            len_textnow += self.measure.getlength(char)
             if len_textnow > length:
                 return textnow, char
             textnow += char
@@ -246,17 +307,17 @@ class TextMaster:
                         continue
                 yield t
 
-    @staticmethod
-    def view(chapter: list[list["para[str]"]]) -> None:
+    def view(self, chapter: list[list["para[str]"]]) -> "TextViewer":
         """View a chapter."""
-        view = "\n\n============ NextPage ============\n\n".join(
+        page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
+        view = page_split.join(
             "\n\n".join(
                 repr(para) if isinstance(para, FakeParagraph) else "\n".join(para)
                 for para in page
             )
             for page in chapter
         )
-        print(view)
+        return TextViewer(view)
 
 
 @dataclass
@@ -279,3 +340,13 @@ class BookImage(FakeParagraph):
     """Image in the book."""
 
     path: Path
+
+
+@dataclass
+class TextViewer:
+    """Text viewer."""
+
+    text: str
+
+    def __repr__(self) -> str:
+        return self.text

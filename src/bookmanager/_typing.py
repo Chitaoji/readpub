@@ -10,7 +10,6 @@ import logging
 from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict, TypeVar
 
 if TYPE_CHECKING:
-    from .book import Book
     from .textmaster import FakeParagraph
 
 
@@ -22,6 +21,7 @@ logging.warning(
 T = TypeVar("T")
 
 TitleLevel = Literal["h1", "h2", "h3", "h4", "h5", "h6"]
+TextMeasureType = Literal["plain", "cached", "same-sized"]
 StatusHint = Literal["normal", "deleted", "pinned"]
 MetaDataKey = Literal[
     "title",
