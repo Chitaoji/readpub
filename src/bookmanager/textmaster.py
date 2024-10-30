@@ -14,6 +14,8 @@ from typing import TYPE_CHECKING, Iterator
 from PIL import ImageFont
 
 if TYPE_CHECKING:
+    from bs4 import BeautifulSoup
+
     from ._typing import para
 
 __all__ = ["TextMaster"]
@@ -129,6 +131,12 @@ class TextMaster:
         paragraph: list[str] = []
         line, char = self.fill(itertext, width)
         while line:
+            if char in {"，", "、", "；", "：", "。", "？", "！", "”", "）", "》"}:
+                char = line[-1] + char
+                line = line[:-1]
+            if (i := line[-1]) in {"“", "（", "《"}:
+                char = i + char
+                line = line[:-1]
             paragraph.append(line)
             itertext = chain(char, itertext)
             line, char = self.fill(itertext, width)
@@ -136,7 +144,7 @@ class TextMaster:
 
     def divide_into_pages(
         self,
-        paraiter: Iterator["str | FakeParagraph"],
+        para_iter: Iterator["str | FakeParagraph"],
         width: float,
         height: float,
         line_height: float,
@@ -149,34 +157,65 @@ class TextMaster:
 
         Parameters
         ----------
-        paraiter : Iterator[str | FakeParagraph]
+        para_iter : Iterator[str | FakeParagraph]
             Iterator of original paragraphs.
         height : float
             Maximum page-height in pixels.
         width : float
             Maximum page-width in pixels.
+        line_height : float
+            Line-height in pixels.
+        para_gap : float
+            Gap between paragraphs in pixels.
 
         Returns
         -------
         ### list[ -------- list[ -------- para[ ----- str]]]
         ### - ↑ ----------- ↑ ------------ ↑ --------- ↑
-        ### chapter   ->   page  ->  paragraph  ->  line
+        ### chapter   ->   page  ->  paragraph  ->   line
+
+        Raises
+        ------
+        ValueError
+            Raised when line-height is larger than page-height.
 
         """
-        chapter: list[list["para[str]"]] = []
-        pagenow: list["para[str]"] = []
+        if line_height > height:
+            raise ValueError(
+                f"line-height is larger than page-height: {line_height} > {height}"
+            )
+        chapter: list[list["para[str]"]] = [[]]
         height_remain = height
-        for para in paraiter:
+        for para in para_iter:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
-                    pagenow.append(para)
+                    chapter[-1].append(para)
                     height_remain = r - para_gap
                 else:
-                    pagenow = [para]
-                    chapter.append(pagenow)
+                    chapter.append([para])
                     height_remain = height - para.height - para_gap
             else:
                 divided = self.divide_into_lines(para, width)
+                while len(divided) > 0:
+                    if height_remain < line_height:
+                        chapter.append([])
+                        height_remain = height
+                    else:
+                        nline = min(height_remain // line_height, len(divided))
+                        chapter[-1].append(divided[:nline])
+                        divided = divided[nline:]
+                        height_remain -= nline * line_height + para_gap
+        return chapter
+
+    @staticmethod
+    def read_from_bs(bs: "BeautifulSoup") -> Iterator["str | FakeParagraph"]:
+        """
+        Read from instance of `BeautifulSoup`. The return value
+        can be directly passed to `.divide_into_pages()`.
+
+        """
+
+        return bs
 
 
 @dataclass
@@ -184,3 +223,4 @@ class FakeParagraph:
     """A fake string with specified length and width."""
 
     height: float
+    path: Path

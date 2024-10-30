@@ -197,8 +197,10 @@ def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData|dict[str, s
 
 def _read_epub(path: Path) -> dict[str, bytes]:
     with ZipFile(path) as z:
+        if not (srcpath := path.parent / "source").exists():
+            z.extractall(path.parent / "source")
         if opf_href := _find_opf(z):  # opf format
-            return _get_opf_items(z, opf_href)
+            return _get_opf_items(srcpath, z.namelist(), opf_href)
         else:
             raise NotImplementedError(f"unsupported epub format: {path}")
 
@@ -225,16 +227,18 @@ def _find_opf(z: ZipFile) -> str:
     return ""
 
 
-def _get_opf_items(z: ZipFile, opf_href: str) -> dict[str, bytes]:
+def _get_opf_items(
+    srcpath: Path, namelist: list[str], opf_href: str
+) -> dict[str, bytes]:
     maindir = "".join(opf_href.rpartition("/")[:-1])
-    bs = BeautifulSoup(z.read(opf_href), features="xml")
+    bs = BeautifulSoup((srcpath / opf_href).read_bytes(), features="xml")
     idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
-    manifest, namelist = bs.manifest, z.namelist()
+    manifest = bs.manifest
 
     items: dict[str, bytes] = {}
     for i in idrefs:
         itemdir = _merge_dir(maindir, manifest.find(id=i).attrs["href"])
-        items[i] = z.read(itemdir) if itemdir in namelist else b""
+        items[i] = (srcpath / itemdir).read_bytes() if itemdir in namelist else b""
 
     return items
 
