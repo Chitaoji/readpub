@@ -18,6 +18,7 @@ logging.warning(
     "therefore unexpected errors may occur"
 )
 
+
 T = TypeVar("T")
 
 TitleLevel = Literal["h1", "h2", "h3", "h4", "h5", "h6"]
@@ -50,3 +51,7 @@ class MetaData(TypedDict):
 
 if TYPE_CHECKING:
     para = list[T] | FakeParagraph
+
+    Paragraph = para[str]
+    Page = list[para[str]]
+    Chapter = list[list[para[str]]]

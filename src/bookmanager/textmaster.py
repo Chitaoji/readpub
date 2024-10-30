@@ -16,7 +16,7 @@ from PIL import ImageFont
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
-    from ._typing import TextMeasureType, TitleLevel, para
+    from ._typing import Chapter, TextMeasureType, TitleLevel, para
 
 __all__ = ["TextMaster"]
 
@@ -210,7 +210,7 @@ class TextMaster:
         height: float,
         hline: float,
         para_gap: float,
-    ) -> list[list["para[str]"]]:
+    ) -> "Chapter":
         """
         Divide the iterator of paragraphs into pages according to the
         page-height and page-width. The original "\\n" in the text
@@ -307,7 +307,7 @@ class TextMaster:
                         continue
                 yield t
 
-    def view(self, chapter: list[list["para[str]"]]) -> "TextViewer":
+    def view(self, chapter: "Chapter") -> "TextViewer":
         """View a chapter."""
         page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
         view = page_split.join(

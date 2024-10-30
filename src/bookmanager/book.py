@@ -160,7 +160,7 @@ class Book:
         return self.__filedict
 
 
-def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData|dict[str, str]":
+def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str, str]":
     """
     Read an e-book from the path.
 

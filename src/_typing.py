@@ -7,6 +7,20 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .bookmanager._typing import (
+        Chapter,
+        MetaData,
+        MetaDataKey,
+        Page,
+        Paragraph,
+        StatusHint,
+        TextMeasureType,
+        TitleLevel,
+        para,
+    )
 
 logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "
