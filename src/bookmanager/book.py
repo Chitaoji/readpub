@@ -16,7 +16,7 @@ import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
 
-from .rdsetting import ReadingSetting
+from .setting import ReadingSetting
 from .textmaster import TextMaster
 
 if TYPE_CHECKING:
