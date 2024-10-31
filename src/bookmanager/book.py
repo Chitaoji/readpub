@@ -195,20 +195,16 @@ def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str,
             return _read_epub_metadata(path) if only_metadata else _read_epub(path)
 
 
-def _read_epub(path: Path) -> dict[str, bytes]:
-    with ZipFile(path) as z:
-        if not (srcpath := path.parent / "source").exists():
-            z.extractall(path.parent / "source")
-        if opf_href := _find_opf(z):  # opf format
-            return _get_opf_items(srcpath, z.namelist(), opf_href)
-        else:
-            raise NotImplementedError(f"unsupported epub format: {path}")
+def _read_epub(path: Path) -> None:
+    if not (srcpath := path.parent / "source").exists():
+        with ZipFile(path) as z:
+            z.extractall(srcpath)
 
 
 def _read_epub_metadata(path: Path) -> "MetaData":
     with ZipFile(path) as z:
         if opf_href := _find_opf(z):  # opf format
-            author, cover_href = _get_opf_info(z, opf_href)
+            author, cover_href, content = _get_opf_info(z, opf_href)
             cover_path = _save_cover(z, cover_href, path)
         else:
             raise NotImplementedError(f"unsupported epub format: {path}")
@@ -217,6 +213,7 @@ def _read_epub_metadata(path: Path) -> "MetaData":
         "author": author,
         "filepath": path.as_posix(),
         "coverpath": cover_path.as_posix(),
+        "content": content,
     }
 
 
@@ -227,29 +224,17 @@ def _find_opf(z: ZipFile) -> str:
     return ""
 
 
-def _get_opf_items(
-    srcpath: Path, namelist: list[str], opf_href: str
-) -> dict[str, bytes]:
-    maindir = "".join(opf_href.rpartition("/")[:-1])
-    bs = BeautifulSoup((srcpath / opf_href).read_bytes(), features="xml")
-    idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
-    manifest = bs.manifest
-
-    items: dict[str, bytes] = {}
-    for i in idrefs:
-        itemdir = _merge_dir(maindir, manifest.find(id=i).attrs["href"])
-        items[i] = (srcpath / itemdir).read_bytes() if itemdir in namelist else b""
-
-    return items
-
-
-def _get_opf_info(z: ZipFile, opf_href: str):
+def _get_opf_info(z: ZipFile, opf_href: str) -> tuple[str, str, list[str]]:
     maindir = "".join(opf_href.rpartition("/")[:-1])
     bs = BeautifulSoup(z.read(opf_href), features="xml")
     author = a if (a := bs.creator.text) else "Unknown"
     c = bs.find("meta", attrs={"name": "cover"}).attrs["content"]
     cover_href = _merge_dir(maindir, bs.find(id=c).attrs["href"])
-    return author, cover_href
+
+    manifest = bs.manifest
+    idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
+    content = [_merge_dir(maindir, manifest.find(id=i).attrs["href"]) for i in idrefs]
+    return author, cover_href, content
 
 
 def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:

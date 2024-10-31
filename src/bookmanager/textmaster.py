@@ -60,13 +60,13 @@ class TextMesureCached(TextMesurePlain):
     def getlength(self, text: str) -> float:
         if text in self.len_cache:
             return self.len_cache[text]
-        self.len_cache[text] = (length := self.fonttype.getlength(text))
+        self.len_cache[text] = length = self.fonttype.getlength(text)
         return length
 
     def getbbox(self, text: str) -> tuple[float, float, float, float]:
         if text in self.bbox_cache:
             return self.bbox_cache[text]
-        self.bbox_cache[text] = (bbox := self.fonttype.getbbox(text))
+        self.bbox_cache[text] = bbox = self.fonttype.getbbox(text)
         return bbox
 
 

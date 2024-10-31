@@ -104,7 +104,7 @@ class BookManager:
         dirpath.mkdir()
         shutil.copyfile(src, dirpath / src.name)
 
-        self.books[bookid] = (book := Book(dirpath, self))
+        self.books[bookid] = book = Book(dirpath, self)
         return book
 
     def check_book(self, src: Path) -> bool:

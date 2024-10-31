@@ -47,6 +47,7 @@ class MetaData(TypedDict):
     uploadtime: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
     progress: NotRequired[Optional[tuple[float, float]]]
+    content: NotRequired[Optional[list[str]]]
 
 
 if TYPE_CHECKING:
