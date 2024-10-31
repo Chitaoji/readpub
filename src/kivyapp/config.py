@@ -87,7 +87,7 @@ class KivyConfig:
         """
         done = [self._set(*c) for c in commands]
         if any(done) or not Path(self.path).exists():
-            Logger.info('Config: Updating values in "%s"', self.path)
+            Logger.info('Config: Updating "%s"', self.path)
             self.parser.write()
 
     def update_and_read(self, commands: list[list]) -> None:
@@ -102,13 +102,11 @@ class KivyConfig:
         """
         done = [self._set(*c) for c in commands]
         if any(done):
-            Logger.info(
-                'Config: Updating values in "%s" and reading it again', self.path
-            )
+            Logger.info('Config: Updating "%s" and reading it again', self.path)
             self.parser.write()
             self.parser.read(self.path.as_posix())
         elif not Path(self.path).exists():
-            Logger.info('Config: Updating values in "%s"', self.path)
+            Logger.info('Config: Updating "%s"', self.path)
             self.parser.write()
 
     def get(self, section: str, option: str) -> str:

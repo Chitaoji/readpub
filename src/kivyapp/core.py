@@ -13,13 +13,13 @@ except ImportError as e:
 import os
 from functools import partial
 from pathlib import Path
-from time import time
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.lang import Builder
+from kivy.logger import Logger
 from kivy.metrics import dp
 from kivy.properties import (  # pylint: disable=no-name-in-module
     ColorProperty,
@@ -179,7 +179,7 @@ class MainApp(MDApp):
                 m.findnot(status="deleted").sort(*self.current_sort_rule).books
             )
         )
-        asynckivy.start(self.extractall(m.find(extracted=False).books, 0.0))
+
         self.category_status = "home"
         self.bookmanager = m
         self.init_color_buttons()
@@ -257,7 +257,7 @@ class MainApp(MDApp):
         self.prev_snackbar.open()
         if checked:
             self.set_card(book := self.bookmanager.add_book(p))
-            asynckivy.start(self.extractall({"": book}, 0.0))
+            asynckivy.start(self.extract_book(book, 0.0))
 
     def set_card(self, book: "Book") -> None:
         """Set a new book card."""
@@ -318,14 +318,14 @@ class MainApp(MDApp):
             if duration is not None:
                 await asynckivy.sleep(duration)
 
-    async def extractall(
-        self, books: dict[str, "Book"], duration: Optional[float] = None
-    ):
-        """Extract all."""
-        for book in books.values():
-            if duration is not None:
-                await asynckivy.sleep(duration)
+    async def extract_book(self, book: "Book", duration: Optional[float] = None):
+        """Extract the book."""
+        if duration is not None:
+            await asynckivy.sleep(duration)
             book.extract()
+            Logger.info(
+                'Extract: Extracting book "%s"', book.get_metadata()["filepath"]
+            )
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""
