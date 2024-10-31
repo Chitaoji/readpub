@@ -256,7 +256,8 @@ class MainApp(MDApp):
         )
         self.prev_snackbar.open()
         if checked:
-            self.set_card(self.bookmanager.add_book(p))
+            self.set_card(book := self.bookmanager.add_book(p))
+            asynckivy.start(self.extractall({"": book}, 0.0))
 
     def set_card(self, book: "Book") -> None:
         """Set a new book card."""
@@ -321,12 +322,10 @@ class MainApp(MDApp):
         self, books: dict[str, "Book"], duration: Optional[float] = None
     ):
         """Extract all."""
-        time_0 = time()
         for book in books.values():
             if duration is not None:
                 await asynckivy.sleep(duration)
             book.extract()
-            print(book, time() - time_0)
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""

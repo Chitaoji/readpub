@@ -77,7 +77,7 @@ class BookManager:
             books_path.mkdir()
         self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
 
-    def add_book(self, src: Path) -> dict[str, str]:
+    def add_book(self, src: Path) -> Book:
         """
         Add a book.
 
@@ -88,8 +88,8 @@ class BookManager:
 
         Returns
         -------
-        dict[str, str]
-            Book metadata.
+        Book
+            New book.
 
         Raises
         ------
