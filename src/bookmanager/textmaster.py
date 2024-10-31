@@ -89,7 +89,7 @@ class TextMesureMixed(TextMesureCached):
     """
 
     def getlength(self, text: str) -> float:
-        if len(text) == 1 and "一" <= text <= "鿿":  # 4E00 ~ 9FFF
+        if len(text) == 1 and "一" <= text <= "鿿":  # U+4E00 ~ U+9FFF
             return self.size
         if text in self.len_cache:
             return self.len_cache[text]
