@@ -16,6 +16,7 @@ import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
 
+from .rdsetting import ReadingSetting
 from .textmaster import TextMaster
 
 if TYPE_CHECKING:
@@ -42,6 +43,7 @@ class Book:
         self.manager = manager
         self.pagemax = 0
         self.textmaster = TextMaster("msyh", 21)
+        self.rdsetting = ReadingSetting()
         self.__page_now = -1
         self.__content: dict[int, BeautifulSoup] = {}
         self.__metadata: MetaData | None = None
