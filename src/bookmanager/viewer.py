@@ -1,5 +1,5 @@
 """
-Contains a simple book viewer: view().
+Contains a simple book viewer: BookViewer.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -10,9 +10,9 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, Page, Paragraph
+    from ._typing import Book, Chapter, Page, Paragraph
 
-__all__ = ["view"]
+__all__ = ["BookViewer", "view"]
 
 
 @dataclass
@@ -23,6 +23,25 @@ class TextViewer:
 
     def __repr__(self) -> str:
         return self.text
+
+
+@dataclass
+class BookViewer:
+    """A simple book viewer"""
+
+    book: "Book"
+
+    def turn_to_page(self, n: int) -> TextViewer:
+        """Turn to page n."""
+        return TextViewer(self.book.turn_to_page(n))
+
+    def next_page(self) -> TextViewer:
+        """Turn to the next page"""
+        return TextViewer(self.book.next_page())
+
+    def prev_page(self) -> TextViewer:
+        """Turn to the previous page"""
+        return TextViewer(self.book.prev_page())
 
 
 def view(content: "Chapter | Page | Paragraph | str") -> TextViewer:

@@ -141,7 +141,6 @@ class Book:
                 )
             raise RuntimeError(f"book is already opened: {self.bookid!r}")
         self.manager.opened_book = self.bookid
-        self.extract()
 
     def close(self) -> None:
         """

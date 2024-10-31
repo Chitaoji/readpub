@@ -16,7 +16,7 @@ from PIL import ImageFont
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
-    from ._typing import Chapter, Page, Paragraph, TextMeasureType, TitleLevel, para
+    from ._typing import Chapter, TextMeasureType, TitleLevel, para
 
 __all__ = ["TextMaster"]
 

@@ -179,7 +179,6 @@ class MainApp(MDApp):
                 m.findnot(status="deleted").sort(*self.current_sort_rule).books
             )
         )
-
         self.category_status = "home"
         self.bookmanager = m
         self.init_color_buttons()
@@ -317,6 +316,13 @@ class MainApp(MDApp):
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
+
+    async def asynctest(self, time: int, duration: Optional[float] = None):
+        """Test the async functionality."""
+        for i in range(1, 1 + time):
+            if duration is not None:
+                await asynckivy.sleep(duration)
+            Logger.info("Test: Test Step No.%s", str(i))
 
     async def extract_book(self, book: "Book", duration: Optional[float] = None):
         """Extract the book."""
