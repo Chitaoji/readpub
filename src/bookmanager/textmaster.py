@@ -195,7 +195,7 @@ class TextMaster:
             if char in {"，", "、", "；", "：", "。", "？", "！", "”", "）", "》"}:
                 char = line[-1] + char
                 line = line[:-1]
-            if (i := line[-1]) in {"“", "（", "《"}:
+            if (i := line[-1]) in {"“", "（", "《"} and char:
                 char = i + char
                 line = line[:-1]
             paragraph.append(line)
