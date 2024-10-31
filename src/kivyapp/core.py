@@ -10,10 +10,10 @@ try:
     from .config import kvconfig
 except ImportError as e:
     raise e
-
 import os
 from functools import partial
 from pathlib import Path
+from time import time
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import asynckivy
@@ -179,6 +179,7 @@ class MainApp(MDApp):
                 m.findnot(status="deleted").sort(*self.current_sort_rule).books
             )
         )
+        asynckivy.start(self.extractall(m.find(extracted=False).books, 0.0))
         self.category_status = "home"
         self.bookmanager = m
         self.init_color_buttons()
@@ -315,6 +316,17 @@ class MainApp(MDApp):
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
+
+    async def extractall(
+        self, books: dict[str, "Book"], duration: Optional[float] = None
+    ):
+        """Extract all."""
+        time_0 = time()
+        for book in books.values():
+            if duration is not None:
+                await asynckivy.sleep(duration)
+            book.extract()
+            print(book, time() - time_0)
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""

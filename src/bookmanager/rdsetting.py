@@ -14,7 +14,7 @@ from pathlib import Path
 class ReadingSetting:
     """Manages reading settings."""
 
-    fontpath: Path = field(default_factory=Path)
+    fontpath: Path = field(default_factory=lambda: Path("msyh"))
     fontsize: float = 21.0
     page_width: float = 800.0
     page_height: float = 1200.0

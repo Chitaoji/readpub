@@ -10,6 +10,7 @@ import logging
 from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict, TypeVar
 
 if TYPE_CHECKING:
+    from .book import Book
     from .textmaster import FakeParagraph
 
 
@@ -47,7 +48,9 @@ class MetaData(TypedDict):
     uploadtime: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
     extracted: NotRequired[Optional[bool]]
-    progress: NotRequired[Optional[tuple[float, float, float]]]
+    progress: NotRequired[
+        Optional[tuple[float, float, float]]
+    ]  # (pagenow, pagemax, chapter)
     content: NotRequired[Optional[list[str]]]
 
 
