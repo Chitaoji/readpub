@@ -20,7 +20,7 @@ from .rdsetting import ReadingSetting
 from .textmaster import TextMaster
 
 if TYPE_CHECKING:
-    from ._typing import MetaData
+    from ._typing import Chapter, MetaData
     from .core import BookManager
 
 __all__ = []
@@ -117,6 +117,15 @@ class Book:
             )
             return content
         return self.__content[contentid]
+
+    def typeset(self, contentid: int) -> "Chapter":
+        """Typeset the content."""
+        bs, st = self.get_content(contentid), self.rdsetting
+        textmaster = TextMaster(st.fontpath, st.fontsize)
+        it = textmaster.read_from_bs(bs, st.htitle, st.himage, self.dirpath / "source")
+        return textmaster.divide_into_pages(
+            it, st.page_width, st.page_height, st.hline, st.gap
+        )
 
     def release(self) -> None:
         """Unload the book and release memory."""

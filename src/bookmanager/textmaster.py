@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from ._typing import Chapter, Page, Paragraph, TextMeasureType, TitleLevel, para
 
-__all__ = ["TextMaster", "view"]
+__all__ = ["TextMaster"]
 
 
 @dataclass
@@ -209,7 +209,7 @@ class TextMaster:
         width: float,
         height: float,
         hline: float,
-        para_gap: float,
+        gap: float,
     ) -> "Chapter":
         """
         Divide the iterator of paragraphs into pages according to the
@@ -226,7 +226,7 @@ class TextMaster:
             Maximum page-width in pixels.
         line_height : float
             Line-height in pixels.
-        para_gap : float
+        gap : float
             Gap between paragraphs in pixels.
 
         Returns
@@ -251,10 +251,10 @@ class TextMaster:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
                     chapter[-1].append(para)
-                    height_remain = r - para_gap
+                    height_remain = r - gap
                 else:
                     chapter.append([para])
-                    height_remain = height - para.height - para_gap
+                    height_remain = height - para.height - gap
             else:
                 divided = self.divide_into_lines(para, width)
                 while len(divided) > 0:
@@ -262,10 +262,10 @@ class TextMaster:
                         chapter.append([])
                         height_remain = height
                     else:
-                        nline = min(height_remain // hline, len(divided))
+                        nline = min(int(height_remain // hline), len(divided))
                         chapter[-1].append(divided[:nline])
                         divided = divided[nline:]
-                        height_remain -= nline * hline + para_gap
+                        height_remain -= nline * hline + gap
         return chapter
 
     @staticmethod
@@ -314,6 +314,10 @@ class FakeParagraph:
 
     height: float
 
+    def plain_text(self) -> str:
+        """Return plain text."""
+        return ""
+
 
 @dataclass
 class BookTitle(FakeParagraph):
@@ -322,6 +326,9 @@ class BookTitle(FakeParagraph):
     level: "TitleLevel"
     text: str
 
+    def plain_text(self) -> str:
+        return f"{self.text}\n"
+
 
 @dataclass
 class BookImage(FakeParagraph):
@@ -329,52 +336,5 @@ class BookImage(FakeParagraph):
 
     path: Path
 
-
-@dataclass
-class TextViewer:
-    """Text viewer."""
-
-    text: str
-
-    def __repr__(self) -> str:
-        return self.text
-
-
-def view(content: "Chapter | Page | Paragraph | str") -> TextViewer:
-    """View a chapter."""
-    if isinstance(content, str):
-        return TextViewer(content)
-    if isinstance(content, list):
-        if len(content) == 0:
-            return TextViewer("")
-        if isinstance(content[0], str):
-            return TextViewer("\n".join(content))
-        if not isinstance(content[0], list):
-            return __join_page(content)
-        if len(content[0]) == 0:
-            return TextViewer("")  # empty page indicates empty chapter
-        if isinstance(content[0][0], str):
-            return __join_page(content)
-        return __join_chapter(content)
-    return TextViewer(repr(content))
-
-
-def __join_page(page: "Page") -> TextViewer:
-    return TextViewer(
-        "\n\n".join(
-            "\n".join(para) if isinstance(para, list) else repr(para) for para in page
-        )
-    )
-
-
-def __join_chapter(chapter: "Chapter") -> TextViewer:
-    page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
-    return TextViewer(
-        page_split.join(
-            "\n\n".join(
-                "\n".join(para) if isinstance(para, list) else repr(para)
-                for para in page
-            )
-            for page in chapter
-        )
-    )
+    def plain_text(self) -> str:
+        return f"[image={self.path}]"
