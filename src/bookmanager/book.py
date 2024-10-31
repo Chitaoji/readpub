@@ -8,6 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import datetime
 import io
+import pickle
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Unpack, overload
 from zipfile import ZipFile
@@ -20,7 +21,7 @@ from .setting import ReadingSetting
 from .textmaster import TextMaster
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, MetaData
+    from ._typing import Chapter, MetaData, RawParagraph
     from .core import BookManager
 
 __all__ = []
@@ -101,30 +102,45 @@ class Book:
             yml_path.unlink()
 
     def extract(self) -> None:
-        """Extract the whole book."""
+        """
+        Extract the whole book. This must be done before `.picklize()`,
+        but we will not ensure it.
+
+        """
         if not self.get_metadata()["extracted"]:
             read_ebook(self.dirpath)
             self.update_metadata(extracted=True)
             self.save_metadata()
 
-    def get_content(self, contentid: int) -> BeautifulSoup:
+    def picklize(self) -> None:
+        """
+        Picklize the whole book. This must be done before `.open()`,
+        but we will not ensure it.
+
+        """
+        if not (pk := self.dirpath / "pickle").exists():
+            pk.mkdir()
+            src, st = self.dirpath / "source", self.rdsetting
+            for i, ref in enumerate(self.get_metadata()["content"]):
+                bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
+                it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src)
+                with (pk / f"{i}.pickle").open("wb") as f:
+                    pickle.dump(list(it), f)
+
+    def get_content(self, contentid: int) -> list["RawParagraph"]:
         """Get content from source."""
         if contentid not in self.__content:
-            metadata = self.get_metadata()
-            contentpath = self.dirpath / "source" / metadata["content"][contentid]
-            self.__content[contentid] = content = BeautifulSoup(
-                contentpath.read_bytes(), features="xml"
-            )
+            with (self.dirpath / f"pickle/{contentid}.pickle").open("rb") as f:
+                self.__content[contentid] = content = pickle.load(f)
             return content
         return self.__content[contentid]
 
     def typeset(self, contentid: int) -> "Chapter":
         """Typeset the content."""
-        bs, st = self.get_content(contentid), self.rdsetting
+        paras, st = self.get_content(contentid), self.rdsetting
         textmaster = TextMaster(st.fontpath, st.fontsize)
-        it = textmaster.read_from_bs(bs, st.htitle, st.himage, self.dirpath / "source")
         return textmaster.divide_into_pages(
-            it, st.page_width, st.page_height, st.hline, st.gap
+            paras, st.page_width, st.page_height, st.hline, st.gap
         )
 
     def release(self) -> None:

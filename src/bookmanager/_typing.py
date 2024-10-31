@@ -57,6 +57,7 @@ class MetaData(TypedDict):
 if TYPE_CHECKING:
     para = list[T] | FakeParagraph
 
+    RawParagraph = str | FakeParagraph
     Paragraph = para[str]
     Page = list[para[str]]
     Chapter = list[list[para[str]]]
