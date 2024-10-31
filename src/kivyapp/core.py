@@ -260,7 +260,7 @@ class MainApp(MDApp):
     def set_card(self, book: "Book") -> None:
         """Set a new book card."""
         metadata = book.get_metadata()
-        pagenow, pagemax = metadata["progress"]
+        pagenow, pagemax, _ = metadata["progress"]
         match pagenow / pagemax:
             case 0.0:
                 progress = "待阅读"
@@ -291,7 +291,7 @@ class MainApp(MDApp):
         """Set cards."""
         for bookid, book in books.items():
             metadata = book.get_metadata()
-            pagenow, pagemax = metadata["progress"]
+            pagenow, pagemax, _ = metadata["progress"]
             match pagenow / pagemax:
                 case 0.0:
                     progress = "待阅读"

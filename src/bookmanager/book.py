@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import datetime
 import io
 from pathlib import Path
-from typing import TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Literal, Unpack, overload
 from zipfile import ZipFile
 
 import yaml
@@ -43,7 +43,7 @@ class Book:
         self.pagemax = 0
         self.textmaster = TextMaster("msyh", 21)
         self.__page_now = -1
-        self.__filedict: dict[str, bytes] = {}
+        self.__content: dict[int, BeautifulSoup] = {}
         self.__metadata: MetaData | None = None
 
     def __repr__(self) -> str:
@@ -65,8 +65,9 @@ class Book:
             {
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
+                "extracted": False,
                 "status": "normal",
-                "progress": (0.0, 1.0),
+                "progress": (0.0, 1.0, -1),
             }
         )
         with open(yml_path, "w+", encoding="utf-8") as stream:
@@ -81,7 +82,7 @@ class Book:
 
     def update_metadata(self, **kwargs: Unpack["MetaData"]) -> None:
         """
-        Update the metadata.
+        Update the metadata (but not save).
 
         Parameters
         ----------
@@ -97,15 +98,27 @@ class Book:
         if yml_path.is_file():
             yml_path.unlink()
 
-    def load(self) -> None:
-        """Load the whole book."""
-        if self.__filedict:
-            raise RuntimeError("book is already loaded")
-        self.__filedict = read_ebook(self.dirpath)
+    def extract(self) -> None:
+        """Extract the whole book."""
+        if not self.get_metadata()["extracted"]:
+            read_ebook(self.dirpath)
+            self.update_metadata(extracted=True)
+            self.save_metadata()
+
+    def get_content(self, contentid: int) -> BeautifulSoup:
+        """Get content from source."""
+        if contentid not in self.__content:
+            metadata = self.get_metadata()
+            contentpath = self.dirpath / "source" / metadata["content"][contentid]
+            self.__content[contentid] = content = BeautifulSoup(
+                contentpath.read_bytes(), features="xml"
+            )
+            return content
+        return self.__content[contentid]
 
     def release(self) -> None:
         """Unload the book and release memory."""
-        self.__filedict.clear()
+        self.__content.clear()
 
     def open(self) -> None:
         """Open the book."""
@@ -116,9 +129,8 @@ class Book:
                     f"already opened: {self.manager.opened_book!r}"
                 )
             raise RuntimeError(f"book is already opened: {self.bookid!r}")
-        if not self.__filedict:
-            raise RuntimeError("book is empty; run '.load()' first")
         self.manager.opened_book = self.bookid
+        self.extract()
 
     def close(self) -> None:
         """
@@ -127,6 +139,7 @@ class Book:
 
         """
         self.__page_now = -1
+        self.manager.opened_book = ""
 
     def turn_to_page(self, n: int) -> str:
         """Turn to page n."""
@@ -142,25 +155,22 @@ class Book:
         """Turn to the previous page"""
         return self.turn_to_page(self.__page_now - 1)
 
-    def divide_into_pages(self) -> None: ...
-
-    @property
-    def is_loaded(self) -> bool:
-        """Indicates whether the book is already loaded."""
-        return bool(self.__filedict)
-
     @property
     def is_opened(self) -> bool:
         """Indicates whether the book is already opened."""
         return self.__page_now > -1
 
     @property
-    def filedict(self) -> dict[str, bytes]:
+    def cache(self) -> dict[str, bytes]:
         """Dictionary of book files."""
-        return self.__filedict
+        return self.__content
 
 
-def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str, str]":
+@overload
+def read_ebook(path: Path, only_metadata: Literal[True] = True) -> "MetaData": ...
+@overload
+def read_ebook(path: Path, only_metadata: Literal[False] = False) -> None: ...
+def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | None":
     """
     Read an e-book from the path.
 
@@ -174,13 +184,13 @@ def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str,
 
     Returns
     -------
-    MetaData|dict[str, str]
-        A dict of files or paths.
+    MetaData | None
+        MetaData or None.
 
     Raises
     ------
-    NotImplementedError
-        Raised when the book format is unsupported.
+    EBookSupportError
+        Raised when the e-book format is unsupported.
 
     """
     if path.is_dir():
@@ -189,7 +199,8 @@ def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | dict[str,
                 path = p
                 break
         else:
-            raise NotImplementedError(f"unsupported book format: {path}")
+            raise EBookFormatError(f"unsupported e-book format: {path}")
+
     match path.suffix:
         case ".epub":
             return _read_epub_metadata(path) if only_metadata else _read_epub(path)
@@ -207,7 +218,7 @@ def _read_epub_metadata(path: Path) -> "MetaData":
             author, cover_href, content = _get_opf_info(z, opf_href)
             cover_path = _save_cover(z, cover_href, path)
         else:
-            raise NotImplementedError(f"unsupported epub format: {path}")
+            raise EBookFormatError(f"unsupported epub format: {path}")
     return {
         "title": path.stem,
         "author": author,
@@ -279,3 +290,7 @@ def _merge_dir(fromdir: str, to: str) -> str:
         parentdir = Path(fromdir).parent.as_posix()
         return _merge_dir("" if parentdir == "." else parentdir, to[3:])
     return fromdir + to
+
+
+class EBookFormatError(NotImplementedError):
+    """Raised when receiving unsupported e-book format."""

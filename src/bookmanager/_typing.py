@@ -46,7 +46,8 @@ class MetaData(TypedDict):
     uploader: NotRequired[Optional[str]]
     uploadtime: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
-    progress: NotRequired[Optional[tuple[float, float]]]
+    extracted: NotRequired[Optional[bool]]
+    progress: NotRequired[Optional[tuple[float, float, float]]]
     content: NotRequired[Optional[list[str]]]
 
 
