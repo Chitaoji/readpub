@@ -16,7 +16,7 @@ from PIL import ImageFont
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
-    from ._typing import Chapter, TextMeasureType, TitleLevel, para
+    from ._typing import Chapter, TextMeasureMethod, TitleLevel, para
 
 __all__ = ["TextMaster"]
 
@@ -92,17 +92,17 @@ class TextMaster:
         Font name, or the path of the font file.
     size : float, optional
         Text size.
-    measure_type : TextMeasureType, optional
-        Specifies the measuring tool, by default "cached".
+    method : TextMeasureMethod, optional
+        Specifies the measure method, by default "cached".
 
     """
 
     font: str | Path = "msyh"
     size: float = 21
-    measure_type: "TextMeasureType" = "cached"
+    method: "TextMeasureMethod" = "cached"
 
     def __post_init__(self):
-        match self.measure_type:
+        match self.method:
             case "plain":
                 self.measure = TextMesurePlain(font=self.font, size=self.size)
             case "cached":

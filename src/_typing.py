@@ -17,7 +17,7 @@ if TYPE_CHECKING:
         Page,
         Paragraph,
         StatusHint,
-        TextMeasureType,
+        TextMeasureMethod,
         TitleLevel,
         para,
     )

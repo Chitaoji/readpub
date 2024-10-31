@@ -44,9 +44,9 @@ class Book:
         self.manager = manager
         self.pagemax = 0
         self.textmaster = TextMaster("msyh", 21)
-        self.rdsetting = ReadingSetting()
+        self.setting = ReadingSetting()
         self.__page_now = -1
-        self.__content: dict[int, BeautifulSoup] = {}
+        self.__content: list[list["RawParagraph"]] | None = None
         self.__metadata: MetaData | None = None
 
     def __repr__(self) -> str:
@@ -118,26 +118,28 @@ class Book:
         but we will not ensure it.
 
         """
-        if not (pk := self.dirpath / "pickle").exists():
-            pk.mkdir()
-            src, st = self.dirpath / "source", self.rdsetting
-            for i, ref in enumerate(self.get_metadata()["content"]):
-                bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
-                it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src)
-                with (pk / f"{i}.pickle").open("wb") as f:
-                    pickle.dump(list(it), f)
+        if (pk := self.dirpath / "0.pickle").exists():
+            return
+        src, st = self.dirpath / "source", self.setting
+        to_pickle = []
+        for ref in self.get_metadata()["content"]:
+            bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
+            it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src)
+            to_pickle.append(list(it))
+        with pk.open("wb") as f:
+            pickle.dump(to_pickle, f)
 
-    def get_content(self, contentid: int) -> list["RawParagraph"]:
+    def get_content(self) -> list[list["RawParagraph"]]:
         """Get content from source."""
-        if contentid not in self.__content:
-            with (self.dirpath / f"pickle/{contentid}.pickle").open("rb") as f:
-                self.__content[contentid] = content = pickle.load(f)
-            return content
-        return self.__content[contentid]
+        if self.__content is None:
+            with (self.dirpath / "0.pickle").open("rb") as f:
+                self.__content = pickle.load(f)
+            return self.__content
+        return self.__content
 
     def typeset(self, contentid: int) -> "Chapter":
         """Typeset the content."""
-        paras, st = self.get_content(contentid), self.rdsetting
+        paras, st = self.get_content()[contentid], self.setting
         textmaster = TextMaster(st.fontpath, st.fontsize)
         return textmaster.divide_into_pages(
             paras, st.page_width, st.page_height, st.hline, st.gap
@@ -145,7 +147,7 @@ class Book:
 
     def release(self) -> None:
         """Unload the book and release memory."""
-        self.__content.clear()
+        self.__content = None
 
     def open(self) -> None:
         """Open the book."""
