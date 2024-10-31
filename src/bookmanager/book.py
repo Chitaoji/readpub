@@ -43,8 +43,8 @@ class Book:
         self.bookid = dirpath.name
         self.manager = manager
         self.pagemax = 0
-        self.textmaster = TextMaster("msyh", 21)
         self.setting = ReadingSetting()
+        self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
         self.__page_now = -1
         self.__content: list[list["RawParagraph"]] | None = None
         self.__metadata: MetaData | None = None
@@ -140,8 +140,7 @@ class Book:
     def typeset(self, contentid: int) -> "Chapter":
         """Typeset the content."""
         paras, st = self.get_content()[contentid], self.setting
-        textmaster = TextMaster(st.fontpath, st.fontsize)
-        return textmaster.divide_into_pages(
+        return self.textmaster.divide_into_pages(
             paras, st.page_width, st.page_height, st.hline, st.gap
         )
 

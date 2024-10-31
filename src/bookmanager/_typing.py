@@ -23,7 +23,7 @@ logging.warning(
 T = TypeVar("T")
 
 TitleLevel = Literal["h1", "h2", "h3", "h4", "h5", "h6"]
-TextMeasureMethod = Literal["plain", "cached", "same-sized"]
+TextMeasureMethod = Literal["plain", "same-sized", "cached", "mixed"]
 StatusHint = Literal["normal", "deleted", "pinned"]
 MetaDataKey = Literal[
     "title",

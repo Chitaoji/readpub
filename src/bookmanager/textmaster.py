@@ -50,6 +50,16 @@ class TextMesurePlain:
         return self.fonttype.getbbox(text)
 
 
+class TextMesureSameSized(TextMesurePlain):
+    """Measures text assuming that they all have the same length."""
+
+    def getlength(self, text: str) -> float:
+        return self.size
+
+    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+        return (0, 5, self.size, 4 + self.size)
+
+
 class TextMesureCached(TextMesurePlain):
     """Measures text with cache."""
 
@@ -71,14 +81,20 @@ class TextMesureCached(TextMesurePlain):
         return bbox
 
 
-class TextMesureSameSized(TextMesurePlain):
-    """Measures text assuming that they all have the same length."""
+class TextMesureMixed(TextMesureCached):
+    """
+    Measures text with mixed methods. This is not necessarily faster
+    than `TextMesureCached`, but can save memory.
+
+    """
 
     def getlength(self, text: str) -> float:
-        return self.size
-
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
-        return (0, 5, self.size, 4 + self.size)
+        if len(text) == 1 and "一" <= text <= "鿿":  # 4E00 ~ 9FFF
+            return self.size
+        if text in self.len_cache:
+            return self.len_cache[text]
+        self.len_cache[text] = length = self.fonttype.getlength(text)
+        return length
 
 
 @dataclass
@@ -99,16 +115,18 @@ class TextMaster:
 
     font: str | Path = "msyh"
     size: float = 21
-    method: "TextMeasureMethod" = "cached"
+    method: "TextMeasureMethod" = "mixed"
 
     def __post_init__(self):
         match self.method:
             case "plain":
                 self.measure = TextMesurePlain(font=self.font, size=self.size)
-            case "cached":
-                self.measure = TextMesureCached(font=self.font, size=self.size)
             case "same-sized":
                 self.measure = TextMesureSameSized(font=self.font, size=self.size)
+            case "cached":
+                self.measure = TextMesureCached(font=self.font, size=self.size)
+            case "mixed":
+                self.measure = TextMesureMixed(font=self.font, size=self.size)
 
     def shorten(self, text: str, length: float, ellipsis: str = "...") -> str:
         """
