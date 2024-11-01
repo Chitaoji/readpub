@@ -119,11 +119,11 @@ class Book:
         """
         if (pk := self.dirpath / ".pickle").exists():
             return
-        src, st = self.dirpath / "source", self.setting
+        srcpath = self.dirpath / "source"
         to_pickle = []
         for ref in self.get_metadata()["content"]:
-            bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
-            it = TextMaster.read_from_bs(bs, src, self.idx)
+            bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
+            it = TextMaster.read_from_bs(bs, srcpath, self.idx)
             to_pickle.append(list(it))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
@@ -144,6 +144,16 @@ class Book:
         return self.textmaster.divide_into_pages(
             paras, st.page_width, st.page_height, st.hline, st.gap
         )
+
+    def pagecount(self) -> int:
+        """Count the pages."""
+        npage = 0
+        for content in self.get_content():
+            st = self.setting
+            npage = self.textmaster.pagecount(
+                content, st.page_width, st.page_height, st.hline, st.gap, npage + 1
+            )
+        return npage
 
     def release(self) -> None:
         """Unload the book and release memory."""

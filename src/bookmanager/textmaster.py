@@ -286,25 +286,30 @@ class TextMaster:
                         height_remain -= nline * hline + gap
         return chapter
 
-    def generate_index(
+    def pagecount(
         self,
         para_iter: Iterator["str | FakeParagraph"],
         width: float,
         height: float,
         hline: float,
         gap: float,
-    ) -> "Chapter":
+        startpage: int,
+    ) -> int:
         """
-        Divide the iterator of paragraphs into pages according to the
-        page-height and page-width. The original "\\n" in the text
-        will not be respected.
+        A simplified version of `divide_into_pages()` which only
+        calculates the number of pages.
 
         Parameters
         ----------
         See `.divide_into_pages()`.
 
+        startpage : int
+            The starting page number.
+
         Returns
         -------
+        int
+            Maximum number of pages.
 
         Raises
         ------
@@ -316,28 +321,26 @@ class TextMaster:
             raise ValueError(
                 f"line-height is larger than page-height: {hline} > {height}"
             )
-        chapter: list[list["para[str]"]] = [[]]
-        height_remain = height
+        npage, height_remain = startpage, height
         for para in para_iter:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
-                    chapter[-1].append(para)
                     height_remain = r - gap
                 else:
-                    chapter.append([para])
+                    npage += 1
                     height_remain = height - para.height - gap
+                para.npage = npage
             else:
                 divided = self.divide_into_lines(para, width)
                 while len(divided) > 0:
                     if height_remain < hline:
-                        chapter.append([])
+                        npage += 1
                         height_remain = height
                     else:
                         nline = min(int(height_remain // hline), len(divided))
-                        chapter[-1].append(divided[:nline])
                         divided = divided[nline:]
                         height_remain -= nline * hline + gap
-        return chapter
+        return npage
 
     @staticmethod
     def read_from_bs(
@@ -444,8 +447,9 @@ class BookTitle(FakeParagraph):
 
     text: str
     level: "TitleLevel"
+    npage: int = field(init=False, default=-1)
+    height: float = field(init=False, default=100.0)
     idx: Optional[BookIndex] = None
-    height: float = 100.0
 
     def __post_init__(self) -> None:
         if self.idx:
@@ -461,7 +465,8 @@ class BookImage(FakeParagraph):
     """Image in the book."""
 
     path: Path
-    height: float = 1200.0
+    npage: int = field(init=False, default=-1)
+    height: float = field(init=False, default=1200.0)
 
     def plain_text(self) -> str:
         return f"[image={self.path}]"
