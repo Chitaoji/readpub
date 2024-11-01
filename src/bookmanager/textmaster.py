@@ -6,10 +6,10 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Mapping
+from typing import TYPE_CHECKING, Iterator, Mapping, Optional
 
 from PIL import ImageFont
 
@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
     from ._typing import Chapter, TextMeasureMethod, TitleLevel, para
 
-__all__ = ["TextMaster"]
+__all__ = ["TextMaster", "BookIndex"]
 
 
 @dataclass
@@ -292,6 +292,7 @@ class TextMaster:
         htitle: Mapping["TitleLevel", float],
         himage: float,
         srcpath: Path,
+        idx: "BookIndex",
     ) -> Iterator["str | FakeParagraph"]:
         """
         Read from instance of `BeautifulSoup`. The return value
@@ -307,6 +308,8 @@ class TextMaster:
             Image height in pixels.
         srcpath : Path
             Source path.
+        idx : BookIndex
+            Book index.
 
         Yields
         ------
@@ -316,7 +319,7 @@ class TextMaster:
         """
         for tag in bs.body.find_all():
             if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-                yield BookTitle(htitle[n], n, tag.text)
+                yield BookTitle(htitle[n], int(n[1]), tag.text, idx)
             elif n == "p":
                 if not (t := tag.text):
                     if img := tag.img:
@@ -324,6 +327,45 @@ class TextMaster:
                     else:
                         continue
                 yield t
+
+
+@dataclass
+class BookIndex:
+    """Book index."""
+
+    title: Optional["BookTitle"] = None
+    content: list["BookIndex"] = field(default_factory=list)
+
+    def pop(self, title: "BookTitle") -> None:
+        """Pop a new (sub)title."""
+        if self.title is None:
+            self.title = title
+        elif self.title.level == title.level:
+            self.content = [BookIndex(self.title, self.content), BookIndex(title)]
+            self.title = BookTitle(title.height, title.level - 1, "Unknown")
+        elif self.title.level > title.level:
+            self.content = [
+                BookIndex(
+                    BookTitle(title.height, title.level, "Unknown"),
+                    BookIndex(self.title, self.content),
+                ),
+                BookIndex(title),
+            ]
+            self.title = BookTitle(title.height, title.level - 1, "Unknown")
+        elif len(self.content) == 0:
+            self.content.append(BookIndex(title))
+        elif self.content[-1].title.level == title.level:
+            self.content.append(BookIndex(title))
+        elif self.content[-1].title.level < title.level:
+            self.content[-1].pop(title)
+        else:
+            self.content = [
+                BookIndex(
+                    BookTitle(title.height, title.level, "Unknown"),
+                    self.content,
+                ),
+                BookIndex(title),
+            ]
 
 
 @dataclass
@@ -343,6 +385,12 @@ class BookTitle(FakeParagraph):
 
     level: "TitleLevel"
     text: str
+    idx: Optional[BookIndex] = None
+
+    def __post_init__(self) -> None:
+        if self.idx:
+            self.idx.pop(self)
+            self.idx = None
 
     def plain_text(self) -> str:
         return f"{self.text}\n"

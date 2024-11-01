@@ -16,7 +16,7 @@ __all__ = ["BookViewer", "view"]
 
 
 @dataclass
-class TextViewer:
+class TextRenderer:
     """Text viewer."""
 
     text: str
@@ -27,44 +27,44 @@ class TextViewer:
 
 @dataclass
 class BookViewer:
-    """A simple book viewer"""
+    """A book viewer for console."""
 
     book: "Book"
 
-    def turn_to_page(self, n: int) -> TextViewer:
+    def turn_to_page(self, n: int) -> TextRenderer:
         """Turn to page n."""
-        return TextViewer(self.book.turn_to_page(n))
+        return TextRenderer(self.book.turn_to_page(n))
 
-    def next_page(self) -> TextViewer:
+    def next_page(self) -> TextRenderer:
         """Turn to the next page"""
-        return TextViewer(self.book.next_page())
+        return TextRenderer(self.book.next_page())
 
-    def prev_page(self) -> TextViewer:
+    def prev_page(self) -> TextRenderer:
         """Turn to the previous page"""
-        return TextViewer(self.book.prev_page())
+        return TextRenderer(self.book.prev_page())
 
 
-def view(content: "Chapter | Page | Paragraph | str") -> TextViewer:
+def view(content: "Chapter | Page | Paragraph | str") -> TextRenderer:
     """View a chapter."""
     if isinstance(content, str):
-        return TextViewer(content)
+        return TextRenderer(content)
     if isinstance(content, list):
         if len(content) == 0:
-            return TextViewer("")
+            return TextRenderer("")
         if isinstance(content[0], str):
-            return TextViewer("\n".join(content))
+            return TextRenderer("\n".join(content))
         if not isinstance(content[0], list):
             return __join_page(content)
         if len(content[0]) == 0:
-            return TextViewer("")  # empty page indicates empty chapter
+            return TextRenderer("")  # empty page indicates empty chapter
         if isinstance(content[0][0], str):
             return __join_page(content)
         return __join_chapter(content)
-    return TextViewer(content.plain_text())
+    return TextRenderer(content.plain_text())
 
 
-def __join_page(page: "Page") -> TextViewer:
-    return TextViewer(
+def __join_page(page: "Page") -> TextRenderer:
+    return TextRenderer(
         "\n\n".join(
             "\n".join(para) if isinstance(para, list) else para.plain_text()
             for para in page
@@ -72,9 +72,9 @@ def __join_page(page: "Page") -> TextViewer:
     )
 
 
-def __join_chapter(chapter: "Chapter") -> TextViewer:
+def __join_chapter(chapter: "Chapter") -> TextRenderer:
     page_split = f"\n\n{"="*12} NextPage {"="*12}\n\n"
-    return TextViewer(
+    return TextRenderer(
         page_split.join(
             "\n\n".join(
                 "\n".join(para) if isinstance(para, list) else para.plain_text()

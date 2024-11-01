@@ -18,7 +18,7 @@ from bs4 import BeautifulSoup
 from PIL import Image
 
 from .setting import ReadingSetting
-from .textmaster import TextMaster
+from .textmaster import BookIndex, TextMaster
 
 if TYPE_CHECKING:
     from ._typing import Chapter, MetaData, RawParagraph
@@ -45,6 +45,7 @@ class Book:
         self.pagemax = 0
         self.setting = ReadingSetting()
         self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
+        self.idx = BookIndex()
         self.__page_now = -1
         self.__content: list[list["RawParagraph"]] | None = None
         self.__metadata: MetaData | None = None
@@ -122,7 +123,7 @@ class Book:
         to_pickle = []
         for ref in self.get_metadata()["content"]:
             bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
-            it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src)
+            it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src, self.idx)
             to_pickle.append(list(it))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
@@ -296,20 +297,6 @@ def _image_auto_resize(image: Image.Image, width: int, height: int) -> Image.Ima
         box = (0, eps, a, b - eps)
     image = image.resize((width, height), box=box, reducing_gap=1.1)
     return image
-
-
-# def _cv2_auto_resize(cover: bytes, width: int, height: int) -> np.ndarray:
-#     img_nuffer = np.frombuffer(cover, dtype=np.uint8)
-#     mat = cv2.imdecode(img_nuffer, 1)
-
-#     b, a, _ = mat.shape
-#     if a / b > width / height:
-#         eps = int((a - b * width / height) / 2)
-#         mat = mat[0:b, eps : a - eps]
-#     else:
-#         eps = int((b - a * height / width) / 2)
-#         mat = mat[eps : b - eps, 0:a]
-#     return cv2.resize(mat, (width, height))
 
 
 def _merge_dir(fromdir: str, to: str) -> str:

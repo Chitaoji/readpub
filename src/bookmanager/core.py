@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
 from .book import Book
+from .viewer import BookViewer
 
 if TYPE_CHECKING:
     from ._typing import MetaData, MetaDataKey
@@ -149,6 +150,10 @@ class BookManager:
         """
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
         del self.books[bookid]
+
+    def view_book(self, bookid: str) -> BookViewer:
+        """View a book in the console."""
+        return BookViewer(self.books[bookid])
 
     def get_new_bookid(self, maxruns: int = 20) -> str:
         """

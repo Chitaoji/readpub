@@ -12,7 +12,9 @@ REQUIRES:
     - kivy
     - kivymd2
     - pillow
-EXTRAS: {}
+EXTRAS:   
+  exe:
+    - pyinstaller
 SOURCE: src
 SUBMODULES: []
 EXCLUDES:
