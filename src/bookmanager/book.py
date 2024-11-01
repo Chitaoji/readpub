@@ -21,7 +21,7 @@ from .setting import ReadingSetting
 from .textmaster import BookIndex, TextMaster
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, MetaData, RawParagraph
+    from ._typing import Chapter, MetaData, Paragraph
     from .core import BookManager
 
 __all__ = []
@@ -45,9 +45,8 @@ class Book:
         self.pagemax = 0
         self.setting = ReadingSetting()
         self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
-        self.idx = BookIndex()
         self.__page_now = -1
-        self.__content: list[list["RawParagraph"]] | None = None
+        self.__content: list[list["Paragraph"]] | None = None
         self.__metadata: MetaData | None = None
 
     def __repr__(self) -> str:
@@ -120,17 +119,17 @@ class Book:
         if (pk := self.dirpath / ".pickle").exists():
             return
         srcpath = self.dirpath / "source"
-        to_pickle = []
+        idx = BookIndex()
+        to_pickle = [[idx]]
         for ref in self.get_metadata()["content"]:
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
-            it = TextMaster.read_from_bs(bs, srcpath, self.idx)
-            to_pickle.append(list(it))
+            to_pickle.append(list(TextMaster.read_from_bs(bs, srcpath, idx)))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
         self.update_metadata(is_ready=True)
         self.save_metadata()
 
-    def get_content(self) -> list[list["RawParagraph"]]:
+    def get_content(self) -> list[list["Paragraph"]]:
         """Get content from source."""
         if self.__content is None:
             with (self.dirpath / ".pickle").open("rb") as f:
@@ -148,7 +147,7 @@ class Book:
     def pagecount(self) -> int:
         """Count the pages."""
         npage = 0
-        for content in self.get_content():
+        for content in self.get_content()[1:]:
             st = self.setting
             npage = self.textmaster.pagecount(
                 content, st.page_width, st.page_height, st.hline, st.gap, npage + 1

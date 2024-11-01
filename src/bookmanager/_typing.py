@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict, Typ
 
 if TYPE_CHECKING:
     from .book import Book
-    from .textmaster import FakeParagraph
+    from .textmaster import BookImage, BookIndex, BookTitle
 
 
 logging.warning(
@@ -55,9 +55,9 @@ class MetaData(TypedDict):
 
 
 if TYPE_CHECKING:
-    para = list[T] | FakeParagraph
+    para = list[T] | BookIndex | BookTitle | BookImage
 
-    RawParagraph = str | FakeParagraph
+    RawParagraph = str | BookIndex | BookTitle | BookImage
     Paragraph = para[str]
     Page = list[para[str]]
     Chapter = list[list[para[str]]]

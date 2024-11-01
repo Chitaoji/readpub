@@ -9,7 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 from dataclasses import dataclass, field
 from itertools import chain
 from pathlib import Path
-from typing import TYPE_CHECKING, Iterator, Mapping, Optional
+from typing import TYPE_CHECKING, Iterator, Optional
 
 from PIL import ImageFont
 
@@ -380,11 +380,22 @@ class TextMaster:
 
 
 @dataclass
-class BookIndex:
+class FakeParagraph:
+    """Pretends to be a paragraph of the book."""
+
+    def plain_text(self) -> str:
+        """Return plain text."""
+        return ""
+
+
+@dataclass
+class BookIndex(FakeParagraph):
     """Book index."""
 
     title: Optional["BookTitle"] = None
     content: list["BookIndex"] = field(default_factory=list)
+    npage: int = field(init=False, default=-1)
+    height: float = field(init=False, default=0.0)
 
     def __repr__(self) -> str:
         string = repr(self.title)
@@ -430,15 +441,6 @@ class BookIndex:
                 BookIndex(BookTitle("Unknown", title.level), self.content),
                 BookIndex(title),
             ]
-
-
-@dataclass
-class FakeParagraph:
-    """Pretends to be a paragraph of the book."""
-
-    def plain_text(self) -> str:
-        """Return plain text."""
-        return ""
 
 
 @dataclass
