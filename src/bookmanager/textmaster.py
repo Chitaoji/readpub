@@ -286,11 +286,62 @@ class TextMaster:
                         height_remain -= nline * hline + gap
         return chapter
 
+    def generate_index(
+        self,
+        para_iter: Iterator["str | FakeParagraph"],
+        width: float,
+        height: float,
+        hline: float,
+        gap: float,
+    ) -> "Chapter":
+        """
+        Divide the iterator of paragraphs into pages according to the
+        page-height and page-width. The original "\\n" in the text
+        will not be respected.
+
+        Parameters
+        ----------
+        See `.divide_into_pages()`.
+
+        Returns
+        -------
+
+        Raises
+        ------
+        ValueError
+            Raised when line-height is larger than page-height.
+
+        """
+        if hline > height:
+            raise ValueError(
+                f"line-height is larger than page-height: {hline} > {height}"
+            )
+        chapter: list[list["para[str]"]] = [[]]
+        height_remain = height
+        for para in para_iter:
+            if isinstance(para, FakeParagraph):
+                if (r := height_remain - para.height) >= 0:
+                    chapter[-1].append(para)
+                    height_remain = r - gap
+                else:
+                    chapter.append([para])
+                    height_remain = height - para.height - gap
+            else:
+                divided = self.divide_into_lines(para, width)
+                while len(divided) > 0:
+                    if height_remain < hline:
+                        chapter.append([])
+                        height_remain = height
+                    else:
+                        nline = min(int(height_remain // hline), len(divided))
+                        chapter[-1].append(divided[:nline])
+                        divided = divided[nline:]
+                        height_remain -= nline * hline + gap
+        return chapter
+
     @staticmethod
     def read_from_bs(
         bs: "BeautifulSoup",
-        htitle: Mapping["TitleLevel", float],
-        himage: float,
         srcpath: Path,
         idx: "BookIndex",
     ) -> Iterator["str | FakeParagraph"]:
@@ -302,10 +353,6 @@ class TextMaster:
         ----------
         bs : BeautifulSoup
             Instance of `BeautifulSoup`.
-        htitle : Mapping[&quot;TitleLevel&quot;, float]
-            Title-height in pixels.
-        himage : float
-            Image height in pixels.
         srcpath : Path
             Source path.
         idx : BookIndex
@@ -319,11 +366,11 @@ class TextMaster:
         """
         for tag in bs.body.find_all():
             if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-                yield BookTitle(htitle[n], int(n[1]), tag.text, idx)
+                yield BookTitle(tag.text, int(n[1]), idx)
             elif n == "p":
                 if not (t := tag.text):
                     if img := tag.img:
-                        yield BookImage(himage, srcpath / img.attrs["src"])
+                        yield BookImage(srcpath / img.attrs["src"])
                     else:
                         continue
                 yield t
@@ -359,16 +406,16 @@ class BookIndex:
             self.title = title
         elif self.title.level == title.level:
             self.content = [BookIndex(self.title, self.content), BookIndex(title)]
-            self.title = BookTitle(title.height, title.level - 1, "Unknown")
+            self.title = BookTitle("Unknown", title.level - 1)
         elif self.title.level > title.level:
             self.content = [
                 BookIndex(
-                    BookTitle(title.height, title.level, "Unknown"),
+                    BookTitle("Unknown", title.level),
                     [BookIndex(self.title, self.content)],
                 ),
                 BookIndex(title),
             ]
-            self.title = BookTitle(title.height, title.level - 1, "Unknown")
+            self.title = BookTitle("Unknown", title.level - 1)
         elif len(self.content) == 0:
             self.content.append(BookIndex(title))
         elif self.content[-1].title.level == title.level:
@@ -377,10 +424,7 @@ class BookIndex:
             self.content[-1].pop(title)
         else:
             self.content = [
-                BookIndex(
-                    BookTitle(title.height, title.level, "Unknown"),
-                    self.content,
-                ),
+                BookIndex(BookTitle("Unknown", title.level), self.content),
                 BookIndex(title),
             ]
 
@@ -388,8 +432,6 @@ class BookIndex:
 @dataclass
 class FakeParagraph:
     """Pretends to be a paragraph of the book."""
-
-    height: float
 
     def plain_text(self) -> str:
         """Return plain text."""
@@ -400,9 +442,10 @@ class FakeParagraph:
 class BookTitle(FakeParagraph):
     """Title."""
 
-    level: "TitleLevel"
     text: str
+    level: "TitleLevel"
     idx: Optional[BookIndex] = None
+    height: float = 100.0
 
     def __post_init__(self) -> None:
         if self.idx:
@@ -418,6 +461,7 @@ class BookImage(FakeParagraph):
     """Image in the book."""
 
     path: Path
+    height: float = 1200.0
 
     def plain_text(self) -> str:
         return f"[image={self.path}]"

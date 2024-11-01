@@ -123,7 +123,7 @@ class Book:
         to_pickle = []
         for ref in self.get_metadata()["content"]:
             bs = BeautifulSoup((src / ref).read_bytes(), features="xml")
-            it = TextMaster.read_from_bs(bs, st.htitle, st.himage, src, self.idx)
+            it = TextMaster.read_from_bs(bs, src, self.idx)
             to_pickle.append(list(it))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
