@@ -126,6 +126,12 @@
             pos_hint: {"bottom": 1, "right": 1}
             on_release: app.open_cover_menu(self)
 
+        # MDCircularProgressIndicator:
+        #     size_hint: None, None
+        #     size: dp(24), dp(24)
+        #     pos_hint: {"top": .136, "right": .983}
+        #     active: not root.is_ready
+        
         MDIcon:
             icon: "pin" if root.status == "pinned" else ""
             pos_hint: {"top": .98, "right": 1}

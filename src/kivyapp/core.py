@@ -21,10 +21,9 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.logger import Logger
 from kivy.metrics import dp
-from kivy.properties import (  # pylint: disable=no-name-in-module
-    ColorProperty,
-    StringProperty,
-)
+from kivy.properties import BooleanProperty  # pylint: disable=no-name-in-module
+from kivy.properties import ColorProperty  # pylint: disable=no-name-in-module
+from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.utils import hex_colormap
@@ -45,6 +44,7 @@ from kivymd.uix.list import MDListItem, MDListItemLeadingIcon, MDListItemSupport
 from kivymd.uix.list.list import MDListItem, MDListItemLeadingIcon
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
+from kivymd.uix.progressindicator.progressindicator import MDCircularProgressIndicator
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import BookManager, TextMaster
@@ -87,6 +87,7 @@ class BookCard(MDCard):
     author: str = StringProperty()
     progress: str = StringProperty()
     status: "StatusHint" = StringProperty()
+    is_ready: bool = BooleanProperty()
 
     def check_border(self) -> None:
         """
@@ -255,10 +256,10 @@ class MainApp(MDApp):
         )
         self.prev_snackbar.open()
         if checked:
-            self.set_card(book := self.bookmanager.add_book(p))
-            asynckivy.start(self.extract_book(book, 0.0))
+            bookcard = self.set_card(book := self.bookmanager.add_book(p))
+            asynckivy.start(self.prepare_book(book, bookcard))
 
-    def set_card(self, book: "Book") -> None:
+    def set_card(self, book: "Book") -> BookCard:
         """Set a new book card."""
         metadata = book.get_metadata()
         pagenow, pagemax, _ = metadata["progress"]
@@ -277,6 +278,7 @@ class MainApp(MDApp):
             author=metadata["author"],
             progress=progress,
             status=metadata["status"],
+            is_ready=metadata["is_ready"],
         )
         idx = self.bookmanager.where_to_insert(
             book.bookid,
@@ -285,6 +287,7 @@ class MainApp(MDApp):
             ascending=True,
         )
         self.root.ids.grid.add_widget(widget, idx)
+        return widget
 
     async def set_cards(
         self, books: dict[str, "Book"], duration: Optional[float] = None
@@ -324,14 +327,19 @@ class MainApp(MDApp):
                 await asynckivy.sleep(duration)
             Logger.info("Test: Test Step No.%s", str(i))
 
-    async def extract_book(self, book: "Book", duration: Optional[float] = None):
+    async def prepare_book(
+        self, book: "Book", bookcard: BookCard, duration: Optional[float] = None
+    ):
         """Extract the book."""
         if duration is not None:
             await asynckivy.sleep(duration)
-            book.extract()
-            Logger.info(
-                'Extract: Extracting book "%s"', book.get_metadata()["filepath"]
-            )
+        book.extract()
+        Logger.info('Extract: Extracting book "%s"', book.get_metadata()["filepath"])
+        if duration is not None:
+            await asynckivy.sleep(duration)
+        book.picklize()
+        Logger.info('Picklize: Pickling book "%s"', book.get_metadata()["filepath"])
+        bookcard.is_ready = True
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""
