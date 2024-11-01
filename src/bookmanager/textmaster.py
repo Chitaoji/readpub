@@ -336,6 +336,23 @@ class BookIndex:
     title: Optional["BookTitle"] = None
     content: list["BookIndex"] = field(default_factory=list)
 
+    def __repr__(self) -> str:
+        string = repr(self.title)
+        if self.content:
+            string += "\n" + "\n".join(
+                "- " + repr(x).replace("\n", "\n  ") for x in self.content
+            )
+        return string
+
+    def plain_text(self) -> str:
+        """Return plain text."""
+        string = self.title.text
+        if self.content:
+            string += "\n" + "\n".join(
+                "- " + x.plain_text().replace("\n", "\n  ") for x in self.content
+            )
+        return string
+
     def pop(self, title: "BookTitle") -> None:
         """Pop a new (sub)title."""
         if self.title is None:
@@ -347,7 +364,7 @@ class BookIndex:
             self.content = [
                 BookIndex(
                     BookTitle(title.height, title.level, "Unknown"),
-                    BookIndex(self.title, self.content),
+                    [BookIndex(self.title, self.content)],
                 ),
                 BookIndex(title),
             ]

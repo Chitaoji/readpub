@@ -45,6 +45,9 @@ class BookManager:
         self.username = "testuser"
         self.__init_books()
 
+    def __getitem__(self, __key: int) -> Book:
+        return list(self.books.values())[__key]
+
     def login(self, username: str = "", password: str = "") -> None:
         """
         Login as a new user.
