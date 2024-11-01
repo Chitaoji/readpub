@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+# pylint: disable=no-name-in-module
 try:
     from .config import kvconfig
 except ImportError as e:
@@ -21,9 +22,7 @@ from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.logger import Logger
 from kivy.metrics import dp
-from kivy.properties import BooleanProperty  # pylint: disable=no-name-in-module
-from kivy.properties import ColorProperty  # pylint: disable=no-name-in-module
-from kivy.properties import StringProperty  # pylint: disable=no-name-in-module
+from kivy.properties import BooleanProperty, ColorProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.widget import Widget
 from kivy.utils import hex_colormap
