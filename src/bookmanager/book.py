@@ -68,9 +68,9 @@ class Book:
             {
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
-                "extracted": False,
                 "status": "normal",
                 "progress": (0.0, 1.0, -1),
+                "is_ready": False,
             }
         )
         with open(yml_path, "w+", encoding="utf-8") as stream:
@@ -107,10 +107,8 @@ class Book:
         but we will not ensure it.
 
         """
-        if not self.get_metadata()["extracted"]:
+        if not (self.dirpath / "source").exists():
             read_ebook(self.dirpath)
-            self.update_metadata(extracted=True)
-            self.save_metadata()
 
     def picklize(self) -> None:
         """
@@ -118,7 +116,7 @@ class Book:
         but we will not ensure it.
 
         """
-        if (pk := self.dirpath / "0.pickle").exists():
+        if (pk := self.dirpath / ".pickle").exists():
             return
         src, st = self.dirpath / "source", self.setting
         to_pickle = []
@@ -128,11 +126,13 @@ class Book:
             to_pickle.append(list(it))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
+        self.update_metadata(is_ready=True)
+        self.save_metadata()
 
     def get_content(self) -> list[list["RawParagraph"]]:
         """Get content from source."""
         if self.__content is None:
-            with (self.dirpath / "0.pickle").open("rb") as f:
+            with (self.dirpath / ".pickle").open("rb") as f:
                 self.__content = pickle.load(f)
             return self.__content
         return self.__content

@@ -47,11 +47,11 @@ class MetaData(TypedDict):
     uploader: NotRequired[Optional[str]]
     uploadtime: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
-    extracted: NotRequired[Optional[bool]]
     progress: NotRequired[
         Optional[tuple[float, float, float]]
     ]  # (pagenow, pagemax, chapter)
     content: NotRequired[Optional[list[str]]]
+    is_ready: NotRequired[Optional[bool]]
 
 
 if TYPE_CHECKING:
