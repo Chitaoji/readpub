@@ -7,6 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from dataclasses import dataclass
+from itertools import repeat
 from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
@@ -33,10 +34,19 @@ class BookViewer:
 
     def __post_init__(self) -> None:
         self.pagemax = self.book.get_metadata()["pagemax"]
+        self.bottom = self.book.textmaster.fill(
+            repeat("="), self.book.setting.page_width
+        )[0]
         self.__renderer = view(self.book.turn_to_page(self.book.pagenow))
 
     def __repr__(self) -> str:
-        return repr(self.__renderer)
+        return (
+            f"{self.__renderer}\n\n{self.bottom}\n{self.book.pagenow}/{self.pagemax}"
+            f" {self.book.pagenow/self.pagemax:.2%}"
+        )
+
+    def __del__(self) -> None:
+        self.save()
 
     def turn_to_page(self, n: int) -> Self:
         """Turn to page n."""
@@ -55,8 +65,8 @@ class BookViewer:
         """Turn to the previous page"""
         return self.turn_to_page(self.book.pagenow - 1)
 
-    def close(self) -> None:
-        """Close the book."""
+    def save(self) -> None:
+        """Save reading progress."""
         self.book.save_metadata()
 
 

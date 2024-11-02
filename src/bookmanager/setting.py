@@ -22,7 +22,7 @@ class ReadingSetting:
     fontpath: Path = field(default_factory=lambda: Path("msyh"))
     fontsize: float = 21.0
     page_width: float = 800.0
-    page_height: float = 1200.0
+    page_height: float = 1000.0
     hline: float = 40.0
     himage: float = 1200.0
     htitle: Mapping["TitleLevel", float] = field(
