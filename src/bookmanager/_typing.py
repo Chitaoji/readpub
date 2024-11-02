@@ -33,7 +33,9 @@ MetaDataKey = Literal[
     "uploader",
     "uploadtime",
     "status",
-    "progress",
+    "pagenow",
+    "pagemax",
+    "is_ready",
 ]
 
 
@@ -47,10 +49,8 @@ class MetaData(TypedDict):
     uploader: NotRequired[Optional[str]]
     uploadtime: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
-    progress: NotRequired[
-        Optional[tuple[float, float, float]]
-    ]  # (pagenow, pagemax, chapter)
-    content: NotRequired[Optional[list[str]]]
+    pagenow: NotRequired[Optional[float]]
+    pagemax: NotRequired[Optional[float]]
     is_ready: NotRequired[Optional[bool]]
 
 

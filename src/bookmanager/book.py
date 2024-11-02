@@ -21,7 +21,7 @@ from .setting import ReadingSetting
 from .textmaster import BookIndex, TextMaster
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, MetaData, Paragraph
+    from ._typing import Chapter, MetaData, Page, Paragraph
     from .core import BookManager
 
 __all__ = []
@@ -44,7 +44,7 @@ class Book:
         self.manager = manager
         self.setting = ReadingSetting()
         self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
-        self.__page_now = -1
+        self.pagenow = -1
         self.__content: list[list["Paragraph"]] | None = None
         self.__typeset: "Chapter" | None = None
         self.__metadata: MetaData | None = None
@@ -69,18 +69,19 @@ class Book:
                 "uploader": self.manager.username,
                 "uploadtime": str(datetime.datetime.now()),
                 "status": "normal",
-                "progress": (0.0, 1.0, -1),
+                "pagenow": 0,
+                "pagemax": 1,
                 "is_ready": False,
             }
         )
-        with open(yml_path, "w+", encoding="utf-8") as stream:
+        with open(yml_path, "w", encoding="utf-8") as stream:
             yaml.safe_dump(metadata, stream)
         self.__metadata = metadata
         return self.__metadata
 
     def save_metadata(self) -> None:
         """Save the metadata."""
-        with open(self.dirpath / "metadata.yml", "w+", encoding="utf-8") as stream:
+        with open(self.dirpath / "metadata.yml", "w", encoding="utf-8") as stream:
             yaml.safe_dump(self.__metadata, stream)
 
     def update_metadata(self, **kwargs: Unpack["MetaData"]) -> None:
@@ -121,7 +122,7 @@ class Book:
         srcpath = self.dirpath / "source"
         idx = BookIndex()
         to_pickle = [[idx]]
-        for ref in self.get_metadata()["content"]:
+        for ref in yaml.safe_load((self.dirpath / "content.yml").read_text()):
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
             to_pickle.append(list(TextMaster.read_from_bs(bs, srcpath, idx)))
         with pk.open("wb") as f:
@@ -152,6 +153,7 @@ class Book:
                 )
                 _typeset.append(chapter)
             self.__typeset = sum(_typeset, [])
+            self.update_metadata(pagemax=len(self.__typeset))
         return self.__typeset
 
     def page_rawcount(self) -> int:
@@ -171,13 +173,14 @@ class Book:
     def open(self) -> None:
         """Open the book."""
         if self.manager.opened_book:
-            if self.__page_now == -1:
+            if self.pagenow == -1:
                 raise RuntimeError(
                     f"can't open book {self.bookid!r} because another book is "
                     f"already opened: {self.manager.opened_book!r}"
                 )
             raise RuntimeError(f"book is already opened: {self.bookid!r}")
         self.manager.opened_book = self.bookid
+        self.pagenow = self.get_metadata()["pagenow"]
 
     def close(self) -> None:
         """
@@ -185,31 +188,33 @@ class Book:
         is closed.
 
         """
-        self.__page_now = -1
+        self.pagenow = -1
         self.manager.opened_book = ""
 
-    def turn_to_page(self, n: int) -> str:
+    def turn_to_page(self, n: int) -> "Page":
         """Turn to page n."""
-        if self.__page_now < 0:
+        if self.pagenow < 0:
             raise RuntimeError("book is closed, run '.open()' first.")
-        self.__page_now = n
+        self.pagenow = n
+        self.update_metadata(pagenow=n)
+        return self.typeset()[n - 1]
 
-    def next_page(self) -> str:
+    def next_page(self) -> "Page":
         """Turn to the next page"""
-        return self.turn_to_page(self.__page_now + 1)
+        return self.turn_to_page(self.pagenow + 1)
 
-    def prev_page(self) -> str:
+    def prev_page(self) -> "Page":
         """Turn to the previous page"""
-        return self.turn_to_page(self.__page_now - 1)
+        return self.turn_to_page(self.pagenow - 1)
 
     @property
     def is_opened(self) -> bool:
         """Indicates whether the book is already opened."""
-        return self.__page_now > -1
+        return self.pagenow > -1
 
     @property
-    def cache(self) -> dict[str, bytes]:
-        """Dictionary of book files."""
+    def cache(self) -> list[list["Paragraph"]]:
+        """Book files."""
         return self.__content
 
 
@@ -266,12 +271,13 @@ def _read_epub_metadata(path: Path) -> "MetaData":
             cover_path = _save_cover(z, cover_href, path)
         else:
             raise EBookFormatError(f"unsupported epub format: {path}")
+    with open(path.parent / "content.yml", "w", encoding="utf-8") as stream:
+        yaml.safe_dump(content, stream)
     return {
         "title": path.stem,
         "author": author,
         "filepath": path.as_posix(),
         "coverpath": cover_path.as_posix(),
-        "content": content,
     }
 
 

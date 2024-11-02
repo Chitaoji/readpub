@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Self
 
 if TYPE_CHECKING:
     from ._typing import Book, Chapter, Page, Paragraph
@@ -31,17 +31,33 @@ class BookViewer:
 
     book: "Book"
 
-    def turn_to_page(self, n: int) -> TextRenderer:
+    def __post_init__(self) -> None:
+        self.pagemax = self.book.get_metadata()["pagemax"]
+        self.__renderer = view(self.book.turn_to_page(self.book.pagenow))
+
+    def __repr__(self) -> str:
+        return repr(self.__renderer)
+
+    def turn_to_page(self, n: int) -> Self:
         """Turn to page n."""
-        return TextRenderer(self.book.turn_to_page(n))
+        if n < 1:
+            n = 1
+        elif n > self.pagemax:
+            n = self.pagemax
+        self.__renderer = view(self.book.turn_to_page(n))
+        return self
 
-    def next_page(self) -> TextRenderer:
+    def next_page(self) -> Self:
         """Turn to the next page"""
-        return TextRenderer(self.book.next_page())
+        return self.turn_to_page(self.book.pagenow + 1)
 
-    def prev_page(self) -> TextRenderer:
+    def prev_page(self) -> Self:
         """Turn to the previous page"""
-        return TextRenderer(self.book.prev_page())
+        return self.turn_to_page(self.book.pagenow - 1)
+
+    def close(self) -> None:
+        """Close the book."""
+        self.book.save_metadata()
 
 
 def view(content: "Chapter | Page | Paragraph | str") -> TextRenderer:

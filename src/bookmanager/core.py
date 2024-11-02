@@ -154,9 +154,11 @@ class BookManager:
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
         del self.books[bookid]
 
-    def view_book(self, bookid: str) -> BookViewer:
-        """View a book in the console."""
-        return BookViewer(self.books[bookid])
+    def view_book(self, n: int) -> BookViewer:
+        """View the n-th book in the bookshelf (in console mode)."""
+        book = self[n]
+        book.open()
+        return BookViewer(book)
 
     def get_new_bookid(self, maxruns: int = 20) -> str:
         """
