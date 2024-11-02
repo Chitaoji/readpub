@@ -89,6 +89,7 @@ class BookCard(MDCard):
     progress: str = StringProperty()
     status: "StatusHint" = StringProperty()
     is_ready: bool = BooleanProperty()
+    truly_disabled: bool = BooleanProperty()
 
     def check_border(self) -> None:
         """
@@ -105,6 +106,11 @@ class BookCard(MDCard):
                 0, self.parent.parent.pos[1] + self.parent.parent.height
             )[1]
         )
+
+    def set_properties_widget(self) -> None:
+        """Fired `on_release/on_press/on_enter/on_leave` events."""
+        if not self.truly_disabled:
+            super().set_properties_widget()
 
 
 class CoverDropdownTextItem(BaseDropdownItem):
@@ -139,7 +145,6 @@ class MainApp(MDApp):
     fontmanager: KivyFont
     current_sort_rule: list[str]
     current_category: str
-    nav_width: int = 0
     has_filemanager: bool = False
     prev_snackbar: MDSnackbar | None = None
     category_status: str
@@ -192,7 +197,9 @@ class MainApp(MDApp):
 
     def on_reader_touch_down(self, func, touch):
         """On mouse down."""
-        if Window.height * 0.2 < touch.y < Window.height * 0.8:
+        if Window.height * 0.2 < touch.y < Window.height * 0.8 and dp(
+            480
+        ) < touch.x < Window.width - dp(480):
             if self.root.ids.reader_toolbar.disabled:
                 asynckivy.start(self.activate_reader_toolbar())
             else:
@@ -341,6 +348,21 @@ class MainApp(MDApp):
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
+
+    def check_cards(self) -> None:
+        """Check the bookcards."""
+        for card in self.root.ids.grid.children:
+            card.check_border()
+
+    def truly_disable_cards(self) -> None:
+        """Disable the bookcards."""
+        for card in self.root.ids.grid.children:
+            card.truly_disabled = True
+
+    def truly_enable_cards(self) -> None:
+        """Enable the bookcards."""
+        for card in self.root.ids.grid.children:
+            card.truly_disabled = False
 
     async def asynctest(self, time: int, duration: Optional[float] = None):
         """Test the async functionality."""
@@ -672,9 +694,6 @@ class MainApp(MDApp):
     def open_nav_drawer(self, name: str) -> None:
         """Open the nav-drawer."""
         nav_drawer = getattr(self.root.ids, name)
-        if self.nav_width == 0:
-            self.nav_width = nav_drawer.width * 1.5
-        nav_drawer.width = self.nav_width
         nav_drawer.set_state("toggle")
 
     def show_alert_dialog(self, button, menu):
@@ -740,11 +759,6 @@ class MainApp(MDApp):
             # -------------------------------------------------------------
         )
         dialog.open()
-
-    def check_cards(self) -> None:
-        """Check the bookcards."""
-        for card in self.root.ids.grid.children:
-            card.check_border()
 
     def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
         # pylint: disable=protected-access

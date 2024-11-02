@@ -123,6 +123,7 @@
     padding: "4dp"
     size_hint: None, None
     size: "480dp", "240dp"
+    truly_disabled: False
     on_release: 
         app.root.ids.reader_toolbar.opacity = 0
         app.root.ids.reader_toolbar.disabled = True
@@ -256,7 +257,7 @@ MDScreenManager:
                     theme_font_size: "Custom"
                     font_size: sp(48)
                     size: search_field.height, search_field.height
-                    on_release: app.open_nav_drawer(name="nav_setting")
+                    on_release: nav_setting.set_state("toggle")
 
                 MDTextField:
                     id: search_field
@@ -271,11 +272,11 @@ MDScreenManager:
 
                     MDTextFieldHintText:
                         text: "搜索书架"
-                        font_style: "BookHint"
+                        font_style: "Hint"
 
                     MDTextFieldHelperText:
                         text: "请输入书籍名或作者名..."
-                        font_style: "BookHint"
+                        font_style: "Hint"
 
                 MDIconButton:
                     icon: "plus"
@@ -283,10 +284,11 @@ MDScreenManager:
                     font_size: sp(48)
                     size: search_field.height, search_field.height
                     on_release: app.open_plus_menu(self)
+                        
 
             MDScrollView:
                 do_scroll_x: False
-                do_scroll_y: True
+                do_scroll_y: nav_setting.state == "close"
                 scroll_x: .5
                 scroll_type: ["content", "bars"]
                 scroll_wheel_distance: 80
@@ -311,11 +313,14 @@ MDScreenManager:
                 drawer_type: "modal"
                 radius: app.get_radius(root=root, nav="left")[0]
                 enable_swiping: False
+                width: max(dp(480), Window.height * 0.2)
+                on_open: app.truly_disable_cards()
+                on_close: app.truly_enable_cards()
 
                 MDBoxLayout:
                     adaptive_height: True
                     orientation: "vertical"
-                    pos_hint: {"top": 1, "left":1}
+                    pos_hint: {"top": 1, "left": 1}
                     spacing: "20dp"
                     
                     MDNavigationDrawerLabel:
@@ -374,6 +379,23 @@ MDScreenManager:
                         on_release: app.reset_theme()
                         adaptive_size: True
                         pos_hint: {"center_x": .5}
+                        on_release: 
+                            Window.fullscreen = "auto" if \
+                            Window.fullscreen is False else False
+
+                        MDButtonIcon:
+                            icon: "keyboard-f11"
+
+                        MDButtonText:
+                            text: 
+                                "全屏模式" if Window.fullscreen is False else "退出全屏"
+                            font_style: "NavText"
+                            role: "medium"
+
+                    MDButton:
+                        on_release: app.reset_theme()
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5}
 
                         MDButtonIcon:
                             icon: "restore"
@@ -393,6 +415,9 @@ MDScreenManager:
                 radius: app.get_radius(root=root, nav="right")[0]
                 anchor: "right"
                 enable_swiping: False
+                width: max(dp(480), Window.height * 0.2)
+                on_open: app.truly_disable_cards()
+                on_close: app.truly_enable_cards()
 
                 MDRelativeLayout:
 
@@ -402,14 +427,24 @@ MDScreenManager:
 
         MDButton:
             pos_hint: {"center_x": .5}
-            y: "36dp"
+            y: dp(120)
+            opacity: reader_toolbar.opacity
+            disabled: reader_toolbar.disabled
+            adaptive_size: True
+            padding: dp(12)
+
             on_release:
                 app.check_cards()
                 root.transition = FadeTransition()
                 root.current = "MainScreen"
+            MDButtonIcon:
+                icon: "restore"
 
             MDButtonText:
-                text: "Move To Main Screen"
+                text: "回到首页"
+                font_style: "BigHint"
+                role: "small"
+
                 
         MDBoxLayout:
             id: reader_toolbar
@@ -450,18 +485,18 @@ MDScreenManager:
 
                 MDTextFieldHintText:
                     text: "搜索本书"
-                    font_style: "BookHint"
+                    font_style: "Hint"
 
                 MDTextFieldHelperText:
                     text: "请输入搜索内容..."
-                    font_style: "BookHint"
+                    font_style: "Hint"
 
             MDIconButton:
                 icon: "format-text-variant"
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: reader_search_field.height, reader_search_field.height
-                on_release: app.open_nav_drawer(name="nav_reader_setting")
+                on_release: nav_reader_setting.set_state("toggle")
 
             MDIconButton:
                 icon: "information-variant"
@@ -478,6 +513,7 @@ MDScreenManager:
                 drawer_type: "modal"
                 radius: app.get_radius(root=root, nav="left")[0]
                 enable_swiping: False
+                width: max(dp(480), Window.height * 0.2)
 
                 MDBoxLayout:
                     adaptive_height: True
@@ -536,6 +572,23 @@ MDScreenManager:
 
                     MDNavigationDrawerDivider:
                         padding: 0, dp(72), 0, 0
+
+                    MDButton:
+                        on_release: app.reset_theme()
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5}
+                        on_release: 
+                            Window.fullscreen = "auto" if \
+                            Window.fullscreen is False else False
+
+                        MDButtonIcon:
+                            icon: "keyboard-f11"
+
+                        MDButtonText:
+                            text: 
+                                "全屏模式" if Window.fullscreen is False else "退出全屏"
+                            font_style: "NavText"
+                            role: "medium"
 
                     MDButton:
                         on_release: app.reset_theme()

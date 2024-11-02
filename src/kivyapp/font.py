@@ -67,7 +67,7 @@ class KivyFont:
                     "font-size": sp(16),
                 },
             },
-            "BookHint": {
+            "Hint": {
                 "large": {
                     "line-height": 1.28,
                     "font-name": "msyh",
@@ -82,6 +82,23 @@ class KivyFont:
                     "line-height": 1.2,
                     "font-name": "msyh",
                     "font-size": sp(13),
+                },
+            },
+            "BigHint": {
+                "large": {
+                    "line-height": 1.36,
+                    "font-name": "msyh",
+                    "font-size": sp(27),
+                },
+                "medium": {
+                    "line-height": 1.32,
+                    "font-name": "msyh",
+                    "font-size": sp(24),
+                },
+                "small": {
+                    "line-height": 1.30,
+                    "font-name": "msyh",
+                    "font-size": sp(21),
                 },
             },
             "NavText": {
