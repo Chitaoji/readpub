@@ -170,7 +170,7 @@ class TextMaster:
         Parameters
         ----------
         text : Iterator[str]
-            Iterator of text.
+            Iterator of single characters.
         length : float
             Specifies the maximum length of text (in pixels).
 
@@ -347,6 +347,10 @@ class TextMaster:
         if npage == 1 and height_remain == height:
             return 0
         return npage
+
+    def getlinewidth(self, line: str) -> int:
+        """Get the line width."""
+        return TextMesurePlain(self.font, self.size).getlength(line)
 
     @staticmethod
     def read_from_bs(
