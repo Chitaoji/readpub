@@ -426,11 +426,11 @@ MDScreenManager:
                     root.current = "MainScreen"
 
             MDIconButton:
-                icon: "format-text-variant"
+                icon: "table-of-contents"
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: reading_search_field.height, reading_search_field.height
-                on_release: app.open_nav_drawer(name="nav_reading_setting")
+
             MDTextField:
                 id: reading_search_field
                 mode: "outlined"
@@ -451,11 +451,12 @@ MDScreenManager:
                     font_style: "BookHint"
 
             MDIconButton:
-                icon: "table-of-contents"
+                icon: "format-text-variant"
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: reading_search_field.height, reading_search_field.height
-
+                on_release: app.open_nav_drawer(name="nav_reading_setting")
+                
             MDIconButton:
                 icon: "information-variant"
                 theme_font_size: "Custom"
