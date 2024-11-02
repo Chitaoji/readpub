@@ -73,6 +73,8 @@ Window.maximize()
 
 
 class ColorCard(BoxLayout):
+    """Implements a material card."""
+
     text = StringProperty()
     bg_color = ColorProperty()
 
@@ -183,6 +185,28 @@ class MainApp(MDApp):
         self.bookmanager = m
         self.init_color_buttons()
 
+        func = self.root.get_screen("Reader").on_touch_down
+        self.root.get_screen("Reader").on_touch_down = (
+            lambda x: self.on_reader_touch_down(func, x)
+        )
+
+    def on_reader_touch_down(self, func, touch):
+        """On mouse down."""
+        if Window.height * 0.2 < touch.y < Window.height * 0.8:
+            if self.root.ids.reader_toolbar.disabled:
+                asynckivy.start(self.activate_reader_toolbar())
+            else:
+                self.root.ids.reader_toolbar.disabled = True
+                self.root.ids.reader_toolbar.opacity = 0
+        func(touch)
+
+    async def activate_reader_toolbar(self) -> None:
+        """Activate reader toolbar."""
+        self.root.ids.reader_toolbar.disabled = False
+        await asynckivy.sleep(0.15)
+        if not self.root.ids.reader_toolbar.disabled:
+            self.root.ids.reader_toolbar.opacity = 1
+
     def open_settings(self, *_) -> None: ...
     def init_color_buttons(self):
         """Initialize the clor buttons."""
@@ -197,7 +221,7 @@ class MainApp(MDApp):
             "olive",
         ]:
             self.root.ids.palette_pre_grid.add_widget(ColorButton(color=color))
-            self.root.ids.reading_palette_pre_grid.add_widget(ColorButton(color=color))
+            self.root.ids.reader_palette_pre_grid.add_widget(ColorButton(color=color))
         self.theme_cls.bind(
             primary_palette=lambda _, c: setattr(
                 self.root.ids.palette_now_button, "md_bg_color", c.lower()
