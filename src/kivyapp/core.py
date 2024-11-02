@@ -196,12 +196,11 @@ class MainApp(MDApp):
             "purple",
             "olive",
         ]:
-            self.root.ids.palette_grid_short.add_widget(ColorButton(color=color))
+            self.root.ids.palette_pre_grid.add_widget(ColorButton(color=color))
+            self.root.ids.reading_palette_pre_grid.add_widget(ColorButton(color=color))
         self.theme_cls.bind(
             primary_palette=lambda _, c: setattr(
-                self.root.ids.palette_now_button,
-                "md_bg_color",
-                c.lower(),
+                self.root.ids.palette_now_button, "md_bg_color", c.lower()
             )
         )
 
@@ -717,6 +716,11 @@ class MainApp(MDApp):
             # -------------------------------------------------------------
         )
         dialog.open()
+
+    def check_cards(self) -> None:
+        """Check the bookcards."""
+        for card in self.root.ids.grid.children:
+            card.check_border()
 
     def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
         # pylint: disable=protected-access
