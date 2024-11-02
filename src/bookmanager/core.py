@@ -157,6 +157,8 @@ class BookManager:
     def view_book(self, n: int) -> BookViewer:
         """View the n-th book in the bookshelf (in console mode)."""
         book = self[n]
+        book.get_metadata()
+        book.typeset()
         book.open()
         return BookViewer(book)
 
