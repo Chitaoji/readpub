@@ -8,6 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 from dataclasses import dataclass, field
 from itertools import chain
+from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional
 
@@ -89,7 +90,7 @@ class TextMesureMixed(TextMesureCached):
     """
 
     def getlength(self, text: str) -> float:
-        if len(text) == 1 and "一" <= text <= "鿿":  # U+4E00 ~ U+9FFF
+        if "一" <= text <= "鿿":  # U+4E00 ~ U+9FFF
             return self.size
         if text in self.len_cache:
             return self.len_cache[text]
@@ -228,6 +229,7 @@ class TextMaster:
         height: float,
         hline: float,
         gap: float,
+        startpage: int = 1,
     ) -> "Chapter":
         """
         Divide the iterator of paragraphs into pages according to the
@@ -246,6 +248,8 @@ class TextMaster:
             Line-height in pixels.
         gap : float
             Gap between paragraphs in pixels.
+        startpage : int, optional
+            Starting page number, by default 1.
 
         Returns
         -------
@@ -264,19 +268,22 @@ class TextMaster:
                 f"line-height is larger than page-height: {hline} > {height}"
             )
         chapter: list[list["para[str]"]] = [[]]
-        height_remain = height
+        npage, height_remain = startpage, height
         for para in para_iter:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
                     chapter[-1].append(para)
                     height_remain = r - gap
                 else:
+                    npage += 1
                     chapter.append([para])
                     height_remain = height - para.height - gap
+                para.npage = npage
             else:
                 divided = self.divide_into_lines(para, width)
                 while len(divided) > 0:
                     if height_remain < hline:
+                        npage += 1
                         chapter.append([])
                         height_remain = height
                     else:
@@ -284,16 +291,17 @@ class TextMaster:
                         chapter[-1].append(divided[:nline])
                         divided = divided[nline:]
                         height_remain -= nline * hline + gap
-        return chapter
+        if npage == startpage and height_remain == height:
+            return [], startpage - 1
+        return chapter, npage
 
-    def pagecount(
+    def page_rawcount(
         self,
         para_iter: Iterator["str | FakeParagraph"],
         width: float,
         height: float,
         hline: float,
         gap: float,
-        startpage: int,
     ) -> int:
         """
         A simplified version of `divide_into_pages()` which only
@@ -303,13 +311,10 @@ class TextMaster:
         ----------
         See `.divide_into_pages()`.
 
-        startpage : int
-            The starting page number.
-
         Returns
         -------
         int
-            Maximum number of pages.
+            Total number of pages.
 
         Raises
         ------
@@ -321,7 +326,7 @@ class TextMaster:
             raise ValueError(
                 f"line-height is larger than page-height: {hline} > {height}"
             )
-        npage, height_remain = startpage, height
+        npage, height_remain = 1, height
         for para in para_iter:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
@@ -329,16 +334,15 @@ class TextMaster:
                 else:
                     npage += 1
                     height_remain = height - para.height - gap
-                para.npage = npage
             else:
-                divided = self.divide_into_lines(para, width)
-                while len(divided) > 0:
+                ndivided = ceil(len(para) / (width / self.measure.size))
+                while ndivided > 0:
                     if height_remain < hline:
                         npage += 1
                         height_remain = height
                     else:
-                        nline = min(int(height_remain // hline), len(divided))
-                        divided = divided[nline:]
+                        nline = min(int(height_remain // hline), ndivided)
+                        ndivided -= nline
                         height_remain -= nline * hline + gap
         return npage
 
@@ -410,7 +414,8 @@ class BookIndex(FakeParagraph):
         string = self.title.text
         if self.content:
             string += "\n" + "\n".join(
-                "- " + x.plain_text().replace("\n", "\n  ") for x in self.content
+                f"- {x.plain_text().replace("\n", "\n  ")}, {x.title.npage}"
+                for x in self.content
             )
         return string
 

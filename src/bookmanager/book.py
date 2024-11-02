@@ -42,11 +42,11 @@ class Book:
         self.dirpath = dirpath
         self.bookid = dirpath.name
         self.manager = manager
-        self.pagemax = 0
         self.setting = ReadingSetting()
         self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
         self.__page_now = -1
         self.__content: list[list["Paragraph"]] | None = None
+        self.__typeset: "Chapter" | None = None
         self.__metadata: MetaData | None = None
 
     def __repr__(self) -> str:
@@ -134,25 +134,35 @@ class Book:
         if self.__content is None:
             with (self.dirpath / ".pickle").open("rb") as f:
                 self.__content = pickle.load(f)
-            return self.__content
         return self.__content
 
-    def typeset(self, contentid: int) -> "Chapter":
+    def typeset(self) -> "Chapter":
         """Typeset the content."""
-        paras, st = self.get_content()[contentid], self.setting
-        return self.textmaster.divide_into_pages(
-            paras, st.page_width, st.page_height, st.hline, st.gap
-        )
+        if self.__typeset is None:
+            _typeset: list["Chapter"] = []
+            st, npage = self.setting, 0
+            for contentid in range(1, len(self.get_content())):
+                chapter, npage = self.textmaster.divide_into_pages(
+                    self.get_content()[contentid],
+                    st.page_width,
+                    st.page_height,
+                    st.hline,
+                    st.gap,
+                    startpage=npage + 1,
+                )
+                _typeset.append(chapter)
+            self.__typeset = sum(_typeset, [])
+        return self.__typeset
 
-    def pagecount(self) -> int:
+    def page_rawcount(self) -> int:
         """Count the pages."""
-        npage = 0
+        n = 0
         for content in self.get_content()[1:]:
             st = self.setting
-            npage = self.textmaster.pagecount(
-                content, st.page_width, st.page_height, st.hline, st.gap, npage + 1
+            n += self.textmaster.page_rawcount(
+                content, st.page_width, st.page_height, st.hline, st.gap
             )
-        return npage
+        return n
 
     def release(self) -> None:
         """Unload the book and release memory."""
