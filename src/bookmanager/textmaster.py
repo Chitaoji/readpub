@@ -326,7 +326,7 @@ class TextMaster:
             raise ValueError(
                 f"line-height is larger than page-height: {hline} > {height}"
             )
-        npage, height_remain, ncontains = 1, height, int(width // self.measure.size)
+        npage, height_remain, nchar = 1, height, int(width // self.measure.size)
         for para in para_iter:
             if isinstance(para, FakeParagraph):
                 if (r := height_remain - para.height) >= 0:
@@ -335,7 +335,7 @@ class TextMaster:
                     npage += 1
                     height_remain = height - para.height - gap
             else:
-                ndivided = ceil(len(para) / ncontains)
+                ndivided = ceil(len(para) / nchar)
                 while ndivided > 0:
                     if height_remain < hline:
                         npage += 1

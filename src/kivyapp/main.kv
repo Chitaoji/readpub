@@ -1,6 +1,16 @@
 #:kivy 2.3.0
 #:import sp kivy.metrics.sp
 #:import dp kivy.metrics.dp
+#:import NoTransition kivy.uix.screenmanager.NoTransition
+#:import SlideTransition kivy.uix.screenmanager.SlideTransition
+#:import CardTransition  kivy.uix.screenmanager.CardTransition
+#:import SwapTransition kivy.uix.screenmanager.SwapTransition
+#:import FadeTransition kivy.uix.screenmanager.FadeTransition
+#:import WipeTransition kivy.uix.screenmanager.WipeTransition
+#:import FallOutTransition kivy.uix.screenmanager.FallOutTransition
+#:import RiseInTransition kivy.uix.screenmanager.RiseInTransition
+#:import MDSlideTransition kivymd.uix.transition.transition.MDSlideTransition
+#:import MDSharedAxisTransition kivymd.uix.transition.transition.MDSharedAxisTransition
 
 <FileImportManagerItem>
     icon: "folder"
@@ -113,6 +123,9 @@
     padding: "4dp"
     size_hint: None, None
     size: "480dp", "240dp"
+    on_release: 
+        app.root.transition = WipeTransition()
+        app.root.current = "Viewer"
 
     MDRelativeLayout:
         
@@ -210,6 +223,7 @@
             if root.divider else \
             (0, 0, 0, 0)
 
+
 <ColorButton>:
     size: dp(30), dp(30)
     theme_bg_color: "Custom"
@@ -217,14 +231,182 @@
     opacity: .5
     on_release: app.switch_theme_palette(self.color.capitalize())
 
-MDScreen:
 
-    md_bg_color: self.theme_cls.backgroundColor
+MDScreenManager:
 
-    MDBoxLayout:
-        orientation: "vertical"
-        spacing: "0dp"
-        
+    MDScreen:
+        name: "MainScreen"
+        md_bg_color: self.theme_cls.backgroundColor
+
+        MDBoxLayout:
+            orientation: "vertical"
+            spacing: "0dp"
+            
+            MDBoxLayout:
+                adaptive_size: True
+                padding: "0dp", "70dp", "0dp", "24dp"
+                spacing: "20dp"
+                pos_hint: {"center_x":.5, "top":1}
+
+                MDIconButton:
+                    icon: "menu"
+                    theme_font_size: "Custom"
+                    font_size: sp(48)
+                    size: search_field.height, search_field.height
+                    on_release: app.open_nav_drawer(name="nav_setting")
+
+                MDTextField:
+                    id: search_field
+                    mode: "outlined"
+                    size_hint_x: None
+                    width: "1380dp"
+                    height: "240dp"
+                    radius: 20
+
+                    MDTextFieldLeadingIcon:
+                        icon: "magnify"
+
+                    MDTextFieldHintText:
+                        text: "搜索书架"
+                        font_style: "BookHint"
+
+                    MDTextFieldHelperText:
+                        text: "请输入书籍名或作者名..."
+                        font_style: "BookHint"
+
+                MDIconButton:
+                    icon: "plus"
+                    theme_font_size: "Custom"
+                    font_size: sp(48)
+                    size: search_field.height, search_field.height
+                    on_release: app.open_plus_menu(self)
+
+            MDScrollView:
+                do_scroll_x: False
+                do_scroll_y: True
+                scroll_x: .5
+                scroll_type: ["content", "bars"]
+                scroll_wheel_distance: 80
+                bar_width: "12dp"
+                bar_inactive_color: root.theme_cls.backgroundColor
+                on_scroll_start: [x.check_border() for x in self.children[0].children]
+                on_scroll_stop: [x.check_border() for x in self.children[0].children]
+
+                MDGridLayout:
+                    id: grid
+                    cols: 3
+                    adaptive_size: True
+                    spacing: ["24dp", "24dp"]
+                    padding: "24dp"
+
+        MDNavigationLayout:
+
+            MDScreenManager:
+
+            MDNavigationDrawer:
+                id: nav_setting
+                drawer_type: "modal"
+                radius: app.get_radius(root=root, nav="left")[0]
+                enable_swiping: False
+
+                MDBoxLayout:
+                    adaptive_height: True
+                    orientation: "vertical"
+                    pos_hint: {"top": 1, "left":1}
+                    spacing: "20dp"
+                    
+                    MDNavigationDrawerLabel:
+                        text: "设置"
+                        font_style: "NavText"
+                        role: "large"
+
+                    MDButton:
+                        on_release: app.switch_theme_style()
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5}
+
+                        MDButtonIcon:
+                            icon: "theme-light-dark"
+
+                        MDButtonText:
+                            text: 
+                                "夜间模式" if app.theme_cls.theme_style == "Light" \
+                                else "白天模式"
+                            font_style: "NavText"
+                            role: "medium"
+
+                    MDGridLayout:
+                        rows: 1
+                        padding: 0, dp(5), 0, 0
+                        adaptive_width: True
+                        spacing: dp(10), 0
+                        pos_hint: {"center_x": .5}
+
+                        MDNavigationDrawerLabel:
+                            text: "主题颜色"
+                            font_style: "NavText"
+                            role: "medium"
+                            adaptive_width: True
+                            padding: 0, 0, 0, dp(4)
+
+                        MDButton:
+                            id: palette_now_button
+                            size: dp(30), dp(30)
+                            theme_bg_color: "Custom"
+                            md_bg_color: app.theme_cls.primary_palette.lower()
+                            opacity: .5
+
+                    MDGridLayout:
+                        id: palette_grid_short
+                        rows: 1
+                        adaptive_width: True
+                        padding: 0, dp(40), 0, 0
+                        spacing: dp(10), 0
+                        pos_hint: {"center_x": .5}
+
+                    MDNavigationDrawerDivider:
+                        padding: 0, dp(72), 0, 0
+
+                    MDButton:
+                        on_release: app.reset_theme()
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5}
+
+                        MDButtonIcon:
+                            icon: "restore"
+
+                        MDButtonText:
+                            text: "恢复默认"
+                            font_style: "NavText"
+                            role: "medium"
+
+        MDNavigationLayout:
+
+            MDScreenManager:
+
+            MDNavigationDrawer:
+                id: nav_upload
+                drawer_type: "modal"
+                radius: app.get_radius(root=root, nav="right")[0]
+                anchor: "right"
+                enable_swiping: False
+
+                MDRelativeLayout:
+
+    MDScreen:
+        name: "Viewer"
+        md_bg_color: self.theme_cls.backgroundColor
+
+        MDButton:
+            pos_hint: {"center_x": .5}
+            y: "36dp"
+            on_release:
+                root.transition = FadeTransition()
+                root.current = "MainScreen"
+
+            MDButtonText:
+                text: "Move To Main Screen"
+                
         MDBoxLayout:
             adaptive_size: True
             padding: "0dp", "70dp", "0dp", "24dp"
@@ -263,119 +445,3 @@ MDScreen:
                 font_size: sp(48)
                 size: search_field.height, search_field.height
                 on_release: app.open_plus_menu(self)
-
-        MDScrollView:
-            do_scroll_x: False
-            do_scroll_y: True
-            scroll_x: .5
-            scroll_type: ["content", "bars"]
-            scroll_wheel_distance: 80
-            bar_width: "12dp"
-            bar_inactive_color: root.theme_cls.backgroundColor
-            on_scroll_start: [x.check_border() for x in self.children[0].children]
-            on_scroll_stop: [x.check_border() for x in self.children[0].children]
-
-            MDGridLayout:
-                id: grid
-                cols: 3
-                adaptive_size: True
-                spacing: ["24dp", "24dp"]
-                padding: "24dp"
-
-    MDNavigationLayout:
-
-        MDScreenManager:
-
-        MDNavigationDrawer:
-            id: nav_setting
-            drawer_type: "modal"
-            radius: app.get_radius(root=root, nav="left")[0]
-            enable_swiping: False
-
-            MDBoxLayout:
-                adaptive_height: True
-                orientation: "vertical"
-                pos_hint: {"top": 1, "left":1}
-                spacing: "20dp"
-                
-                MDNavigationDrawerLabel:
-                    text: "设置"
-                    font_style: "NavText"
-                    role: "large"
-
-                MDButton:
-                    on_release: app.switch_theme_style()
-                    adaptive_size: True
-                    pos_hint: {"center_x": .5}
-
-                    MDButtonIcon:
-                        icon: "theme-light-dark"
-
-                    MDButtonText:
-                        text: 
-                            "夜间模式" if app.theme_cls.theme_style == "Light" \
-                            else "白天模式"
-                        font_style: "NavText"
-                        role: "medium"
-
-                MDGridLayout:
-                    rows: 1
-                    padding: 0, dp(5), 0, 0
-                    adaptive_width: True
-                    spacing: dp(10), 0
-                    pos_hint: {"center_x": .5}
-
-                    MDNavigationDrawerLabel:
-                        text: "主题颜色"
-                        font_style: "NavText"
-                        role: "medium"
-                        adaptive_width: True
-                        padding: 0, 0, 0, dp(4)
-
-                    MDButton:
-                        id: palette_now_button
-                        size: dp(30), dp(30)
-                        theme_bg_color: "Custom"
-                        md_bg_color: app.theme_cls.primary_palette.lower()
-                        opacity: .5
-
-                MDGridLayout:
-                    id: palette_grid_short
-                    rows: 1
-                    adaptive_width: True
-                    padding: 0, dp(40), 0, 0
-                    spacing: dp(10), 0
-                    pos_hint: {"center_x": .5}
-
-                MDNavigationDrawerDivider:
-                    padding: 0, dp(72), 0, 0
-
-                MDButton:
-                    on_release: app.reset_theme()
-                    adaptive_size: True
-                    pos_hint: {"center_x": .5}
-
-                    MDButtonIcon:
-                        icon: "restore"
-
-                    MDButtonText:
-                        text: "恢复默认"
-                        font_style: "NavText"
-                        role: "medium"
-
-    MDNavigationLayout:
-
-        MDScreenManager:
-
-        MDNavigationDrawer:
-            id: nav_upload
-            drawer_type: "modal"
-            radius: app.get_radius(root=root, nav="right")[0]
-            anchor: "right"
-            enable_swiping: False
-
-            MDRelativeLayout:
-
-
-
-
