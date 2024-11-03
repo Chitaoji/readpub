@@ -12,12 +12,12 @@ from pathlib import Path
 import asynckivy
 from kivy.core.window import Window
 from kivy.metrics import dp
-from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import TextMaster
+from .bookcard import BookCardContainer
 
 __all__ = ["FileImporter"]
 
@@ -104,7 +104,7 @@ class FakeModalView:
         """Dismiss?"""
 
 
-class FileImporter(MDApp):
+class FileImporter(BookCardContainer):
     """Implements a file importer app."""
 
     filemanager: FileImporterManager
