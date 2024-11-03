@@ -18,10 +18,10 @@ from bs4 import BeautifulSoup
 from PIL import Image
 
 from .setting import ReadingSetting
-from .textmaster import BookIndex, TextMaster
+from .textmaster import BookIndex, TextMaster, merge_dir
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, MetaData, Page, Paragraph
+    from ._typing import BookSetting, Chapter, MetaData, Page, Paragraph
     from .core import BookManager
 
 __all__ = []
@@ -44,7 +44,7 @@ class Book:
         self.manager = manager
         self.setting = ReadingSetting()
         self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
-        self.pagenow = -1
+        self.pagenow, self.pagemax = -1, -1
         self.__content: list[list["Paragraph"]] | None = None
         self.__typeset: "Chapter" | None = None
         self.__metadata: MetaData | None = None
@@ -123,8 +123,9 @@ class Book:
         idx = BookIndex()
         to_pickle = [[idx]]
         for ref in yaml.safe_load((self.dirpath / "content.yml").read_text()):
+            fromdir = "".join(ref.rpartition("/")[:-1])
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
-            to_pickle.append(list(TextMaster.read_from_bs(bs, srcpath, idx)))
+            to_pickle.append(list(TextMaster.read_from_bs(bs, srcpath, fromdir, idx)))
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)
         self.update_metadata(is_ready=True)
@@ -154,7 +155,28 @@ class Book:
                 _typeset.append(chapter)
             self.__typeset = sum(_typeset, [])
             self.update_metadata(pagemax=len(self.__typeset))
+            if self.manager.logger:
+                self.manager.logger.info(
+                    'Typeset: Typsetting book "<%s>"', self.get_metadata()["title"]
+                )
         return self.__typeset
+
+    def adjust(self, **kwargs: Unpack["BookSetting"]) -> None:
+        """Adjust settings."""
+        adjusted = False
+        for k, v in kwargs.items():
+            if getattr(self.setting, k) != v:
+                setattr(self.setting, k, v)
+                adjusted = True
+        if adjusted:
+            if self.manager.logger:
+                self.manager.logger.info(
+                    'Typeset: Ajusting settings for book "<%s>": %s',
+                    self.get_metadata()["title"],
+                    repr(kwargs),
+                )
+            self.__typeset = None
+            self.typeset()
 
     def page_rawcount(self) -> int:
         """Count the pages."""
@@ -181,6 +203,7 @@ class Book:
             raise RuntimeError(f"book is already opened: {self.bookid!r}")
         self.manager.opened_book = self.bookid
         self.pagenow = self.get_metadata()["pagenow"]
+        self.pagemax = self.get_metadata()["pagemax"]
 
     def close(self) -> None:
         """
@@ -188,6 +211,7 @@ class Book:
         is closed.
 
         """
+        self.save_metadata()
         self.pagenow = -1
         self.manager.opened_book = ""
 
@@ -215,7 +239,7 @@ class Book:
     @property
     def cache(self) -> list[list["Paragraph"]]:
         """Book files."""
-        return self.__content
+        return self.__typeset
 
 
 @overload
@@ -293,11 +317,11 @@ def _get_opf_info(z: ZipFile, opf_href: str) -> tuple[str, str, list[str]]:
     bs = BeautifulSoup(z.read(opf_href), features="xml")
     author = a if (a := bs.creator.text) else "Unknown"
     c = bs.find("meta", attrs={"name": "cover"}).attrs["content"]
-    cover_href = _merge_dir(maindir, bs.find(id=c).attrs["href"])
+    cover_href = merge_dir(maindir, bs.find(id=c).attrs["href"])
 
     manifest = bs.manifest
     idrefs = [i.attrs["idref"] for i in bs.spine.find_all("itemref")]
-    content = [_merge_dir(maindir, manifest.find(id=i).attrs["href"]) for i in idrefs]
+    content = [merge_dir(maindir, manifest.find(id=i).attrs["href"]) for i in idrefs]
     return author, cover_href, content
 
 
@@ -322,13 +346,6 @@ def _image_auto_resize(image: Image.Image, width: int, height: int) -> Image.Ima
         box = (0, eps, a, b - eps)
     image = image.resize((width, height), box=box, reducing_gap=1.1)
     return image
-
-
-def _merge_dir(fromdir: str, to: str) -> str:
-    if to.startswith("../"):
-        parentdir = Path(fromdir).parent.as_posix()
-        return _merge_dir("" if parentdir == "." else parentdir, to[3:])
-    return fromdir + to
 
 
 class EBookFormatError(NotImplementedError):

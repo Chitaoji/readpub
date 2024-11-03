@@ -54,6 +54,13 @@ class MetaData(TypedDict):
     is_ready: NotRequired[Optional[bool]]
 
 
+class BookSetting(TypedDict):
+    """Dictionary of book settings."""
+
+    page_height: NotRequired[Optional[float]]
+    page_width: NotRequired[Optional[float]]
+
+
 if TYPE_CHECKING:
     para = list[T] | BookIndex | BookTitle | BookImage
 

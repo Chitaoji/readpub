@@ -21,9 +21,16 @@ from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.lang import Builder
 from kivy.logger import Logger
-from kivy.metrics import dp
-from kivy.properties import BooleanProperty, ColorProperty, StringProperty
+from kivy.metrics import Metrics, dp
+from kivy.properties import (
+    BooleanProperty,
+    ColorProperty,
+    NumericProperty,
+    StringProperty,
+)
 from kivy.uix.boxlayout import BoxLayout
+from kivy.uix.image import Image
+from kivy.uix.screenmanager import FadeTransition
 from kivy.uix.widget import Widget
 from kivy.utils import hex_colormap
 from kivymd.app import MDApp
@@ -44,10 +51,11 @@ from kivymd.uix.list.list import MDListItem, MDListItemLeadingIcon
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.progressindicator.progressindicator import MDCircularProgressIndicator
+from kivymd.uix.screen import MDScreen
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 from kivymd.uix.textfield import MDTextField, MDTextFieldHelperText
 
-from ..bookmanager import BookManager, TextMaster
+from ..bookmanager import BookImage, BookManager, TextMaster
 from .fileimport import FileImportManager
 from .font import KivyFont
 
@@ -59,17 +67,16 @@ if TYPE_CHECKING:
 __all__ = ["MainApp"]
 
 
-def _on_key_up(key, *_):
-    if key == 292:  # "F11"
-        match Window.fullscreen:
-            case "auto":
-                Window.fullscreen = False
-            case False:
-                Window.fullscreen = "auto"
+class BookContentItem(MDListItem):
+    """Book Content."""
+
+    text = StringProperty()
+    npage = NumericProperty()
 
 
-Window.on_key_up = _on_key_up
 Window.maximize()
+if Window.width <= 1920:
+    Metrics.dpi = 100
 
 
 class ColorCard(BoxLayout):
@@ -145,10 +152,12 @@ class MainApp(MDApp):
     fontmanager: KivyFont
     current_sort_rule: list[str]
     current_category: str
-    has_filemanager: bool = False
-    prev_snackbar: MDSnackbar | None = None
     category_status: str
+    has_filemanager: bool = False
+    reader_disabled: bool = True
+    prev_snackbar: MDSnackbar | None = None
     test_bookcard: BookCard | None = None
+    book: "Book | None" = None
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -179,7 +188,7 @@ class MainApp(MDApp):
         )
 
     def on_start(self) -> None:
-        m = BookManager(kvconfig.path.parent)
+        m = BookManager(kvconfig.path.parent, logger=Logger)
         self.current_sort_rule = ["status", "uploadtime"]
 
         asynckivy.start(
@@ -191,22 +200,50 @@ class MainApp(MDApp):
         self.bookmanager = m
         self.init_color_buttons()
 
-        func = self.root.get_screen("Reader").on_touch_down
-        self.root.get_screen("Reader").on_touch_down = (
-            lambda x: self.on_reader_touch_down(func, x)
-        )
+        self.root.get_screen("Reader").bind(on_touch_down=self.on_reader_touch_down)
+        Window.bind(on_keyboard=self.on_keyboard)
 
-    def on_reader_touch_down(self, func, touch):
+    def on_keyboard(self, _, key, *__):
+        """On keyboard."""
+        if key == 292:  # "F11"
+            match Window.fullscreen:
+                case "auto":
+                    Window.fullscreen = False
+                case False:
+                    Window.fullscreen = "auto"
+        elif key == 281:  # PgDn
+            if self.root.current == "Reader":
+                self.next_page()
+        elif key == 280:  # PgUp
+            if self.root.current == "Reader":
+                self.prev_page()
+        elif key == 278:  # Home
+            if self.root.current == "Reader":
+                self.homepage()
+
+    def homepage(self):
+        """Return to the homepage."""
+        self.check_cards()
+        self.root.transition = FadeTransition()
+        self.root.current = "MainScreen"
+        self.close_book()
+        self.delete_content()
+
+    def on_reader_touch_down(self, _, touch):
         """On mouse down."""
-        if Window.height * 0.2 < touch.y < Window.height * 0.8 and dp(
-            480
-        ) < touch.x < Window.width - dp(480):
-            if (toolbar := self.root.ids.reader_toolbar).disabled:
-                asynckivy.start(self.activate_reader_toolbar())
-            else:
-                toolbar.disabled = True
-                toolbar.opacity = 0
-        func(touch)
+        if not self.reader_disabled:
+            lb, rb = Window.width / 3, Window.width * 2 / 3
+            if Window.height * 0.2 < touch.y < Window.height * 0.8:
+                if lb < touch.x < rb:
+                    if (toolbar := self.root.ids.reader_toolbar).disabled:
+                        asynckivy.start(self.activate_reader_toolbar())
+                    else:
+                        self.root.ids.reader_bottom.disabled = toolbar.disabled = True
+                        self.root.ids.reader_bottom.opacity = toolbar.opacity = 0
+                elif touch.x <= lb:
+                    self.prev_page()
+                elif touch.x >= rb:
+                    self.next_page()
 
     async def activate_reader_toolbar(self) -> None:
         """Activate reader toolbar."""
@@ -216,9 +253,8 @@ class MainApp(MDApp):
         if not self.root.ids.reader_toolbar.disabled:
             self.root.ids.reader_search_field_helper.text = ""
             self.root.ids.reader_toolbar.opacity = 1
-            await asynckivy.sleep(0.1)
-            if not self.root.ids.reader_toolbar.disabled:
-                self.root.ids.reader_search_field_helper.text = "请输入搜索内容..."
+        self.root.ids.reader_bottom.disabled = False
+        self.root.ids.reader_bottom.opacity = 1
 
     def fix_reader_search_field(self):
         """Fix the search field."""
@@ -233,11 +269,51 @@ class MainApp(MDApp):
 
     def open_book(self, bookid: str) -> None:
         """Open a book."""
-        book = self.bookmanager.books[bookid]
-        book.typeset()
-        book.open()
-        page = book.turn_to_page(100)
+        if self.book is not None:
+            if self.book.bookid != bookid:
+                self.book.release()
+        self.book = self.bookmanager.books[bookid]
+        self.book.adjust(
+            page_height=min(Window.height * 0.7, 900),
+            page_width=min(Window.width * 0.4, 1000),
+        )
+
+        self.book.typeset()
+        self.book.open()
+        self.turn_to_page(self.book.pagenow)
+
+    def close_book(self) -> None:
+        """Close the book."""
+        for bookcard in self.root.ids.grid.children:
+            if bookcard.bookid == self.book.bookid:
+                bookcard.progress = f"阅读到 {self.book.pagenow/self.book.pagemax:.2%}"
+                break
+        self.book.close()
+        for widget in list((box := self.root.ids.textbox).children):
+            box.remove_widget(widget)
+
+    def next_page(self) -> None:
+        """Next page."""
+        if self.book.pagenow >= self.book.pagemax:
+            return
+        self.turn_to_page(self.book.pagenow + 1)
+
+    def prev_page(self) -> None:
+        """Previous page."""
+        if self.book.pagenow <= 1:
+            return
+        self.turn_to_page(self.book.pagenow - 1)
+
+    def turn_to_page(self, n: int) -> None:
+        """Turn to page n."""
+        if n < 1:
+            n = 1
+        page = self.book.turn_to_page(n)
         box = self.root.ids.textbox
+        for widget in list((box := self.root.ids.textbox).children):
+            box.remove_widget(widget)
+        for widget in list((imgbox := self.root.ids.imagebox).children):
+            imgbox.remove_widget(widget)
         for para in page:
             if isinstance(para, list):
                 for line in para:
@@ -257,6 +333,9 @@ class MainApp(MDApp):
                         text="",
                     )
                 )
+            elif isinstance(para, BookImage):
+                Logger.info('Image: Loading image "%s"', para.path)
+                imgbox.add_widget(Image(source=para.path.as_posix()))
             else:
                 box.add_widget(
                     MDLabel(
@@ -274,6 +353,10 @@ class MainApp(MDApp):
                         text="",
                     )
                 )
+        self.root.ids.progress_button.text = (
+            f"{self.book.pagenow}/{self.book.pagemax}"
+            f"  {self.book.pagenow/self.book.pagemax:.2%}"
+        )
 
     def init_color_buttons(self):
         """Initialize the color buttons."""
@@ -411,6 +494,14 @@ class MainApp(MDApp):
         """Enable the bookcards."""
         for card in self.root.ids.grid.children:
             card.truly_disabled = False
+
+    def truly_disable_reader(self) -> None:
+        """Disable the reader."""
+        self.reader_disabled = True
+
+    def truly_enable_reader(self) -> None:
+        """Enable the reader."""
+        self.reader_disabled = False
 
     async def asynctest(self, time: int, duration: Optional[float] = None):
         """Test the async functionality."""
@@ -878,6 +969,30 @@ class MainApp(MDApp):
         menu.set_menu_pos()
         # pylint: enable=protected-access
         _menu_on_open(menu)
+
+    def generate_content(self):
+        """Generate the book content."""
+        if len(self.root.ids.nav_content_box.children) > 0:
+            return
+        self.__generate_content(self.book.get_content()[0][0].content)
+
+    def __generate_content(self, content, indent: int = 0):
+        box = self.root.ids.nav_content_box
+        for x in content:
+            if x.title.text != "Unknown":
+                box.add_widget(
+                    BookContentItem(
+                        text=" " * indent * 4 + x.title.text, npage=x.title.npage
+                    )
+                )
+            # if 0 < len(x.content) and indent <= 0:
+            #     self.__generate_content(x.content, indent=indent + 1)
+
+    def delete_content(self):
+        """Delete the book content."""
+        box = self.root.ids.nav_content_box
+        for widget in list(box.children):
+            box.remove_widget(widget)
 
 
 def _menu_on_open(menu: MDDropdownMenu) -> None:

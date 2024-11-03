@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 
     from ._typing import Chapter, TextMeasureMethod, TitleLevel, para
 
-__all__ = ["TextMaster", "BookIndex"]
+__all__ = ["TextMaster", "BookIndex", "BookTitle", "BookImage"]
 
 
 @dataclass
@@ -271,7 +271,7 @@ class TextMaster:
         npage, height_remain = startpage, height
         for para in para_iter:
             if isinstance(para, FakeParagraph):
-                if (r := height_remain - para.height) >= 0:
+                if (r := height_remain - para.height) >= 0 or height_remain == height:
                     chapter[-1].append(para)
                     height_remain = r - gap
                 else:
@@ -356,6 +356,7 @@ class TextMaster:
     def read_from_bs(
         bs: "BeautifulSoup",
         srcpath: Path,
+        fromdir: str,
         idx: "BookIndex",
     ) -> Iterator["str | FakeParagraph"]:
         """
@@ -368,6 +369,8 @@ class TextMaster:
             Instance of `BeautifulSoup`.
         srcpath : Path
             Source path.
+        fromdir : str
+            Directory ref (may be used by the image).
         idx : BookIndex
             Book index.
 
@@ -378,25 +381,33 @@ class TextMaster:
 
         """
         for tag in bs.body.find_all():
+            if not (t := tag.text):
+                if img := tag.img:
+                    yield BookImage(srcpath / merge_dir(fromdir, img.attrs["src"]))
+                continue
             if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
                 level = int(n[1])
-                if "\n" in (title := tag.text):
-                    for subtitle in title.split("\n"):
+                if "\n" in t:
+                    for subtitle in t.split("\n"):
                         yield BookTitle(subtitle, level, idx)
                         level += 1
                 else:
-                    yield BookTitle(tag.text, level, idx)
+                    yield BookTitle(t, level, idx)
             elif n == "p":
-                if not (t := tag.text):
-                    if img := tag.img:
-                        yield BookImage(srcpath / img.attrs["src"])
-                    else:
-                        continue
-                # elif "\n" in t:
+                # if "\n" in t:
                 #     for line in t.split("\n"):
                 #         yield line
-                else:
-                    yield t
+                yield t
+
+
+def merge_dir(fromdir: str, to: str) -> str:
+    """Merge the two directories."""
+    if to.startswith("../"):
+        parentdir = Path(fromdir).parent.as_posix()
+        return merge_dir("" if parentdir == "." else parentdir, to[3:])
+    if fromdir and not fromdir.endswith("/"):
+        return fromdir + "/" + to
+    return fromdir + to
 
 
 @dataclass

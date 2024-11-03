@@ -33,7 +33,6 @@ class BookViewer:
     book: "Book"
 
     def __post_init__(self) -> None:
-        self.pagemax = self.book.get_metadata()["pagemax"]
         self.bottom = self.book.textmaster.fill(
             repeat("="), self.book.setting.page_width
         )[0]
@@ -41,19 +40,19 @@ class BookViewer:
 
     def __repr__(self) -> str:
         return (
-            f"{self.__renderer}\n\n{self.bottom}\n{self.book.pagenow}/{self.pagemax}"
-            f" {self.book.pagenow/self.pagemax:.2%}"
+            f"{self.__renderer}\n\n{self.bottom}\n{self.book.pagenow}/"
+            f"{self.book.pagemax} {self.book.pagenow/self.book.pagemax:.2%}"
         )
 
     def __del__(self) -> None:
-        self.save()
+        self.book.close()
 
     def turn_to_page(self, n: int) -> Self:
         """Turn to page n."""
         if n < 1:
             n = 1
-        elif n > self.pagemax:
-            n = self.pagemax
+        elif n > self.book.pagemax:
+            n = self.book.pagemax
         self.__renderer = view(self.book.turn_to_page(n))
         return self
 
@@ -65,9 +64,9 @@ class BookViewer:
         """Turn to the previous page"""
         return self.turn_to_page(self.book.pagenow - 1)
 
-    def save(self) -> None:
+    def close(self) -> None:
         """Save reading progress."""
-        self.book.save_metadata()
+        self.book.close()
 
 
 def view(content: "Chapter | Page | Paragraph | str") -> TextRenderer:

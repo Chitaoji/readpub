@@ -15,6 +15,8 @@ from .book import Book
 from .viewer import BookViewer
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from ._typing import MetaData, MetaDataKey
 
 __all__ = ["BookManager", "get_datapath"]
@@ -28,6 +30,8 @@ class BookManager:
     ----------
     datapath : Path
         The path for data storage.
+    logger : Logger, optional
+        Logger.
 
     Raises
     ------
@@ -37,10 +41,11 @@ class BookManager:
 
     """
 
-    def __init__(self, datapath: Path) -> None:
+    def __init__(self, datapath: Path, logger: Optional["Logger"] = None) -> None:
         if not datapath.is_dir():
             raise NotADirectoryError(f"not a directory: {datapath}")
         self.datapath = datapath
+        self.logger = logger
         self.opened_book = ""
         self.username = "testuser"
         self.__init_books()
