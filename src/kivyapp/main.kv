@@ -226,7 +226,7 @@ MDScreenManager:
 
     MDScreen:
         name: "MainScreen"
-        md_bg_color: self.theme_cls.backgroundColor
+        md_bg_color: root.theme_cls.surfaceContainerColor
 
         MDBoxLayout:
             orientation: "vertical"
@@ -409,7 +409,7 @@ MDScreenManager:
 
     MDScreen:
         name: "Reader"
-        md_bg_color: self.theme_cls.backgroundColor
+        md_bg_color: root.theme_cls.surfaceContainerColor
 
         MDBoxLayout:
             id: textbox
