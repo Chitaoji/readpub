@@ -125,6 +125,7 @@
     size: "480dp", "240dp"
     truly_disabled: False
     on_release: 
+        app.open_book(self.bookid)
         app.root.ids.reader_toolbar.opacity = 0
         app.root.ids.reader_toolbar.disabled = True
         app.root.transition = WipeTransition()
@@ -311,7 +312,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_setting
                 drawer_type: "modal"
-                radius: app.get_radius(root=root, nav="left")[0]
+                radius: app.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.truly_disable_cards()
@@ -412,7 +413,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_upload
                 drawer_type: "modal"
-                radius: app.get_radius(root=root, nav="right")[0]
+                radius: app.get_radius(nav="right")[0]
                 anchor: "right"
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
@@ -425,9 +426,17 @@ MDScreenManager:
         name: "Reader"
         md_bg_color: self.theme_cls.backgroundColor
 
+        MDBoxLayout:
+            id: textbox
+            adaptive_size: True
+            orientation: "vertical"
+            padding: "24dp"
+            spacing: dp(40)
+            pos_hint: {"center_x": .5, "center_y": .5}
+
         MDButton:
             pos_hint: {"center_x": .5}
-            y: dp(120)
+            y: dp(100)
             opacity: reader_toolbar.opacity
             disabled: reader_toolbar.disabled
             adaptive_size: True
@@ -437,15 +446,15 @@ MDScreenManager:
                 app.check_cards()
                 root.transition = FadeTransition()
                 root.current = "MainScreen"
+
             MDButtonIcon:
-                icon: "restore"
+                icon: "keyboard-backspace"
 
             MDButtonText:
                 text: "回到首页"
-                font_style: "BigHint"
-                role: "small"
+                font_style: "BookCover"
+                role: "medium"
 
-                
         MDBoxLayout:
             id: reader_toolbar
             adaptive_size: True
@@ -459,12 +468,10 @@ MDScreenManager:
                 icon: "chevron-left"
                 theme_font_size: "Custom"
                 font_size: sp(48)
-                size: reader_search_field.height, reader_search_field.height
-                
+                size: reader_search_field.height, reader_search_field.height 
                 on_release:
-                    app.check_cards()
-                    root.transition = FadeTransition()
-                    root.current = "MainScreen"
+                    app.root.ids.reader_toolbar.disabled = True
+                    app.root.ids.reader_toolbar.opacity = 0     
 
             MDIconButton:
                 icon: "table-of-contents"
@@ -488,6 +495,7 @@ MDScreenManager:
                     font_style: "Hint"
 
                 MDTextFieldHelperText:
+                    id: reader_search_field_helper
                     text: "请输入搜索内容..."
                     font_style: "Hint"
 
@@ -511,7 +519,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_reader_setting
                 drawer_type: "modal"
-                radius: app.get_radius(root=root, nav="left")[0]
+                radius: app.get_radius(nav="right")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
 
@@ -574,10 +582,10 @@ MDScreenManager:
                         padding: 0, dp(72), 0, 0
 
                     MDButton:
-                        on_release: app.reset_theme()
                         adaptive_size: True
                         pos_hint: {"center_x": .5}
                         on_release: 
+                            app.reset_theme()
                             Window.fullscreen = "auto" if \
                             Window.fullscreen is False else False
 

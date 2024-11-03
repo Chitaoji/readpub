@@ -379,14 +379,24 @@ class TextMaster:
         """
         for tag in bs.body.find_all():
             if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
-                yield BookTitle(tag.text, int(n[1]), idx)
+                level = int(n[1])
+                if "\n" in (title := tag.text):
+                    for subtitle in title.split("\n"):
+                        yield BookTitle(subtitle, level, idx)
+                        level += 1
+                else:
+                    yield BookTitle(tag.text, level, idx)
             elif n == "p":
                 if not (t := tag.text):
                     if img := tag.img:
                         yield BookImage(srcpath / img.attrs["src"])
                     else:
                         continue
-                yield t
+                # elif "\n" in t:
+                #     for line in t.split("\n"):
+                #         yield line
+                else:
+                    yield t
 
 
 @dataclass
@@ -461,7 +471,7 @@ class BookTitle(FakeParagraph):
     text: str
     level: "TitleLevel"
     npage: int = field(init=False, default=-1)
-    height: float = field(init=False, default=100.0)
+    height: float = field(init=False, default=40.0)
     idx: Optional[BookIndex] = None
 
     def __post_init__(self) -> None:

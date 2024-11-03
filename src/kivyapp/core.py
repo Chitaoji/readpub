@@ -45,6 +45,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 from kivymd.uix.progressindicator.progressindicator import MDCircularProgressIndicator
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
+from kivymd.uix.textfield import MDTextField, MDTextFieldHelperText
 
 from ..bookmanager import BookManager, TextMaster
 from .fileimport import FileImportManager
@@ -54,7 +55,6 @@ if TYPE_CHECKING:
     from kivy.config import ConfigParser
 
     from ..bookmanager._typing import Book, StatusHint
-
 
 __all__ = ["MainApp"]
 
@@ -148,6 +148,7 @@ class MainApp(MDApp):
     has_filemanager: bool = False
     prev_snackbar: MDSnackbar | None = None
     category_status: str
+    test_bookcard: BookCard | None = None
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -200,23 +201,82 @@ class MainApp(MDApp):
         if Window.height * 0.2 < touch.y < Window.height * 0.8 and dp(
             480
         ) < touch.x < Window.width - dp(480):
-            if self.root.ids.reader_toolbar.disabled:
+            if (toolbar := self.root.ids.reader_toolbar).disabled:
                 asynckivy.start(self.activate_reader_toolbar())
             else:
-                self.root.ids.reader_toolbar.disabled = True
-                self.root.ids.reader_toolbar.opacity = 0
+                toolbar.disabled = True
+                toolbar.opacity = 0
         func(touch)
 
     async def activate_reader_toolbar(self) -> None:
         """Activate reader toolbar."""
+        self.fix_reader_search_field()
         self.root.ids.reader_toolbar.disabled = False
         await asynckivy.sleep(0.15)
         if not self.root.ids.reader_toolbar.disabled:
+            self.root.ids.reader_search_field_helper.text = ""
             self.root.ids.reader_toolbar.opacity = 1
+            await asynckivy.sleep(0.1)
+            if not self.root.ids.reader_toolbar.disabled:
+                self.root.ids.reader_search_field_helper.text = "请输入搜索内容..."
+
+    def fix_reader_search_field(self):
+        """Fix the search field."""
+        field = self.root.ids.reader_search_field
+        field.set_texture_color(
+            getattr(field, "_helper_text_label"),
+            field.canvas.before.get_group("helper-text-color")[0],
+            self.theme_cls.transparentColor,
+        )
 
     def open_settings(self, *_) -> None: ...
+
+    def open_book(self, bookid: str) -> None:
+        """Open a book."""
+        book = self.bookmanager.books[bookid]
+        book.typeset()
+        book.open()
+        page = book.turn_to_page(100)
+        box = self.root.ids.textbox
+        for para in page:
+            if isinstance(para, list):
+                for line in para:
+                    box.add_widget(
+                        MDLabel(
+                            adaptive_width=True,
+                            font_style="BookCover",
+                            role="medium",
+                            text=line,
+                        )
+                    )
+                box.add_widget(
+                    MDLabel(
+                        adaptive_width=True,
+                        font_style="BookCover",
+                        role="medium",
+                        text="",
+                    )
+                )
+            else:
+                box.add_widget(
+                    MDLabel(
+                        adaptive_width=True,
+                        font_style="BookCover",
+                        role="medium",
+                        text=para.text,
+                    )
+                )
+                box.add_widget(
+                    MDLabel(
+                        adaptive_width=True,
+                        font_style="BookCover",
+                        role="medium",
+                        text="",
+                    )
+                )
+
     def init_color_buttons(self):
-        """Initialize the clor buttons."""
+        """Initialize the color buttons."""
         for color in [
             "red",
             "orange",
@@ -235,17 +295,6 @@ class MainApp(MDApp):
             )
         )
 
-    def _(self):
-        self.root.ids.card_list.data = []
-        for color in dir(self.theme_cls):
-            if color.endswith("Color"):
-                self.root.ids.card_list.data.append(
-                    {
-                        "bg_color": getattr(self.theme_cls, color),
-                        "text": color,
-                    }
-                )
-
     def filemanager_open(self):
         """Open filemanager."""
         self.open_nav_drawer("nav_upload")
@@ -259,7 +308,6 @@ class MainApp(MDApp):
         It will be called when you click on the file name
         or the catalog selection button.
 
-        :param path: path to the selected directory or file;
         """
         self.filemanager_exit()
         if checked := self.bookmanager.check_book(p := Path(path)):
@@ -673,23 +721,23 @@ class MainApp(MDApp):
             menu.dismiss()
 
     def get_radius(
-        self, root=None, nav: Optional[Literal["left", "right"]] = None
+        self, nav: Optional[Literal["left", "right"]] = None
     ) -> tuple[list, list]:
         """Get the radius and the shadow-radius."""
-        if root is None:
-            root = self.root
-        if len(children := root.ids.grid.children) > 0:
-            bookcard = children[0]
-        else:
-            bookcard = BookCard(style="elevated")
+        if self.test_bookcard is None:
+            self.test_bookcard = BookCard(style="elevated")
+        radius, shadow_radius = (
+            self.test_bookcard.radius.copy(),
+            self.test_bookcard.shadow_radius,
+        )
         match nav:
             case "left":
-                bookcard.radius[0] = 0
-                bookcard.radius[3] = 0
+                radius[0] = 0
+                radius[3] = 0
             case "right":
-                bookcard.radius[1] = 0
-                bookcard.radius[2] = 0
-        return bookcard.radius, bookcard.shadow_radius
+                radius[1] = 0
+                radius[2] = 0
+        return radius, shadow_radius
 
     def open_nav_drawer(self, name: str) -> None:
         """Open the nav-drawer."""
