@@ -12,7 +12,7 @@
 #:import MDSlideTransition kivymd.uix.transition.transition.MDSlideTransition
 #:import MDSharedAxisTransition kivymd.uix.transition.transition.MDSharedAxisTransition
 
-<FileImportManagerItem>
+<FileImporterItem>
     icon: "folder"
     path: ""
     background_normal: ""
@@ -50,39 +50,7 @@
         role: "medium"
 
 
-<FileImportManagerItemPreview>
-    name: ""
-    path: ""
-    realpath: ""
-    type: "folder"
-    events_callback: lambda x: None
-    _selected: False
-    orientation: "vertical"
-    size_hint_y: None
-    height: root.height
-    padding: "20dp"
-    spacing: "12dp"
-    theme_bg_color: "Custom"
-    md_bg_color: app.theme_cls.surfaceContainerLowColor
-
-    MDFileManagerThumbnail:
-        mipmap: True
-        source: root.path
-        on_release:
-            root.events_callback( \
-            os.path.join(root.path if root.type != "folder" \
-            else root.realpath, root.name), root)
-
-    MDLabel:
-        text: root.name
-        adaptive_height: True
-        shorten: True
-        shorten_from: "center"
-        halign: "center"
-        text_size: self.width, None
-
-
-<FIleImportManager>
+<FileImporterManager>
     canvas:
         Color:
             rgba: app.theme_cls.surfaceContainerLowColor

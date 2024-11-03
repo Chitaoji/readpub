@@ -11,7 +11,7 @@ try:
     from .config import kvconfig
 except ImportError as e:
     raise e
-import os
+
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
@@ -19,21 +19,11 @@ from typing import TYPE_CHECKING, Any, Literal, Optional
 import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
-from kivy.lang import Builder
 from kivy.logger import Logger
 from kivy.metrics import Metrics, dp
-from kivy.properties import (
-    BooleanProperty,
-    ColorProperty,
-    NumericProperty,
-    StringProperty,
-)
+from kivy.properties import BooleanProperty, ColorProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
-from kivy.uix.image import Image
-from kivy.uix.screenmanager import FadeTransition
 from kivy.uix.widget import Widget
-from kivy.utils import hex_colormap
-from kivymd.app import MDApp
 from kivymd.uix.button import MDButton, MDButtonText
 from kivymd.uix.card import MDCard
 from kivymd.uix.dialog import (
@@ -45,19 +35,14 @@ from kivymd.uix.dialog import (
     MDDialogSupportingText,
 )
 from kivymd.uix.divider import MDDivider
-from kivymd.uix.label import MDLabel
 from kivymd.uix.list import MDListItem, MDListItemLeadingIcon, MDListItemSupportingText
-from kivymd.uix.list.list import MDListItem, MDListItemLeadingIcon
 from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
-from kivymd.uix.progressindicator.progressindicator import MDCircularProgressIndicator
-from kivymd.uix.screen import MDScreen
-from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
-from kivymd.uix.textfield import MDTextField, MDTextFieldHelperText
 
-from ..bookmanager import BookImage, BookManager, TextMaster
-from .fileimport import FileImportManager
+from ..bookmanager import BookManager
 from .font import KivyFont
+from .importer import FakeModalView, FileImporter, FileImporterManager
+from .reader import Reader
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -65,13 +50,6 @@ if TYPE_CHECKING:
     from ..bookmanager._typing import Book, StatusHint
 
 __all__ = ["MainApp"]
-
-
-class BookContentItem(MDListItem):
-    """Book Content."""
-
-    text = StringProperty()
-    npage = NumericProperty()
 
 
 Window.maximize()
@@ -128,36 +106,20 @@ class CoverDeleteDropdownTextItem(CoverDropdownTextItem):
     """Implements a menu item with text without leading and trailing icons."""
 
 
-class FakeModalView:
-    """A fake view."""
-
-    def open(self):
-        """Open?"""
-
-    def dismiss(self):
-        """Dismiss?"""
-
-
 class ColorButton(MDButton):
     """Button with color."""
 
     color: str = StringProperty()
 
 
-class MainApp(MDApp):
+class MainApp(Reader, FileImporter):
     """Kivy-App for ReadPub."""
 
-    bookmanager: BookManager
-    filemanager: FileImportManager
     fontmanager: KivyFont
     current_sort_rule: list[str]
     current_category: str
     category_status: str
-    has_filemanager: bool = False
-    reader_disabled: bool = True
-    prev_snackbar: MDSnackbar | None = None
     test_bookcard: BookCard | None = None
-    book: "Book | None" = None
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -180,12 +142,10 @@ class MainApp(MDApp):
     def build(self):
         self.title = "ReadPub"
 
-        self.filemanager = FileImportManager(
+        self.filemanager = FileImporterManager(
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
         )
-        self.filemanager._window_manager = (  # pylint: disable=protected-access
-            FakeModalView()
-        )
+        setattr(self.filemanager, "_window_manager", FakeModalView())
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)
@@ -221,142 +181,7 @@ class MainApp(MDApp):
             if self.root.current == "Reader":
                 self.homepage()
 
-    def homepage(self):
-        """Return to the homepage."""
-        self.check_cards()
-        self.root.transition = FadeTransition()
-        self.root.current = "MainScreen"
-        self.close_book()
-        self.delete_content()
-
-    def on_reader_touch_down(self, _, touch):
-        """On mouse down."""
-        if not self.reader_disabled:
-            lb, rb = Window.width / 3, Window.width * 2 / 3
-            if Window.height * 0.2 < touch.y < Window.height * 0.8:
-                if lb < touch.x < rb:
-                    if (toolbar := self.root.ids.reader_toolbar).disabled:
-                        asynckivy.start(self.activate_reader_toolbar())
-                    else:
-                        self.root.ids.reader_bottom.disabled = toolbar.disabled = True
-                        self.root.ids.reader_bottom.opacity = toolbar.opacity = 0
-                elif touch.x <= lb:
-                    self.prev_page()
-                elif touch.x >= rb:
-                    self.next_page()
-
-    async def activate_reader_toolbar(self) -> None:
-        """Activate reader toolbar."""
-        self.fix_reader_search_field()
-        self.root.ids.reader_toolbar.disabled = False
-        await asynckivy.sleep(0.15)
-        if not self.root.ids.reader_toolbar.disabled:
-            self.root.ids.reader_search_field_helper.text = ""
-            self.root.ids.reader_toolbar.opacity = 1
-        self.root.ids.reader_bottom.disabled = False
-        self.root.ids.reader_bottom.opacity = 1
-
-    def fix_reader_search_field(self):
-        """Fix the search field."""
-        field = self.root.ids.reader_search_field
-        field.set_texture_color(
-            getattr(field, "_helper_text_label"),
-            field.canvas.before.get_group("helper-text-color")[0],
-            self.theme_cls.transparentColor,
-        )
-
     def open_settings(self, *_) -> None: ...
-
-    def open_book(self, bookid: str) -> None:
-        """Open a book."""
-        if self.book is not None:
-            if self.book.bookid != bookid:
-                self.book.release()
-        self.book = self.bookmanager.books[bookid]
-        self.book.adjust(
-            page_height=min(Window.height * 0.7, 900),
-            page_width=min(Window.width * 0.4, 1000),
-        )
-
-        self.book.typeset()
-        self.book.open()
-        self.turn_to_page(self.book.pagenow)
-
-    def close_book(self) -> None:
-        """Close the book."""
-        for bookcard in self.root.ids.grid.children:
-            if bookcard.bookid == self.book.bookid:
-                bookcard.progress = f"阅读到 {self.book.pagenow/self.book.pagemax:.2%}"
-                break
-        self.book.close()
-        for widget in list((box := self.root.ids.textbox).children):
-            box.remove_widget(widget)
-
-    def next_page(self) -> None:
-        """Next page."""
-        if self.book.pagenow >= self.book.pagemax:
-            return
-        self.turn_to_page(self.book.pagenow + 1)
-
-    def prev_page(self) -> None:
-        """Previous page."""
-        if self.book.pagenow <= 1:
-            return
-        self.turn_to_page(self.book.pagenow - 1)
-
-    def turn_to_page(self, n: int) -> None:
-        """Turn to page n."""
-        if n < 1:
-            n = 1
-        page = self.book.turn_to_page(n)
-        box = self.root.ids.textbox
-        for widget in list((box := self.root.ids.textbox).children):
-            box.remove_widget(widget)
-        for widget in list((imgbox := self.root.ids.imagebox).children):
-            imgbox.remove_widget(widget)
-        for para in page:
-            if isinstance(para, list):
-                for line in para:
-                    box.add_widget(
-                        MDLabel(
-                            adaptive_width=True,
-                            font_style="BookCover",
-                            role="medium",
-                            text=line,
-                        )
-                    )
-                box.add_widget(
-                    MDLabel(
-                        adaptive_width=True,
-                        font_style="BookCover",
-                        role="medium",
-                        text="",
-                    )
-                )
-            elif isinstance(para, BookImage):
-                Logger.info('Image: Loading image "%s"', para.path)
-                imgbox.add_widget(Image(source=para.path.as_posix()))
-            else:
-                box.add_widget(
-                    MDLabel(
-                        adaptive_width=True,
-                        font_style="BookCover",
-                        role="medium",
-                        text=para.text,
-                    )
-                )
-                box.add_widget(
-                    MDLabel(
-                        adaptive_width=True,
-                        font_style="BookCover",
-                        role="medium",
-                        text="",
-                    )
-                )
-        self.root.ids.progress_button.text = (
-            f"{self.book.pagenow}/{self.book.pagemax}"
-            f"  {self.book.pagenow/self.book.pagemax:.2%}"
-        )
 
     def init_color_buttons(self):
         """Initialize the color buttons."""
@@ -377,47 +202,6 @@ class MainApp(MDApp):
                 self.root.ids.palette_now_button, "md_bg_color", c.lower()
             )
         )
-
-    def filemanager_open(self):
-        """Open filemanager."""
-        self.open_nav_drawer("nav_upload")
-        if not self.has_filemanager:
-            self.root.ids.nav_upload.children[0].add_widget(self.filemanager)
-            self.has_filemanager = True
-        self.filemanager.show(os.path.expanduser(r"~\DeskTop"))
-
-    def filemanager_select_path(self, path: str):
-        """
-        It will be called when you click on the file name
-        or the catalog selection button.
-
-        """
-        self.filemanager_exit()
-        if checked := self.bookmanager.check_book(p := Path(path)):
-            snack = "已导入新书: " + path
-        else:
-            snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
-
-        # open snackbar
-        if self.prev_snackbar:
-            self.prev_snackbar.dismiss()
-        fs, role = "NavText", "medium"
-        self.prev_snackbar = MDSnackbar(
-            MDSnackbarText(
-                text=TextMaster(*self.fontmanager.translate(fs, role)).shorten(
-                    snack, Window.width / 2 - 20
-                ),
-                font_style=fs,
-                role=role,
-            ),
-            y=dp(40),
-            pos_hint={"center_x": 0.5},
-            size_hint_x=0.5,
-        )
-        self.prev_snackbar.open()
-        if checked:
-            bookcard = self.set_card(book := self.bookmanager.add_book(p))
-            asynckivy.start(self.prepare_book(book, bookcard))
 
     def set_card(self, book: "Book") -> BookCard:
         """Set a new book card."""
@@ -495,14 +279,6 @@ class MainApp(MDApp):
         for card in self.root.ids.grid.children:
             card.truly_disabled = False
 
-    def truly_disable_reader(self) -> None:
-        """Disable the reader."""
-        self.reader_disabled = True
-
-    def truly_enable_reader(self) -> None:
-        """Enable the reader."""
-        self.reader_disabled = False
-
     async def asynctest(self, time: int, duration: Optional[float] = None):
         """Test the async functionality."""
         for i in range(1, 1 + time):
@@ -529,10 +305,6 @@ class MainApp(MDApp):
         self.root.ids.grid.parent.scroll_y = 1
         for widget in list(self.root.ids.grid.children):
             self.root.ids.grid.remove_widget(widget)
-
-    def filemanager_exit(self, *_):
-        """Called when the user reaches the root of the directory tree."""
-        self.filemanager.close()
 
     def switch_theme_style(self, to: Optional[str] = None):
         """Switch the theme-style."""
@@ -969,30 +741,6 @@ class MainApp(MDApp):
         menu.set_menu_pos()
         # pylint: enable=protected-access
         _menu_on_open(menu)
-
-    def generate_content(self):
-        """Generate the book content."""
-        if len(self.root.ids.nav_content_box.children) > 0:
-            return
-        self.__generate_content(self.book.get_content()[0][0].content)
-
-    def __generate_content(self, content, indent: int = 0):
-        box = self.root.ids.nav_content_box
-        for x in content:
-            if x.title.text != "Unknown":
-                box.add_widget(
-                    BookContentItem(
-                        text=" " * indent * 4 + x.title.text, npage=x.title.npage
-                    )
-                )
-            # if 0 < len(x.content) and indent <= 0:
-            #     self.__generate_content(x.content, indent=indent + 1)
-
-    def delete_content(self):
-        """Delete the book content."""
-        box = self.root.ids.nav_content_box
-        for widget in list(box.children):
-            box.remove_widget(widget)
 
 
 def _menu_on_open(menu: MDDropdownMenu) -> None:
