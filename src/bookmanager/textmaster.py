@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import re
 from dataclasses import dataclass, field
 from itertools import chain
 from math import ceil
@@ -396,10 +397,9 @@ class TextMaster:
                 else:
                     res.append(BookTitle(t.strip(), level, idx))
             elif n == "p":
-                # if "\n" in t:
-                #     for line in t.split("\n"):
-                #         yield line
-                res.append(t)
+                res.append(
+                    re.sub("(?<=[\u4e00-\u9fff])\\s+(?=[\u4e00-\u9fff])", "", t).strip()
+                )
         return res
 
 
