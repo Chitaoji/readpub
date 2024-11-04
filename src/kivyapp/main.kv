@@ -301,13 +301,9 @@ MDScreenManager:
                 radius: app.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
-                opening_time: 0.0
-                closing_time: 0.0
                 on_open: app.truly_disable_cards()
                 on_close: 
                     app.truly_enable_cards()
-                    self.opening_time = 0.2
-                    self.closing_time = 0.2
 
                 MDBoxLayout:
                     adaptive_height: True
