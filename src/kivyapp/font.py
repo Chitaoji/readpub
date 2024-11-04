@@ -9,6 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 from pathlib import Path
 
 from kivy.core.text import LabelBase
+from kivy.logger import Logger
 from kivy.metrics import sp
 from kivymd.font_definitions import theme_font_styles
 
@@ -17,6 +18,7 @@ SYS_FONT_MAPPING = {
     "msyhbd": "微软雅黑-粗体",
     "msyhl": "微软雅黑-细体",
     "simhei": "黑体",
+    "Arial": "Arial",
 }
 
 
@@ -47,6 +49,8 @@ class KivyFont:
             ).exists():
                 LabelBase.register(name=stem, fn_regular=p.as_posix())
                 self.fonts[stem] = (p, name)
+            else:
+                Logger.info('Font: Font style not found: "%s"', stem)
 
     def __set_font_styles(self):
         self.font_styles = {

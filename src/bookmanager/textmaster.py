@@ -162,14 +162,14 @@ class TextMaster:
             textnow += char
         return textnow
 
-    def fill(self, text: Iterator[str], length: float) -> tuple[str, str]:
+    def fill(self, char_iter: Iterator[str], length: float) -> tuple[str, str]:
         """
         Similar to `.shorten(text, length, ellipsis="")`, but accepts
-        an iterator of string.
+        an iterator of characters.
 
         Parameters
         ----------
-        text : Iterator[str]
+        char_iter : Iterator[str]
             Iterator of single characters.
         length : float
             Specifies the maximum length of text (in pixels).
@@ -181,7 +181,7 @@ class TextMaster:
 
         """
         len_textnow, textnow = 0, ""
-        for char in text:
+        for char in char_iter:
             len_textnow += self.measure.getlength(char)
             if len_textnow > length:
                 return textnow, char
@@ -358,7 +358,7 @@ class TextMaster:
         srcpath: Path,
         fromdir: str,
         idx: "BookIndex",
-    ) -> Iterator["str | FakeParagraph"]:
+    ) -> list["str | FakeParagraph"]:
         """
         Read from instance of `BeautifulSoup`. The return value
         can be directly passed to `.divide_into_pages()`.
@@ -374,30 +374,33 @@ class TextMaster:
         idx : BookIndex
             Book index.
 
-        Yields
-        ------
-        str | FakeParagraph
-            Paragraphs.
+        Returns
+        -------
+        list["str | FakeParagraph"]
+            List of paragraphs.
 
         """
+        res: list["str | FakeParagraph"] = []
         for tag in bs.body.find_all():
             if not (t := tag.text):
                 if img := tag.img:
-                    yield BookImage(srcpath / merge_dir(fromdir, img.attrs["src"]))
-                continue
-            if (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
+                    res.append(
+                        BookImage(srcpath / merge_dir(fromdir, img.attrs["src"]))
+                    )
+            elif (n := tag.name) in {"h1", "h2", "h3", "h4", "h5", "h6"}:
                 level = int(n[1])
                 if "\n" in t:
                     for subtitle in t.split("\n"):
-                        yield BookTitle(subtitle, level, idx)
+                        res.append(BookTitle(subtitle.strip(), level, idx))
                         level += 1
                 else:
-                    yield BookTitle(t, level, idx)
+                    res.append(BookTitle(t.strip(), level, idx))
             elif n == "p":
                 # if "\n" in t:
                 #     for line in t.split("\n"):
                 #         yield line
-                yield t
+                res.append(t)
+        return res
 
 
 def merge_dir(fromdir: str, to: str) -> str:

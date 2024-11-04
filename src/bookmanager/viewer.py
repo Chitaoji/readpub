@@ -36,7 +36,7 @@ class BookViewer:
         self.bottom = self.book.textmaster.fill(
             repeat("="), self.book.setting.page_width
         )[0]
-        self.__renderer = view(self.book.turn_to_page(self.book.pagenow))
+        self.turn_to_page(self.book.pagenow)
 
     def __repr__(self) -> str:
         return (

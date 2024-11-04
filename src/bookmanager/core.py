@@ -162,6 +162,10 @@ class BookManager:
     def view_book(self, n: int) -> BookViewer:
         """View the n-th book in the bookshelf (in console mode)."""
         book = self[n]
+        if self.opened_book == book.bookid:
+            return BookViewer(book)
+        if self.opened_book:
+            self.books[self.opened_book].close()
         book.get_metadata()
         book.typeset()
         book.open()
