@@ -7,8 +7,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 # pylint: disable=no-name-in-module
-
-
 from typing import TYPE_CHECKING
 
 import asynckivy

@@ -330,7 +330,6 @@ class MainApp(FileImporter):
         nav_drawer.set_state("toggle")
 
     def _plus_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
-        # pylint: disable=protected-access
         menu.set_menu_properties()
 
         Window.add_widget(menu)
@@ -339,17 +338,17 @@ class MainApp(FileImporter):
         menu.width = dp(160)
 
         menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        menu._tar_x, menu._tar_y = (
+            menu.get_target_pos()
+        )  # pylint: disable=protected-access
         button_pos = caller.to_window(*caller.pos)
         menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width - dp(5)
         menu.y = button_pos[1] - menu.height - dp(5)
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
-        # pylint: enable=protected-access
         menu_on_open(menu)
 
     def _category_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
-        # pylint: disable=protected-access
         menu.set_menu_properties()
 
         Window.add_widget(menu)
@@ -358,13 +357,14 @@ class MainApp(FileImporter):
         menu.width = dp(160)
 
         menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        menu._tar_x, menu._tar_y = (
+            menu.get_target_pos()
+        )  # pylint: disable=protected-access
         button_pos = caller.to_window(*caller.pos)
         menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width
         menu.y = button_pos[1] - menu.height - dp(8)
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
-        # pylint: enable=protected-access
         menu_on_open(menu)
 
 

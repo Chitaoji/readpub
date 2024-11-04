@@ -368,17 +368,14 @@ class BookCardContainer(Reader):
         dialog.open()
 
     def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
-        # pylint: disable=protected-access
         menu.set_menu_properties()
 
         # check ver_growth
         menu.ver_growth = "up"
-        if menu.target_height > menu._start_coords[1] - menu.border_margin:
+        coord_y = menu._start_coords[1]  # pylint: disable=protected-access
+        if menu.target_height > coord_y - menu.border_margin:
             menu.ver_growth = "up"
-        elif (
-            menu._start_coords[1]
-            > Window.height - menu.border_margin - menu.target_height
-        ):
+        elif coord_y > Window.height - menu.border_margin - menu.target_height:
             menu.ver_growth = "down"
 
         Window.add_widget(menu)
@@ -387,7 +384,9 @@ class BookCardContainer(Reader):
         menu.width = dp(160)
 
         menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = menu.get_target_pos()
+        menu._tar_x, menu._tar_y = (
+            menu.get_target_pos()
+        )  # pylint: disable=protected-access
         bookcard_pos = caller.parent.parent.to_window(*caller.parent.parent.pos)
         menu.x = (
             bookcard_pos[0]
@@ -397,7 +396,6 @@ class BookCardContainer(Reader):
         menu.y = bookcard_pos[1]
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
-        # pylint: enable=protected-access
         menu_on_open(menu)
 
 
