@@ -150,8 +150,8 @@ class FileImporter(BasicApp):
         )
         self.prev_snackbar.open()
         if checked:
-            bookcard = self.set_card(book := self.bookmanager.add_book(p))
-            asynckivy.start(self.prepare_book(book, bookcard))
+            self.set_card(book := self.bookmanager.add_book(p))
+            self.prepare_book(book)
 
     def filemanager_exit(self, *_):
         """Called when the user reaches the root of the directory tree."""

@@ -59,7 +59,5 @@ class BasicApp(MDApp):
     def check_cards(self) -> None:
         """Check the bookcards."""
 
-    async def prepare_book(
-        self, book: "Book", bookcard: "BookCard", duration: Optional[float] = None
-    ) -> None:
+    def prepare_book(self, book: "Book") -> None:
         """Extract and picklize the book."""

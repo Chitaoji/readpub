@@ -47,7 +47,6 @@ class BookCard(MDCard):
     author: str = StringProperty()
     progress: str = StringProperty()
     status: "StatusHint" = StringProperty()
-    is_ready: bool = BooleanProperty()
     truly_disabled: bool = BooleanProperty()
 
     def check_border(self) -> None:
@@ -93,7 +92,6 @@ class BookCardContainer(BasicApp):
             author=metadata["author"],
             progress=progress,
             status=metadata["status"],
-            is_ready=metadata["is_ready"],
         )
         idx = self.bookmanager.where_to_insert(
             book.bookid,
@@ -110,6 +108,8 @@ class BookCardContainer(BasicApp):
         """Set cards."""
         for bookid, book in books.items():
             metadata = book.get_metadata()
+            if not metadata["is_ready"]:
+                self.prepare_book(book)
             pagenow, pagemax = metadata["pagenow"], metadata["pagemax"]
             match pagenow / pagemax:
                 case 0.0:
@@ -149,18 +149,11 @@ class BookCardContainer(BasicApp):
         for card in self.root.ids.grid.children:
             card.truly_disabled = False
 
-    async def prepare_book(
-        self, book: "Book", bookcard: BookCard, duration: Optional[float] = None
-    ) -> None:
-        if duration is not None:
-            await asynckivy.sleep(duration)
-        book.extract()
+    def prepare_book(self, book: "Book") -> None:
         Logger.info('Extract: Extracting book "%s"', book.get_metadata()["filepath"])
-        if duration is not None:
-            await asynckivy.sleep(duration)
-        book.picklize()
+        book.extract()
         Logger.info('Picklize: Pickling book "%s"', book.get_metadata()["filepath"])
-        bookcard.is_ready = True
+        book.picklize()
 
     def remove_cards(self) -> None:
         """Remove all the bookcards."""
