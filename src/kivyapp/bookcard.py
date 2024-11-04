@@ -31,11 +31,11 @@ from kivymd.uix.divider import MDDivider
 from kivymd.uix.list import MDListItem, MDListItemLeadingIcon, MDListItemSupportingText
 from kivymd.uix.menu import MDDropdownMenu
 
-from .reader import Reader
-
 if TYPE_CHECKING:
-
     from ..bookmanager._typing import Book, StatusHint
+    from ._typing import BasicApp
+else:
+    from kivymd.app import MDApp as BasicApp
 
 
 class BookCard(MDCard):
@@ -72,15 +72,10 @@ class BookCard(MDCard):
             super().set_properties_widget()
 
 
-class BookCardContainer(Reader):
+class BookCardContainer(BasicApp):
     """Implements a bookcard container."""
 
-    current_sort_rule: list[str]
-    category_status: str
-    test_bookcard: BookCard | None = None
-
     def set_card(self, book: "Book") -> BookCard:
-        """Set a new book card."""
         metadata = book.get_metadata()
         pagenow, pagemax = metadata["pagenow"], metadata["pagemax"]
         match pagenow / pagemax:
@@ -141,7 +136,6 @@ class BookCardContainer(Reader):
                 await asynckivy.sleep(duration)
 
     def check_cards(self) -> None:
-        """Check the bookcards."""
         for card in self.root.ids.grid.children:
             card.check_border()
 
@@ -157,8 +151,7 @@ class BookCardContainer(Reader):
 
     async def prepare_book(
         self, book: "Book", bookcard: BookCard, duration: Optional[float] = None
-    ):
-        """Extract the book."""
+    ) -> None:
         if duration is not None:
             await asynckivy.sleep(duration)
         book.extract()

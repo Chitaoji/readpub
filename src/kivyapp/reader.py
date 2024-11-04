@@ -15,16 +15,15 @@ from kivy.logger import Logger
 from kivy.properties import NumericProperty, StringProperty
 from kivy.uix.image import Image
 from kivy.uix.screenmanager import FadeTransition
-from kivymd.app import MDApp
 from kivymd.uix.label import MDLabel
 from kivymd.uix.list import MDListItem
 
 from ..bookmanager import BookImage
 
 if TYPE_CHECKING:
-
-    from ..bookmanager import BookManager
-    from ..bookmanager._typing import Book
+    from ._typing import BasicApp
+else:
+    from kivymd.app import MDApp as BasicApp
 
 __all__ = ["Reader"]
 
@@ -36,12 +35,8 @@ class BookContentItem(MDListItem):
     npage = NumericProperty()
 
 
-class Reader(MDApp):
+class Reader(BasicApp):
     """Implements a reader app."""
-
-    bookmanager: "BookManager"
-    reader_disabled: bool = True
-    book: "Book | None" = None
 
     def homepage(self):
         """Return to the homepage."""

@@ -8,6 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import asynckivy
 from kivy.core.window import Window
@@ -17,7 +18,11 @@ from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 from ..bookmanager import TextMaster
-from .bookcard import BookCardContainer
+
+if TYPE_CHECKING:
+    from ._typing import BasicApp
+else:
+    from kivymd.app import MDApp as BasicApp
 
 __all__ = ["FileImporter"]
 
@@ -104,12 +109,8 @@ class FakeModalView:
         """Dismiss?"""
 
 
-class FileImporter(BookCardContainer):
+class FileImporter(BasicApp):
     """Implements a file importer app."""
-
-    filemanager: FileImporterManager
-    has_filemanager: bool = False
-    prev_snackbar: MDSnackbar | None = None
 
     def filemanager_open(self):
         """Open filemanager."""

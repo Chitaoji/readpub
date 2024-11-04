@@ -27,9 +27,10 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
-from .bookcard import menu_on_open
+from .bookcard import BookCardContainer, menu_on_open
 from .font import KivyFont
 from .importer import FakeModalView, FileImporter, FileImporterManager
+from .reader import Reader
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -64,12 +65,8 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(FileImporter):
+class MainApp(Reader, BookCardContainer, FileImporter):
     """Kivy-App for ReadPub."""
-
-    fontmanager: KivyFont
-    current_sort_rule: list[str]
-    category_status: str
 
     def get_application_config(self, defaultpath="") -> str:
         return kvconfig.get_inipath(self).as_posix()
@@ -89,6 +86,8 @@ class MainApp(FileImporter):
             "theme-cls", "primary_palette"
         )
 
+        self.test_bookcard = None
+
     def build(self):
         self.title = "ReadPub"
 
@@ -96,6 +95,11 @@ class MainApp(FileImporter):
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
         )
         setattr(self.filemanager, "_window_manager", FakeModalView())
+        self.has_filemanager = False
+        self.prev_snackbar = None
+
+        self.reader_disabled = True
+        self.book = None
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)
@@ -107,6 +111,7 @@ class MainApp(FileImporter):
             )
         )
         self.category_status = "home"
+
         self.bookmanager = m
         self.init_color_buttons()
 
@@ -325,7 +330,6 @@ class MainApp(FileImporter):
         self._category_menu_open(menu, button)
 
     def open_nav_drawer(self, name: str) -> None:
-        """Open the nav-drawer."""
         nav_drawer = getattr(self.root.ids, name)
         nav_drawer.set_state("toggle")
 
