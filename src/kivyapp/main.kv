@@ -302,25 +302,23 @@ MDScreenManager:
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.truly_disable_cards()
-                on_close: 
-                    app.truly_enable_cards()
+                on_close: app.truly_enable_cards()
 
-                MDBoxLayout:
-                    adaptive_height: True
+                MDRelativeLayout:
                     orientation: "vertical"
                     pos_hint: {"top": 1, "left": 1}
                     spacing: "20dp"
-                    padding: 0, dp(10), 0, 0
 
                     MDNavigationDrawerLabel:
                         text: "设置"
                         font_style: "NavText"
                         role: "large"
+                        pos_hint: {"top": 1, "left": 1}
 
                     MDButton:
                         on_release: app.switch_theme_style()
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .91}
 
                         MDButtonIcon:
                             icon: "theme-light-dark"
@@ -334,17 +332,15 @@ MDScreenManager:
 
                     MDGridLayout:
                         rows: 1
-                        padding: 0, dp(5), 0, 0
-                        adaptive_width: True
-                        spacing: dp(10), 0
-                        pos_hint: {"center_x": .5}
-
-                        MDNavigationDrawerLabel:
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5, "center_y": .84}
+                        spacing: dp(10)
+                        
+                        MDLabel:
+                            adaptive_width: True
                             text: "主题颜色"
                             font_style: "NavText"
                             role: "medium"
-                            adaptive_width: True
-                            padding: 0, 0, 0, dp(4)
 
                         MDButton:
                             id: palette_now_button
@@ -356,17 +352,16 @@ MDScreenManager:
                     MDGridLayout:
                         id: palette_pre_grid
                         rows: 1
-                        adaptive_width: True
-                        padding: 0, dp(40), 0, 0
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5, "center_y": .78}
                         spacing: dp(10), 0
-                        pos_hint: {"center_x": .5}
 
-                    MDNavigationDrawerDivider:
-                        padding: 0, dp(72), 0, 0
+                    MDDivider:
+                        pos_hint : {"center_x": .5, "center_y": .735}
 
                     MDButton:
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .69}
                         on_release: 
                             Window.fullscreen = "auto" if \
                             Window.fullscreen is False else False
@@ -379,11 +374,11 @@ MDScreenManager:
                                 "全屏模式" if Window.fullscreen is False else "退出全屏"
                             font_style: "NavText"
                             role: "medium"
-
+                   
                     MDButton:
                         on_release: app.reset_theme()
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .05}
 
                         MDButtonIcon:
                             icon: "restore"
@@ -532,22 +527,21 @@ MDScreenManager:
                 on_open: app.truly_disable_reader()
                 on_close: app.truly_enable_reader()
 
-                MDBoxLayout:
-                    adaptive_height: True
+                MDRelativeLayout:
                     orientation: "vertical"
-                    pos_hint: {"top": 1, "left":1}
+                    pos_hint: {"top": 1, "left": 1}
                     spacing: "20dp"
-                    padding: 0, dp(10), 0, 0
-                    
+
                     MDNavigationDrawerLabel:
                         text: "设置"
                         font_style: "NavText"
                         role: "large"
+                        pos_hint: {"top": 1, "left": 1}
 
                     MDButton:
                         on_release: app.switch_theme_style()
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .91}
 
                         MDButtonIcon:
                             icon: "theme-light-dark"
@@ -561,17 +555,15 @@ MDScreenManager:
 
                     MDGridLayout:
                         rows: 1
-                        padding: 0, dp(5), 0, 0
-                        adaptive_width: True
-                        spacing: dp(10), 0
-                        pos_hint: {"center_x": .5}
-
-                        MDNavigationDrawerLabel:
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5, "center_y": .84}
+                        spacing: dp(10)
+                        
+                        MDLabel:
+                            adaptive_width: True
                             text: "主题颜色"
                             font_style: "NavText"
                             role: "medium"
-                            adaptive_width: True
-                            padding: 0, 0, 0, dp(4)
 
                         MDButton:
                             id: reader_palette_now_button
@@ -583,17 +575,16 @@ MDScreenManager:
                     MDGridLayout:
                         id: reader_palette_pre_grid
                         rows: 1
-                        adaptive_width: True
-                        padding: 0, dp(40), 0, 0
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5, "center_y": .78}
                         spacing: dp(10), 0
-                        pos_hint: {"center_x": .5}
 
-                    MDNavigationDrawerDivider:
-                        padding: 0, dp(72), 0, 0
+                    MDDivider:
+                        pos_hint : {"center_x": .5, "center_y": .735}
 
                     MDButton:
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .69}
                         on_release: 
                             Window.fullscreen = "auto" if \
                             Window.fullscreen is False else False
@@ -610,7 +601,7 @@ MDScreenManager:
                     MDButton:
                         on_release: app.reset_theme()
                         adaptive_size: True
-                        pos_hint: {"center_x": .5}
+                        pos_hint: {"center_x": .5, "center_y": .05}
 
                         MDButtonIcon:
                             icon: "restore"
@@ -619,7 +610,6 @@ MDScreenManager:
                             text: "恢复默认"
                             font_style: "NavText"
                             role: "medium"
-
 
         MDNavigationLayout:
 
