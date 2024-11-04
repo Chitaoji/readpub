@@ -329,6 +329,10 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         menu.on_enter = menu.on_leave
         self._category_menu_open(menu, button)
 
+    def set_category_status(self, category_status: str) -> None:
+        """Set the category status."""
+        self.category_status = category_status
+
     def open_nav_drawer(self, name: str) -> None:
         nav_drawer = getattr(self.root.ids, name)
         nav_drawer.set_state("toggle")

@@ -10,7 +10,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import asynckivy
 from kivy.core.window import Window
 from kivy.metrics import dp
 from kivymd.uix.filemanager import MDFileManager
