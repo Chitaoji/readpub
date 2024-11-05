@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
 from .book import Book
+from .textmaster import FontTable
 from .viewer import BookViewer
 
 if TYPE_CHECKING:
@@ -48,6 +49,7 @@ class BookManager:
         self.logger = logger
         self.opened_book = ""
         self.username = "testuser"
+        self.fonttable = FontTable()
         self.__init_books()
 
     def __getitem__(self, __key: int) -> Book:

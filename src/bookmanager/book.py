@@ -129,7 +129,9 @@ class Book:
         for ref in yaml.safe_load((self.dirpath / "content.yml").read_text()):
             fromdir = "".join(ref.rpartition("/")[:-1])
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
-            if paras := TextMaster.read_from_bs(bs, srcpath, fromdir, idx):
+            if paras := TextMaster.read_from_bs(
+                bs, srcpath, fromdir, idx, self.manager.fonttable
+            ):
                 to_pickle.append(paras)
         with pk.open("wb") as f:
             pickle.dump(to_pickle, f)

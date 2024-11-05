@@ -13,15 +13,43 @@ from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional
 
-from fontTools.ttLib import TTFont
 from PIL import ImageFont
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from fontTools.ttLib.tables._g_l_y_f import table__g_l_y_f
 
     from ._typing import Chapter, TextMeasureMethod, TitleLevel, para
 
 __all__ = ["TextMaster", "BookIndex", "BookTitle", "BookImage"]
+
+
+class FontTable:
+    """Contains a font table."""
+
+    def __init__(self):
+        self.unsupported: dict[str] = set("\t⋯⛎♐♎♓♌⭐\ue40a♠♥♣♦⁉︎♪❤ꓶ➋➊")
+        self.__glyf: "table__g_l_y_f | None" = None
+
+    def is_char_in_font(self, char: str) -> bool:
+        """Returns whether the character is supported by the font."""
+        return char not in self.unsupported
+
+    def glyf_has_key(self, char: str) -> bool:
+        """Check whether the character is in the glyf table."""
+        code = char.encode("unicode-escape").decode()
+        if "\\u" in code:
+            code = "uni" + code[2:].upper()
+        return self.glyf.has_key(code)
+
+    @property
+    def glyf(self) -> "table__g_l_y_f":
+        """Glyf table."""
+        from fontTools.ttLib import TTFont  # pylint: disable=import-outside-toplevel
+
+        if self.__glyf is None:
+            self.__glyf = TTFont("C:/Windows/Fonts/msyh.ttc", fontNumber=0)["glyf"]
+        return self.__glyf
 
 
 @dataclass
@@ -43,14 +71,6 @@ class TextMesurePlain:
 
     def __post_init__(self):
         self.fonttype = ImageFont.truetype(font=self.font, size=self.size)
-        self.glyf = TTFont(
-            (
-                f"C:/Windows/Fonts/{self.font}.ttc"
-                if isinstance(self.font, str)
-                else self.font
-            ),
-            fontNumber=0,
-        )["glyf"]
 
     def getlength(self, char: str) -> float:
         """Get the character length (in pixels)."""
@@ -59,15 +79,6 @@ class TextMesurePlain:
     def getbbox(self, char: str) -> tuple[float, float, float, float]:
         """Get the (left, top, right, bottom) bounding box."""
         return self.fonttype.getbbox(char)
-
-    def is_char_in_font(self, char: str) -> bool:
-        """Returns whether the character is supported by the font."""
-        code = char.encode("unicode-escape").decode()
-        if "\\u" in code:
-            code = "uni" + code[2:].upper()
-        if not self.glyf.has_key(code):
-            return False
-        return len(self.glyf[code].getCoordinates(0)[0]) > 0
 
 
 class TextMesureSameSized(TextMesurePlain):
@@ -129,7 +140,7 @@ class TextMaster:
     size : float, optional
         Text size.
     method : TextMeasureMethod, optional
-        Specifies the measure method, by default "cached".
+        Specifies the measure method, by default "mixed".
 
     """
 
@@ -377,6 +388,7 @@ class TextMaster:
         srcpath: Path,
         fromdir: str,
         idx: "BookIndex",
+        fonttable: FontTable,
     ) -> list["str | FakeParagraph"]:
         """
         Read from instance of `BeautifulSoup`. The return value
@@ -392,6 +404,8 @@ class TextMaster:
             Directory ref (may be used by the image).
         idx : BookIndex
             Book index.
+        fonttable : FontTable
+            Instance of `FontTable`.
 
         Returns
         -------
@@ -415,6 +429,8 @@ class TextMaster:
                 else:
                     res.append(BookTitle(t.strip(), level, idx))
             elif n == "p":
+                for i in t:
+                    fonttable.is_char_in_font(i)
                 res.append(
                     re.sub("(?<=[\u4e00-\u9fff])\\s+(?=[\u4e00-\u9fff])", "", t).strip()
                 )
@@ -467,8 +483,8 @@ class BookIndex(FakeParagraph):
             )
         return string
 
-    def pop(self, title: "BookTitle") -> None:
-        """Pop a new (sub)title."""
+    def push(self, title: "BookTitle") -> None:
+        """Push a new (sub)title."""
         if self.title is None:
             self.title = title
         elif self.title.level == title.level:
@@ -488,7 +504,7 @@ class BookIndex(FakeParagraph):
         elif self.content[-1].title.level == title.level:
             self.content.append(BookIndex(title))
         elif self.content[-1].title.level < title.level:
-            self.content[-1].pop(title)
+            self.content[-1].push(title)
         else:
             self.content = [
                 BookIndex(BookTitle("Unknown", title.level), self.content),
@@ -508,7 +524,7 @@ class BookTitle(FakeParagraph):
 
     def __post_init__(self) -> None:
         if self.idx:
-            self.idx.pop(self)
+            self.idx.push(self)
             self.idx = None
 
     def plain_text(self) -> str:
@@ -525,3 +541,16 @@ class BookImage(FakeParagraph):
 
     def plain_text(self) -> str:
         return f"[image={self.path}]"
+
+
+@dataclass
+class AlternativeCharacter(FakeParagraph):
+    """Alternative character."""
+
+    text: str
+    font_name: str
+    npage: int = field(init=False, default=-1)
+    height: float = field(init=False, default=40.0)
+
+    def plain_text(self) -> str:
+        return self.text
