@@ -28,12 +28,35 @@ class FontTable:
     """Contains a font table."""
 
     def __init__(self):
-        self.unsupported: dict[str] = set("\t⋯⛎♐♎♓♌⭐\ue40a♠♥♣♦⁉︎♪❤ꓶ➋➊")
+        self.alter: dict[str, str] = {
+            "\t": "",
+            "⋯": "",
+            "⛎": "",
+            "♐": "",
+            "♎": "",
+            "♓": "",
+            "♌": "",
+            "⭐": "",
+            "\ue40a": "",
+            "♠": "Arial",
+            "♥": "Arial",
+            "♣": "Arial",
+            "♦": "Arial",
+            "⁉︎": "",
+            "♪": "",
+            "❤": "",
+            "ꓶ": "",
+        }
+        for i in "➊➋➌➍➎➏➐➑➒➓":
+            self.alter[i] = ""
         self.__glyf: "table__g_l_y_f | None" = None
 
     def is_char_in_font(self, char: str) -> bool:
         """Returns whether the character is supported by the font."""
-        return char not in self.unsupported
+        return char not in self.alter
+
+    def translate(self, text: str) -> list:
+        return []
 
     def glyf_has_key(self, char: str) -> bool:
         """Check whether the character is in the glyf table."""
@@ -414,6 +437,7 @@ class TextMaster:
 
         """
         res: list["str | FakeParagraph"] = []
+        repl = "(?<=[\u4e00-\u9fff])\\s+(?=[\u4e00-\u9fff])"
         for tag in bs.body.find_all():
             if not (t := tag.text):
                 if img := tag.img:
@@ -429,11 +453,15 @@ class TextMaster:
                 else:
                     res.append(BookTitle(t.strip(), level, idx))
             elif n == "p":
-                for i in t:
-                    fonttable.is_char_in_font(i)
-                res.append(
-                    re.sub("(?<=[\u4e00-\u9fff])\\s+(?=[\u4e00-\u9fff])", "", t).strip()
-                )
+                if all(fonttable.is_char_in_font(char) for char in t):
+                    res.append(re.sub(repl, "", t).strip())
+                else:
+                    for sub_t in fonttable.translate(t):
+                        res.append(
+                            re.sub(repl, "", sub_t).strip()
+                            if isinstance(sub_t, str)
+                            else sub_t
+                        )
         return res
 
 
