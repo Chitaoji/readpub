@@ -12,6 +12,7 @@ REQUIRES:
     - kivy
     - kivymd2
     - pillow
+    - fonttools
 EXTRAS:   
   exe:
     - pyinstaller

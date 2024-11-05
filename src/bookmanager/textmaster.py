@@ -13,6 +13,7 @@ from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional
 
+from fontTools.ttLib import TTFont
 from PIL import ImageFont
 
 if TYPE_CHECKING:
@@ -33,7 +34,7 @@ class TextMesurePlain:
     font : str | Path, optional
         Font name, or the path of the font file.
     size : float, optional
-        Text size.
+        Character size.
 
     """
 
@@ -42,23 +43,40 @@ class TextMesurePlain:
 
     def __post_init__(self):
         self.fonttype = ImageFont.truetype(font=self.font, size=self.size)
+        self.glyf = TTFont(
+            (
+                f"C:/Windows/Fonts/{self.font}.ttc"
+                if isinstance(self.font, str)
+                else self.font
+            ),
+            fontNumber=0,
+        )["glyf"]
 
-    def getlength(self, text: str) -> float:
-        """Get the text length (in pixels)."""
-        return self.fonttype.getlength(text)
+    def getlength(self, char: str) -> float:
+        """Get the character length (in pixels)."""
+        return self.fonttype.getlength(char)
 
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+    def getbbox(self, char: str) -> tuple[float, float, float, float]:
         """Get the (left, top, right, bottom) bounding box."""
-        return self.fonttype.getbbox(text)
+        return self.fonttype.getbbox(char)
+
+    def is_char_in_font(self, char: str) -> bool:
+        """Returns whether the character is supported by the font."""
+        code = char.encode("unicode-escape").decode()
+        if "\\u" in code:
+            code = "uni" + code[2:].upper()
+        if not self.glyf.has_key(code):
+            return False
+        return len(self.glyf[code].getCoordinates(0)[0]) > 0
 
 
 class TextMesureSameSized(TextMesurePlain):
     """Measures text assuming that they all have the same length."""
 
-    def getlength(self, text: str) -> float:
+    def getlength(self, char: str) -> float:
         return self.size
 
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
+    def getbbox(self, char: str) -> tuple[float, float, float, float]:
         return (0, 5, self.size, 4 + self.size)
 
 
@@ -70,16 +88,16 @@ class TextMesureCached(TextMesurePlain):
         self.bbox_cache: dict[str, tuple[float, float, float, float]] = {}
         super().__post_init__()
 
-    def getlength(self, text: str) -> float:
-        if text in self.len_cache:
-            return self.len_cache[text]
-        self.len_cache[text] = length = self.fonttype.getlength(text)
+    def getlength(self, char: str) -> float:
+        if char in self.len_cache:
+            return self.len_cache[char]
+        self.len_cache[char] = length = self.fonttype.getlength(char)
         return length
 
-    def getbbox(self, text: str) -> tuple[float, float, float, float]:
-        if text in self.bbox_cache:
-            return self.bbox_cache[text]
-        self.bbox_cache[text] = bbox = self.fonttype.getbbox(text)
+    def getbbox(self, char: str) -> tuple[float, float, float, float]:
+        if char in self.bbox_cache:
+            return self.bbox_cache[char]
+        self.bbox_cache[char] = bbox = self.fonttype.getbbox(char)
         return bbox
 
 
@@ -90,12 +108,12 @@ class TextMesureMixed(TextMesureCached):
 
     """
 
-    def getlength(self, text: str) -> float:
-        if "一" <= text <= "鿿":  # U+4E00 ~ U+9FFF
+    def getlength(self, char: str) -> float:
+        if "一" <= char <= "鿿":  # U+4E00 ~ U+9FFF
             return self.size
-        if text in self.len_cache:
-            return self.len_cache[text]
-        self.len_cache[text] = length = self.fonttype.getlength(text)
+        if char in self.len_cache:
+            return self.len_cache[char]
+        self.len_cache[char] = length = self.fonttype.getlength(char)
         return length
 
 
