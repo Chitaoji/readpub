@@ -123,7 +123,6 @@ class KivyFont:
         LabelBase.register(name=font_name, fn_regular=font_path.as_posix())
         self.font_styles[font_style] = font_properties
         self.app.theme_cls.font_styles[font_style] = font_properties
-        print(theme_font_styles)
 
     def findfont(self, font_name: str) -> Path | None:
         """
