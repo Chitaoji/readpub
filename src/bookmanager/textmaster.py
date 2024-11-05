@@ -450,7 +450,6 @@ class TextMaster:
 
         """
         res: list["str | FakeParagraph"] = []
-        repl = "(?<=[\u4e00-\u9fff])\\s+(?=[\u4e00-\u9fff])"
         for tag in bs.body.find_all():
             if not (t := tag.text):
                 if img := tag.img:
@@ -467,11 +466,11 @@ class TextMaster:
                     res.append(BookTitle(t.strip(), level, idx))
             elif n == "p":
                 if all(fonttable.is_char_in_font(char) for char in t):
-                    res.append(re.sub(repl, "", t).strip())
+                    res.append(t.replace("\n", " ").strip())
                 else:
                     for sub_t in fonttable.translate(t):
                         res.append(
-                            re.sub(repl, "", sub_t).strip()
+                            t.replace("\n", " ").strip()
                             if isinstance(sub_t, str)
                             else sub_t
                         )
