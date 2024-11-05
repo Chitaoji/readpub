@@ -7,7 +7,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Mapping
 
 if TYPE_CHECKING:
@@ -19,7 +18,7 @@ if TYPE_CHECKING:
 class ReadingSetting:
     """Manages reading settings."""
 
-    fontpath: Path = field(default_factory=lambda: Path("msyh"))
+    fontpath: str = field(default_factory=lambda: "msyh")
     fontsize: float = 21.0
     page_width: float = 1000.0
     page_height: float = 900.0

@@ -9,6 +9,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 import datetime
 import io
 import pickle
+from dataclasses import asdict
 from pathlib import Path
 from typing import TYPE_CHECKING, Literal, Unpack, overload
 from zipfile import ZipFile
@@ -21,7 +22,7 @@ from .setting import ReadingSetting
 from .textmaster import BookIndex, TextMaster, merge_dir
 
 if TYPE_CHECKING:
-    from ._typing import BookSetting, Chapter, MetaData, Page, Paragraph
+    from ._typing import Chapter, MetaData, Page, Paragraph, ReadingSettingDict
     from .core import BookManager
 
 __all__ = []
@@ -42,8 +43,8 @@ class Book:
         self.dirpath = dirpath
         self.bookid = dirpath.name
         self.manager = manager
-        self.setting = ReadingSetting()
-        self.textmaster = TextMaster(self.setting.fontpath, self.setting.fontsize)
+        self.setting: ReadingSetting | None = None
+        self.textmaster = TextMaster()
         self.pagenow, self.pagemax = -1, -1
         self.__content: list[list["Paragraph"]] | None = None
         self.__typeset: "Chapter" | None = None
@@ -61,9 +62,11 @@ class Book:
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.exists():
             self.__metadata = yaml.safe_load(yml_path.read_text())
+            self.setting = ReadingSetting(**self.__metadata["setting"])
             return self.__metadata
         metadata = read_ebook(self.dirpath, only_metadata=True)
         metadata["title"] = self.textmaster.shorten(metadata["title"], 600)
+        self.setting = ReadingSetting()
         metadata.update(
             {
                 "uploader": self.manager.username,
@@ -72,6 +75,7 @@ class Book:
                 "pagenow": 0,
                 "pagemax": 1,
                 "is_ready": False,
+                "setting": asdict(self.setting),
             }
         )
         with open(yml_path, "w", encoding="utf-8") as stream:
@@ -155,14 +159,16 @@ class Book:
                 )
                 _typeset.append(chapter)
             self.__typeset = sum(_typeset, [])
-            self.update_metadata(pagemax=len(self.__typeset))
+            self.update_metadata(
+                pagemax=len(self.__typeset), setting=asdict(self.setting)
+            )
             if self.manager.logger:
                 self.manager.logger.info(
                     'Typeset: Typsetting book "<%s>"', self.get_metadata()["title"]
                 )
         return self.__typeset
 
-    def adjust(self, **kwargs: Unpack["BookSetting"]) -> None:
+    def adjust(self, **kwargs: Unpack["ReadingSettingDict"]) -> None:
         """Adjust settings."""
         adjusted = False
         for k, v in kwargs.items():
@@ -177,7 +183,6 @@ class Book:
                     repr(kwargs),
                 )
             self.__typeset = None
-            self.typeset()
 
     def page_rawcount(self) -> int:
         """Count the pages."""

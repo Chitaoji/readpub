@@ -7,7 +7,15 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TYPE_CHECKING, Literal, NotRequired, Optional, TypedDict, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Literal,
+    Mapping,
+    NotRequired,
+    Optional,
+    TypedDict,
+    TypeVar,
+)
 
 if TYPE_CHECKING:
     from .book import Book
@@ -39,6 +47,19 @@ MetaDataKey = Literal[
 ]
 
 
+class ReadingSettingDict(TypedDict):
+    """Dictionary of book settings."""
+
+    fontpath: NotRequired[Optional[str]]
+    fontsize: NotRequired[Optional[float]]
+    page_height: NotRequired[Optional[float]]
+    page_width: NotRequired[Optional[float]]
+    hline: NotRequired[Optional[float]]
+    himage: NotRequired[Optional[float]]
+    htitle: NotRequired[Optional[Mapping[TitleLevel, float]]]
+    gap: NotRequired[Optional[float]]
+
+
 class MetaData(TypedDict):
     """Dictionary of metadata."""
 
@@ -52,13 +73,7 @@ class MetaData(TypedDict):
     pagenow: NotRequired[Optional[float]]
     pagemax: NotRequired[Optional[float]]
     is_ready: NotRequired[Optional[bool]]
-
-
-class BookSetting(TypedDict):
-    """Dictionary of book settings."""
-
-    page_height: NotRequired[Optional[float]]
-    page_width: NotRequired[Optional[float]]
+    setting: NotRequired[Optional[ReadingSettingDict]]
 
 
 if TYPE_CHECKING:

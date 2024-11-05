@@ -12,13 +12,13 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from .bookmanager._typing import (
         Book,
-        BookSetting,
         Chapter,
         MetaData,
         MetaDataKey,
         Page,
         Paragraph,
         RawParagraph,
+        ReadingSettingDict,
         StatusHint,
         TextMeasureMethod,
         TitleLevel,
