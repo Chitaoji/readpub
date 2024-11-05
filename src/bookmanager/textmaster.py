@@ -28,8 +28,8 @@ class FontTable:
     """Contains a font table."""
 
     def __init__(self):
-        self.alter: dict[str, str] = {
-            "\t": "",
+        self.alter: dict[str, str | None] = {
+            "\t": None,
             "⋯": "",
             "⛎": "",
             "♐": "",
@@ -61,11 +61,13 @@ class FontTable:
         for char in text:
             if self.is_char_in_font(char):
                 textnow += char
-            elif font_name := self.alter[char]:
+            elif val := self.alter[char]:
                 if textnow:
                     yield textnow
                     textnow = ""
-                yield AlternativeCharacter(char, font_name)
+                yield AlternativeCharacter(char, val)
+            elif val == "":
+                textnow += char.encode("unicode-escape").decode()
         if textnow:
             yield textnow
 
