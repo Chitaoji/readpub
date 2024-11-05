@@ -55,8 +55,19 @@ class FontTable:
         """Returns whether the character is supported by the font."""
         return char not in self.alter
 
-    def translate(self, text: str) -> list:
-        return []
+    def translate(self, text: str) -> Iterator["str | AlternativeCharacter"]:
+        """Translate with alternative characters."""
+        textnow = ""
+        for char in text:
+            if self.is_char_in_font(char):
+                textnow += char
+            elif font_name := self.alter[char]:
+                if textnow:
+                    yield textnow
+                    textnow = ""
+                yield AlternativeCharacter(char, font_name)
+        if textnow:
+            yield textnow
 
     def glyf_has_key(self, char: str) -> bool:
         """Check whether the character is in the glyf table."""
@@ -575,10 +586,10 @@ class BookImage(FakeParagraph):
 class AlternativeCharacter(FakeParagraph):
     """Alternative character."""
 
-    text: str
+    char: str
     font_name: str
     npage: int = field(init=False, default=-1)
     height: float = field(init=False, default=40.0)
 
     def plain_text(self) -> str:
-        return self.text
+        return self.char
