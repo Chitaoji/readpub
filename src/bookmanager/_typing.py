@@ -47,7 +47,7 @@ MetaDataKey = Literal[
 ]
 
 
-class ReadingSettingDict(TypedDict):
+class PageSettingsDict(TypedDict):
     """Dictionary of book settings."""
 
     fontpath: NotRequired[Optional[str]]
@@ -73,7 +73,7 @@ class MetaData(TypedDict):
     pagenow: NotRequired[Optional[float]]
     pagemax: NotRequired[Optional[float]]
     is_ready: NotRequired[Optional[bool]]
-    setting: NotRequired[Optional[ReadingSettingDict]]
+    setting: NotRequired[Optional[PageSettingsDict]]
 
 
 if TYPE_CHECKING:

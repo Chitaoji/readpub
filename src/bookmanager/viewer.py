@@ -34,7 +34,7 @@ class BookViewer:
 
     def __post_init__(self) -> None:
         self.bottom = self.book.textmaster.fill(
-            repeat("="), self.book.setting.page_width
+            repeat("="), self.book.settings.page_width
         )[0]
         self.turn_to_page(self.book.pagenow)
 

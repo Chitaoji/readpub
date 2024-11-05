@@ -18,11 +18,11 @@ import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
 
-from .setting import ReadingSetting
+from .setting import PageSettings
 from .textmaster import BookIndex, TextMaster, merge_dir
 
 if TYPE_CHECKING:
-    from ._typing import Chapter, MetaData, Page, Paragraph, ReadingSettingDict
+    from ._typing import Chapter, MetaData, Page, PageSettingsDict, Paragraph
     from .core import BookManager
 
 __all__ = []
@@ -43,7 +43,7 @@ class Book:
         self.dirpath = dirpath
         self.bookid = dirpath.name
         self.manager = manager
-        self.setting: ReadingSetting | None = None
+        self.settings: PageSettings | None = None
         self.textmaster = TextMaster()
         self.pagenow, self.pagemax = -1, -1
         self.__content: list[list["Paragraph"]] | None = None
@@ -62,11 +62,11 @@ class Book:
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.exists():
             self.__metadata = yaml.safe_load(yml_path.read_text())
-            self.setting = ReadingSetting(**self.__metadata["setting"])
+            self.settings = PageSettings(**self.__metadata["settings"])
             return self.__metadata
         metadata = read_ebook(self.dirpath, only_metadata=True)
         metadata["title"] = self.textmaster.shorten(metadata["title"], 600)
-        self.setting = ReadingSetting()
+        self.settings = PageSettings()
         metadata.update(
             {
                 "uploader": self.manager.username,
@@ -75,7 +75,7 @@ class Book:
                 "pagenow": 0,
                 "pagemax": 1,
                 "is_ready": False,
-                "setting": asdict(self.setting),
+                "settings": asdict(self.settings),
             }
         )
         with open(yml_path, "w", encoding="utf-8") as stream:
@@ -147,7 +147,7 @@ class Book:
         """Typeset the content."""
         if self.__typeset is None:
             _typeset: list["Chapter"] = []
-            st, npage = self.setting, 0
+            st, npage = self.settings, 0
             for contentid in range(1, len(self.get_content())):
                 chapter, npage = self.textmaster.divide_into_pages(
                     self.get_content()[contentid],
@@ -160,7 +160,7 @@ class Book:
                 _typeset.append(chapter)
             self.__typeset = sum(_typeset, [])
             self.update_metadata(
-                pagemax=len(self.__typeset), setting=asdict(self.setting)
+                pagemax=len(self.__typeset), settings=asdict(self.settings)
             )
             if self.manager.logger:
                 self.manager.logger.info(
@@ -168,12 +168,12 @@ class Book:
                 )
         return self.__typeset
 
-    def adjust(self, **kwargs: Unpack["ReadingSettingDict"]) -> None:
+    def adjust(self, **kwargs: Unpack["PageSettingsDict"]) -> None:
         """Adjust settings."""
         adjusted = False
         for k, v in kwargs.items():
-            if getattr(self.setting, k) != v:
-                setattr(self.setting, k, v)
+            if getattr(self.settings, k) != v:
+                setattr(self.settings, k, v)
                 adjusted = True
         if adjusted:
             if self.manager.logger:
@@ -188,7 +188,7 @@ class Book:
         """Count the pages."""
         n = 0
         for content in self.get_content()[1:]:
-            st = self.setting
+            st = self.settings
             n += self.textmaster.page_rawcount(
                 content, st.page_width, st.page_height, st.hline, st.gap
             )

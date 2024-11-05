@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class ReadingSetting:
+class PageSettings:
     """Manages reading settings."""
 
     fontpath: str = field(default_factory=lambda: "msyh")
