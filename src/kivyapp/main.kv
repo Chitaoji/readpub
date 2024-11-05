@@ -71,14 +71,14 @@
             md_bg_color: app.theme_cls.surfaceContainerLowColor
 
             MDTopAppBarLeadingButtonContainer:
-                padding: "12dp", 0, 0, root_label.height / 2 - self.height * 0.35
+                padding: dp(12), 0, 0, root_label.height / 2 - self.height * 0.35
 
                 MDActionTopAppBarButton:
                     icon: "chevron-left"
                     on_release: root.back()
 
             MDLabel:
-                padding: 0, 0, "12dp", 0
+                padding: 0, 0, dp(12), 0
                 text: p if (p:=root.current_path) else "此电脑"
                 id: root_label
                 adaptive_height: True
@@ -94,8 +94,8 @@
             bar_inactive_color: app.theme_cls.surfaceContainerLowColor
 
             RecycleGridLayout:
-                padding: "10dp"
-                spacing: "2dp"
+                padding: dp(10)
+                spacing: dp(2)
                 cols: 3 if root.preview else 1
                 default_size: None, dp(48)
                 default_size_hint: 1, None
@@ -104,9 +104,9 @@
 
 
 <BookCard>
-    padding: "4dp"
+    padding: dp(4)
     size_hint: None, None
-    size: "480dp", "240dp"
+    size: dp(480), dp(240)
     truly_disabled: False
     on_release: 
         app.open_book(self.bookid)
@@ -144,9 +144,9 @@
         MDBoxLayout:
             adaptive_height: True
             orientation: "vertical"
-            padding: "190dp", "0dp", "10dp", "0dp"
+            padding: dp(190), 0, dp(10), 0
             pos_hint: {"top": .88}
-            spacing: "26dp"
+            spacing: dp(26)
             
             MDLabel:
                 text: root.title
@@ -168,7 +168,7 @@
             role: "small"
             color: app.theme_cls.outlineColor
             adaptive_height: True
-            padding: "190dp", "0dp", "10dp", "16dp"
+            padding: dp(190), 0, dp(10), dp(16)
             pos_hint: {"bottom": 1}
                 
 
@@ -176,7 +176,7 @@
     orientation: "vertical"
     
     MDBoxLayout:
-        padding: "30dp"
+        padding: dp(30)
         spacing: 
             (self.width - trailing_text.width)/2 - self.padding[0] \
             - leading_icon.width + dp(10)
@@ -231,12 +231,12 @@ MDScreenManager:
 
         MDBoxLayout:
             orientation: "vertical"
-            spacing: "0dp"
+            spacing: 0
             
             MDBoxLayout:
                 adaptive_size: True
-                padding: "0dp", "70dp", "0dp", "24dp"
-                spacing: "20dp"
+                padding: 0, dp(70), 0, dp(24)
+                spacing: dp(20)
                 pos_hint: {"center_x":.5, "top":1}
 
                 MDIconButton:
@@ -279,7 +279,7 @@ MDScreenManager:
                 scroll_x: .5
                 scroll_type: ["content", "bars"]
                 scroll_wheel_distance: 80
-                bar_width: "12dp"
+                bar_width: dp(12)
                 bar_inactive_color: root.theme_cls.surfaceContainerColor
                 on_scroll_start: app.check_cards()
                 on_scroll_stop: app.check_cards()
@@ -288,8 +288,8 @@ MDScreenManager:
                     id: grid
                     cols: 3
                     adaptive_size: True
-                    spacing: ["24dp", "24dp"]
-                    padding: "24dp"
+                    spacing: [dp(24), dp(24)]
+                    padding: dp(24)
 
         MDNavigationLayout:
 
@@ -307,7 +307,7 @@ MDScreenManager:
                 MDRelativeLayout:
                     orientation: "vertical"
                     pos_hint: {"top": 1, "left": 1}
-                    spacing: "20dp"
+                    spacing: dp(20)
 
                     MDNavigationDrawerLabel:
                         text: "设置"
@@ -363,8 +363,7 @@ MDScreenManager:
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .69}
                         on_release: 
-                            Window.fullscreen = "auto" if \
-                            Window.fullscreen is False else False
+                            Clock.schedule_once(lambda _: app.switch_fullscreen(), .5)
 
                         MDButtonIcon:
                             icon: "keyboard-f11"
@@ -412,14 +411,14 @@ MDScreenManager:
             id: textbox
             adaptive_size: True
             orientation: "vertical"
-            padding: "24dp"
+            padding: dp(24)
             spacing: dp(40)
             pos_hint: {"center_x": .5, "center_y": .5}
 
         MDBoxLayout:
             id: imagebox
             orientation: "vertical"
-            padding: "24dp"
+            padding: dp(24)
             spacing: dp(40)
             pos_hint: {"center_x": .5, "center_y": .5}
 
@@ -456,8 +455,8 @@ MDScreenManager:
         MDBoxLayout:
             id: reader_toolbar
             adaptive_size: True
-            padding: "0dp", "70dp", "0dp", "24dp"
-            spacing: "20dp"
+            padding: 0, dp(70), 0, dp(24)
+            spacing: dp(20)
             pos_hint: {"center_x":.5, "top":1}
             opacity: 0
             disabled: 1
@@ -484,8 +483,8 @@ MDScreenManager:
                 id: reader_search_field
                 mode: "outlined"
                 size_hint_x: None
-                width: "1380dp"
-                height: "240dp"
+                width: dp(1380)
+                height: dp(240)
                 radius: 20
                 on_focus: reader_search_field_helper.text = "请输入搜索内容..."
 
@@ -530,7 +529,7 @@ MDScreenManager:
                 MDRelativeLayout:
                     orientation: "vertical"
                     pos_hint: {"top": 1, "left": 1}
-                    spacing: "20dp"
+                    spacing: dp(20)
 
                     MDNavigationDrawerLabel:
                         text: "设置"
@@ -586,8 +585,7 @@ MDScreenManager:
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .69}
                         on_release: 
-                            Window.fullscreen = "auto" if \
-                            Window.fullscreen is False else False
+                            Clock.schedule_once(lambda _: app.switch_fullscreen(), .5)
 
                         MDButtonIcon:
                             icon: "keyboard-f11"

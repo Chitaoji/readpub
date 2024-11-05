@@ -177,6 +177,10 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             [["theme-cls", "theme_style", self.theme_cls.theme_style]]
         )
 
+    def switch_fullscreen(self):
+        """Switch between fullscreen and windowed screen."""
+        Window.fullscreen = "auto" if Window.fullscreen is False else False
+
     def switch_theme_palette(self, color: str):
         """Switch the theme-palette."""
         self.theme_cls.primary_palette = color
