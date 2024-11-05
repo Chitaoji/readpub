@@ -80,7 +80,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             ]
         )
 
-        self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"))
+        self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
         self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
         self.theme_cls.primary_palette = kvconfig[self].get(
             "theme-cls", "primary_palette"

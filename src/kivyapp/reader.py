@@ -18,7 +18,7 @@ from kivy.uix.screenmanager import FadeTransition
 from kivymd.uix.label import MDLabel
 from kivymd.uix.list import MDListItem
 
-from ..bookmanager import BookImage
+from ..bookmanager import AlternativeCharacter, BookImage
 
 if TYPE_CHECKING:
     from ._typing import BasicApp
@@ -151,6 +151,26 @@ class Reader(BasicApp):
             elif isinstance(para, BookImage):
                 Logger.info('Image: Loading image "%s"', para.path)
                 imgbox.add_widget(Image(source=para.path.as_posix()))
+            elif isinstance(para, AlternativeCharacter):
+                font_style, role = self.fontmanager.getstyle(
+                    para.font_name, self.book.settings.fontsize
+                )
+                box.add_widget(
+                    MDLabel(
+                        adaptive_width=True,
+                        font_style=font_style,
+                        role=role,
+                        text=para.char,
+                    )
+                )
+                box.add_widget(
+                    MDLabel(
+                        adaptive_width=True,
+                        font_style="BookCover",
+                        role="medium",
+                        text="",
+                    )
+                )
             else:
                 box.add_widget(
                     MDLabel(

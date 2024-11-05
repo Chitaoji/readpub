@@ -161,9 +161,12 @@ class BookManager:
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
         del self.books[bookid]
 
-    def view_book(self, n: int) -> BookViewer:
+    def view_book(self, n: int | str) -> BookViewer:
         """View the n-th book in the bookshelf (in console mode)."""
-        book = self[n]
+        if isinstance(n, int):
+            book = self[n]
+        else:
+            book = self.books[n]
         if self.opened_book == book.bookid:
             return BookViewer(book)
         if self.opened_book:

@@ -137,7 +137,7 @@ class FileImporter(BasicApp):
         fs, role = "NavText", "medium"
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=TextMaster(*self.fontmanager.translate(fs, role)).shorten(
+                text=TextMaster(*self.fontmanager.getpath(fs, role)).shorten(
                     snack, Window.width / 2 - 20
                 ),
                 font_style=fs,

@@ -6,7 +6,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-import re
 from dataclasses import dataclass, field
 from itertools import chain
 from math import ceil
@@ -21,7 +20,7 @@ if TYPE_CHECKING:
 
     from ._typing import Chapter, TextMeasureMethod, TitleLevel, para
 
-__all__ = ["TextMaster", "BookIndex", "BookTitle", "BookImage"]
+__all__ = ["TextMaster", "BookIndex", "BookTitle", "BookImage", "AlternativeCharacter"]
 
 
 class FontTable:

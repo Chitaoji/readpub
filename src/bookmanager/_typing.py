@@ -19,7 +19,7 @@ from typing import (
 
 if TYPE_CHECKING:
     from .book import Book
-    from .textmaster import BookImage, BookIndex, BookTitle
+    from .textmaster import AlternativeCharacter, BookImage, BookIndex, BookTitle
 
 
 logging.warning(
@@ -77,9 +77,9 @@ class MetaData(TypedDict):
 
 
 if TYPE_CHECKING:
-    para = list[T] | BookIndex | BookTitle | BookImage
+    para = list[T] | BookIndex | BookTitle | BookImage | AlternativeCharacter
 
-    RawParagraph = str | BookIndex | BookTitle | BookImage
+    RawParagraph = str | BookIndex | BookTitle | BookImage | AlternativeCharacter
     Paragraph = para[str]
     Page = list[para[str]]
     Chapter = list[list[para[str]]]

@@ -7,11 +7,15 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from kivy.core.text import LabelBase
 from kivy.logger import Logger
 from kivy.metrics import sp
 from kivymd.font_definitions import theme_font_styles
+
+if TYPE_CHECKING:
+    from kivymd.app import MDApp
 
 SYS_FONT_MAPPING = {
     "msyh": "微软雅黑",
@@ -33,20 +37,19 @@ class KivyFont:
 
     """
 
-    def __init__(self, sys_fontpath: Path) -> None:
+    def __init__(self, sys_fontpath: Path, app: "MDApp") -> None:
         if not sys_fontpath.is_dir():
             raise NotADirectoryError(f"not a directory: {sys_fontpath}")
 
         self.fontpath = sys_fontpath
+        self.app = app
         self.fonts: dict[str, tuple[Path, str]] = {}
         self.__find_sys_font()
         self.__set_font_styles()
 
     def __find_sys_font(self):
         for stem, name in SYS_FONT_MAPPING.items():
-            if (p := self.fontpath / f"{stem}.ttc").exists() or (
-                p := self.fontpath / f"{stem}.ttf"
-            ).exists():
+            if p := self.findfont(stem):
                 LabelBase.register(name=stem, fn_regular=p.as_posix())
                 self.fonts[stem] = (p, name)
             else:
@@ -106,17 +109,91 @@ class KivyFont:
                 },
             },
         }
-        for fontstyle, properties in self.font_styles.items():
-            theme_font_styles[fontstyle] = properties
+        for styl, prop in self.font_styles.items():
+            theme_font_styles[styl] = prop
 
-    def translate(self, fontstyle: str, role: str) -> tuple[Path, float]:
+    def register(
+        self,
+        font_name: str,
+        font_path: Path,
+        font_style: str,
+        font_properties: dict[str, dict[str, Any]],
+    ) -> None:
+        """Register a new font."""
+        LabelBase.register(name=font_name, fn_regular=font_path.as_posix())
+        self.font_styles[font_style] = font_properties
+        self.app.theme_cls.font_styles[font_style] = font_properties
+        print(theme_font_styles)
+
+    def findfont(self, font_name: str) -> Path | None:
         """
-        Translate the 2-tuple (fontstyle, role) into font-path and
+        Find the font under the system-font-path.
+
+        Parameters
+        ----------
+        font_name : str
+            Font name.
+
+        Returns
+        -------
+        Path | None
+            If the font exists, return a Path object; otherwise return
+            None.
+
+        """
+        if (p := self.fontpath / f"{font_name}.ttc").exists() or (
+            p := self.fontpath / f"{font_name}.ttf"
+        ).exists():
+            return p
+        return None
+
+    def getstyle(self, font: str | Path, size: float) -> tuple[str, str]:
+        """
+        Translate the 2-tuple (font, font-size) into font-style and
+        role.
+
+        Parameters
+        ----------
+        font : str | Path
+            Font name or path.
+        size : str
+            Font size.
+
+        Returns
+        -------
+        tuple[Path, float]
+            2-tuple (font-style, role).
+
+        """
+        if isinstance(font, str):
+            if not (path := self.findfont(font)):
+                return "", ""
+        else:
+            font, path = font.stem, font
+        font_style = f"{font}-{int(size)}"
+        if font_style not in self.font_styles:
+            self.register(
+                font,
+                path,
+                font_style,
+                {
+                    "large": {
+                        "line-height": 1.28,
+                        "font-name": font,
+                        "font-size": sp(size),
+                    }
+                },
+            )
+        return font_style, "large"
+
+    def getpath(self, font_style: str, role: str) -> tuple[Path, float]:
+        """
+        Translate the 2-tuple (font-style, role) into font-path and
         font-size.
 
         Parameters
         ----------
-        fontstyle : str
+        font_style : str
             Font style.
         role : str
             Font role.
@@ -124,8 +201,8 @@ class KivyFont:
         Returns
         -------
         tuple[Path, float]
-            2-tuple (fontpath, fontsize).
+            2-tuple (font-path, font-size).
 
         """
-        role_properties = self.font_styles[fontstyle][role]
-        return self.fonts[role_properties["font-name"]][0], role_properties["font-size"]
+        prop = self.font_styles[font_style][role]
+        return self.fonts[prop["font-name"]][0], prop["font-size"]
