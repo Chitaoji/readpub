@@ -43,7 +43,7 @@ class KivyFont:
 
         self.fontpath = sys_fontpath
         self.app = app
-        self.fonts: dict[str, tuple[Path, str]] = {}
+        self.font_info: dict[str, tuple[Path, str]] = {}
         self.__find_sys_font()
         self.__set_font_styles()
 
@@ -51,7 +51,7 @@ class KivyFont:
         for stem, name in SYS_FONT_MAPPING.items():
             if p := self.findfont(stem):
                 LabelBase.register(name=stem, fn_regular=p.as_posix())
-                self.fonts[stem] = (p, name)
+                self.font_info[stem] = (p, name)
             else:
                 Logger.info('Font: Font style not found: "%s"', stem)
 
@@ -113,14 +113,17 @@ class KivyFont:
             theme_font_styles[styl] = prop
 
     def register(
-        self,
-        font_name: str,
-        font_path: Path,
-        font_style: str,
-        font_properties: dict[str, dict[str, Any]],
+        self, font_name: str, font_path: Path, font_style: str, font_size: float
     ) -> None:
         """Register a new font."""
         LabelBase.register(name=font_name, fn_regular=font_path.as_posix())
+        font_properties = {
+            "large": {
+                "line-height": 1.28,
+                "font-name": font_name,
+                "font-size": sp(font_size),
+            }
+        }
         self.font_styles[font_style] = font_properties
         self.app.theme_cls.font_styles[font_style] = font_properties
 
@@ -171,18 +174,7 @@ class KivyFont:
             font, path = font.stem, font
         font_style = f"{font}-{int(size)}"
         if font_style not in self.font_styles:
-            self.register(
-                font,
-                path,
-                font_style,
-                {
-                    "large": {
-                        "line-height": 1.28,
-                        "font-name": font,
-                        "font-size": sp(size),
-                    }
-                },
-            )
+            self.register(font, path, font_style, size)
         return font_style, "large"
 
     def getpath(self, font_style: str, role: str) -> tuple[Path, float]:
@@ -204,4 +196,4 @@ class KivyFont:
 
         """
         prop = self.font_styles[font_style][role]
-        return self.fonts[prop["font-name"]][0], prop["font-size"]
+        return self.font_info[prop["font-name"]][0], prop["font-size"]
