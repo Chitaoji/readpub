@@ -66,28 +66,28 @@ class IconItem(MDListItem):
 
 
 class MDIconMenu(MDScreen):
-    """Previous all the icons."""
+    """MDIcon menu screen."""
 
     def set_list_md_icons(self, text="", search=False):
-        """Builds a list of icons for the screen MDIcons."""
-
-        def add_icon_item(name_icon):
-            self.ids.rv.data.append(
-                {
-                    "viewclass": "IconItem",
-                    "icon": name_icon,
-                    "text": name_icon,
-                    "callback": lambda x: x,
-                }
-            )
-
+        """Builds a list of icons for the screen."""
         self.ids.rv.data = []
         for name_icon in list(md_icons):
             if search:
                 if text in name_icon:
-                    add_icon_item(name_icon)
+                    self.add_icon_item(name_icon)
             else:
-                add_icon_item(name_icon)
+                self.add_icon_item(name_icon)
+
+    def add_icon_item(self, name_icon):
+        """Add an icon item."""
+        self.ids.rv.data.append(
+            {
+                "viewclass": "IconItem",
+                "icon": name_icon,
+                "text": name_icon,
+                "callback": lambda x: x,
+            }
+        )
 
 
 class IconPreview(MDApp):

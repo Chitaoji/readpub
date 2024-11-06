@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
@@ -33,7 +33,7 @@ class BasicApp(MDApp):
 
     def __init__(self, **kwargs) -> None:
         self.bookmanager = BookManager(Path(""))
-        self.fontmanager = KivyFont(Path(""))
+        self.fontmanager = KivyFont(Path(""), self)
         self.filemanager = MDFileManager()
 
         self.current_sort_rule: list[str]
