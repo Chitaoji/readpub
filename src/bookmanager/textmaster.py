@@ -27,27 +27,23 @@ class FontTable:
     """Contains a font table."""
 
     def __init__(self):
-        self.alter: dict[str, str | None] = {
-            "\t": None,
-            "⋯": "",
-            "⛎": "",
-            "♐": "",
-            "♎": "",
-            "♓": "",
-            "♌": "",
-            "⭐": "",
-            "\ue40a": "",
-            "♠": "Arial",
-            "♥": "Arial",
-            "♣": "Arial",
-            "♦": "Arial",
-            "⁉︎": "",
-            "♪": "",
-            "❤": "",
-            "ꓶ": "",
+        self.alter: dict[str, str | tuple[str]] = {
+            "\t": ("",),
+            "⋯": ("···",),
+            "⭐": "seguiemj",
+            "❤": "seguiemj",
+            "♠": "seguiemj",
+            "♥": "seguiemj",
+            "♣": "seguiemj",
+            "♦": "seguiemj",
+            "⁉︎": "YuGothR",
+            "♪": "YuGothR",
+            "ꓶ": "calibri",
         }
+        for i in "♈♉♊♋♌♍♎♏♐♑♒♓":
+            self.alter[i] = "seguiemj"
         for i in "➊➋➌➍➎➏➐➑➒➓":
-            self.alter[i] = ""
+            self.alter[i] = "YuGothR"
         self.__glyf: "table__g_l_y_f | None" = None
 
     def is_char_in_font(self, char: str) -> bool:
@@ -60,13 +56,13 @@ class FontTable:
         for char in text:
             if self.is_char_in_font(char):
                 textnow += char
-            elif val := self.alter[char]:
+            elif isinstance(val := self.alter[char], str):
                 if textnow:
                     yield textnow
                     textnow = ""
                 yield AlternativeCharacter(char, val)
-            elif val == "":
-                textnow += char.encode("unicode-escape").decode()
+            else:
+                textnow += val[0]
         if textnow:
             yield textnow
 

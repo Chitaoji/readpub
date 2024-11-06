@@ -22,7 +22,6 @@ SYS_FONT_MAPPING = {
     "msyhbd": "微软雅黑-粗体",
     "msyhl": "微软雅黑-细体",
     "simhei": "黑体",
-    "Arial": "Arial",
 }
 
 
