@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from kivy.core.text import LabelBase
 from kivy.logger import Logger
