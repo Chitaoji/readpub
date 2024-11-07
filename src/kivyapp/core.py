@@ -11,12 +11,12 @@ try:
     from .config import kvconfig
 except ImportError as e:
     raise e
-
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
 
 import asynckivy
+from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.metrics import Metrics, dp
@@ -27,7 +27,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
-from .bookcard import BookCardContainer, menu_on_open
+from .bookcard import BookCardContainer
 from .font import KivyFont
 from .importer import FakeModalView, FileImporter, FileImporterManager
 from .reader import Reader
@@ -244,7 +244,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button, -dp(5), -dp(5))
+        self.open_menu(menu, button, -dp(5), -dp(5), on_left=True, on_bottom=True)
 
     def open_category_menu(self, button) -> None:
         """Open the category menu."""
@@ -331,7 +331,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button, rely=-dp(8))
+        self.open_menu(menu, button, rely=-dp(8), on_left=True, on_bottom=True)
 
     def set_category_status(self, category_status: str) -> None:
         """Set the category status."""
@@ -347,9 +347,11 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         caller: Any,
         relx: float = 0.0,
         rely: float = 0.0,
+        on_left: bool = False,
+        on_bottom: bool = False,
         check_ver_growth: bool = False,
+        show_duration_x: Optional[float] = None,
     ) -> None:
-        """Open the menu object."""
         menu.set_menu_properties()
 
         if check_ver_growth:
@@ -369,11 +371,28 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             menu.get_target_pos()
         )  # pylint: disable=protected-access
         button_pos = caller.to_window(*caller.pos)
-        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width + relx
-        menu.y = button_pos[1] - menu.height + rely
+        menu.x = button_pos[0] + caller.width - menu.width * on_left + relx
+        menu.y = button_pos[1] - menu.height * on_bottom + rely
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
-        menu_on_open(menu)
+        menu_on_open(menu, show_duration_x)
+
+
+def menu_on_open(menu: MDDropdownMenu, show_duration_x: Optional[float] = None) -> None:
+    """On opening menu."""
+    if show_duration_x is None:
+        show_duration_x = menu.show_duration - 0.3
+    anim = Animation(
+        _scale_y=1,
+        duration=menu.show_duration,
+        transition=menu.show_transition,
+    )
+    anim &= Animation(
+        _scale_x=1,
+        duration=max(show_duration_x, 0.0),
+        transition="out_quad",
+    )
+    anim.start(menu)
 
 
 def _button_auto_dismiss(button, on_dismiss):

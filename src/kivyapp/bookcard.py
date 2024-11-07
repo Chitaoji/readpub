@@ -8,11 +8,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 # pylint: disable=no-name-in-module
 from functools import partial
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Literal, Optional
 
 import asynckivy
-from kivy.animation import Animation
-from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.metrics import dp
 from kivy.properties import BooleanProperty, StringProperty
@@ -166,7 +164,7 @@ class BookCardContainer(BasicApp):
         menu = MDDropdownMenu(
             caller=button,
             items=[],
-            show_duration=0.1,
+            show_duration=0.15,
             hide_duration=0.1,
             hor_growth="right",
             ver_growth="up",
@@ -217,7 +215,12 @@ class BookCardContainer(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self._cover_menu_open(menu, button.parent.parent)
+        self.open_menu(
+            menu,
+            button.parent.parent,
+            self.root.ids.grid.spacing[0] / 2,
+            show_duration_x=0.06,
+        )
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
@@ -353,44 +356,3 @@ class BookCardContainer(BasicApp):
             # -------------------------------------------------------------
         )
         dialog.open()
-
-    def _cover_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
-        menu.set_menu_properties()
-
-        # check ver_growth
-        coord_y = menu._start_coords[1]  # pylint: disable=protected-access
-        if menu.target_height > coord_y - menu.border_margin:
-            menu.ver_growth = "up"
-        elif coord_y > Window.height - menu.border_margin - menu.target_height:
-            menu.ver_growth = "down"
-
-        Window.add_widget(menu)
-        menu.position = menu.adjust_position()
-
-        menu.width = dp(160)
-
-        menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = (
-            menu.get_target_pos()
-        )  # pylint: disable=protected-access
-        bookcard_pos = caller.to_window(*caller.pos)
-        menu.x = bookcard_pos[0] + caller.width + self.root.ids.grid.spacing[0] / 2
-        menu.y = bookcard_pos[1]
-        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
-        menu.set_menu_pos()
-        menu_on_open(menu)
-
-
-def menu_on_open(menu: MDDropdownMenu) -> None:
-    """On opening menu."""
-    anim = Animation(
-        _scale_y=1,
-        duration=menu.show_duration,
-        transition=menu.show_transition,
-    )
-    anim &= Animation(
-        _scale_x=1,
-        duration=max(menu.show_duration - 0.3, 0.0),
-        transition="out_quad",
-    )
-    anim.start(menu)

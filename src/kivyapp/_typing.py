@@ -8,10 +8,11 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, Optional
 
 from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
+from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.snackbar import MDSnackbar
 
 from ..bookmanager import BookManager
@@ -61,3 +62,16 @@ class BasicApp(MDApp):
 
     def prepare_book(self, book: "Book") -> None:
         """Extract and picklize the book."""
+
+    def open_menu(
+        self,
+        menu: MDDropdownMenu,
+        caller: Any,
+        relx: float = 0.0,
+        rely: float = 0.0,
+        on_left: bool = False,
+        on_bottom: bool = False,
+        check_ver_growth: bool = False,
+        show_duration_x: Optional[float] = None,
+    ) -> None:
+        """Open the menu object."""
