@@ -244,7 +244,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self._plus_menu_open(menu, button)
+        self.open_menu(menu, button, -dp(5), -dp(5))
 
     def open_category_menu(self, button) -> None:
         """Open the category menu."""
@@ -331,7 +331,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self._category_menu_open(menu, button)
+        self.open_menu(menu, button, rely=-dp(8))
 
     def set_category_status(self, category_status: str) -> None:
         """Set the category status."""
@@ -341,8 +341,23 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         nav_drawer = getattr(self.root.ids, name)
         nav_drawer.set_state("toggle")
 
-    def _plus_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
+    def open_menu(
+        self,
+        menu: MDDropdownMenu,
+        caller: Any,
+        relx: float = 0.0,
+        rely: float = 0.0,
+        check_ver_growth: bool = False,
+    ) -> None:
+        """Open the menu object."""
         menu.set_menu_properties()
+
+        if check_ver_growth:
+            coord_y = menu._start_coords[1]  # pylint: disable=protected-access
+            if menu.target_height > coord_y - menu.border_margin:
+                menu.ver_growth = "up"
+            elif coord_y > Window.height - menu.border_margin - menu.target_height:
+                menu.ver_growth = "down"
 
         Window.add_widget(menu)
         menu.position = menu.adjust_position()
@@ -354,27 +369,8 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             menu.get_target_pos()
         )  # pylint: disable=protected-access
         button_pos = caller.to_window(*caller.pos)
-        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width - dp(5)
-        menu.y = button_pos[1] - menu.height - dp(5)
-        menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
-        menu.set_menu_pos()
-        menu_on_open(menu)
-
-    def _category_menu_open(self, menu: MDDropdownMenu, caller: Any) -> None:
-        menu.set_menu_properties()
-
-        Window.add_widget(menu)
-        menu.position = menu.adjust_position()
-
-        menu.width = dp(160)
-
-        menu.height = menu.target_height
-        menu._tar_x, menu._tar_y = (
-            menu.get_target_pos()
-        )  # pylint: disable=protected-access
-        button_pos = caller.to_window(*caller.pos)
-        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width
-        menu.y = button_pos[1] - menu.height - dp(8)
+        menu.x = caller.to_window(*caller.pos)[0] + caller.width - menu.width + relx
+        menu.y = button_pos[1] - menu.height + rely
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
         menu_on_open(menu)

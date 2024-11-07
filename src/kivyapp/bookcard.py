@@ -169,6 +169,7 @@ class BookCardContainer(BasicApp):
             show_duration=0.1,
             hide_duration=0.1,
             hor_growth="right",
+            ver_growth="up",
             radius=button.parent.parent.radius,
             shadow_radius=button.parent.parent.shadow_radius,
         )
@@ -216,7 +217,7 @@ class BookCardContainer(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self._cover_menu_open(menu, button)
+        self._cover_menu_open(menu, button.parent.parent)
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
@@ -357,7 +358,6 @@ class BookCardContainer(BasicApp):
         menu.set_menu_properties()
 
         # check ver_growth
-        menu.ver_growth = "up"
         coord_y = menu._start_coords[1]  # pylint: disable=protected-access
         if menu.target_height > coord_y - menu.border_margin:
             menu.ver_growth = "up"
@@ -373,12 +373,8 @@ class BookCardContainer(BasicApp):
         menu._tar_x, menu._tar_y = (
             menu.get_target_pos()
         )  # pylint: disable=protected-access
-        bookcard_pos = caller.parent.parent.to_window(*caller.parent.parent.pos)
-        menu.x = (
-            bookcard_pos[0]
-            + caller.parent.parent.width
-            + self.root.ids.grid.spacing[0] / 2
-        )
+        bookcard_pos = caller.to_window(*caller.pos)
+        menu.x = bookcard_pos[0] + caller.width + self.root.ids.grid.spacing[0] / 2
         menu.y = bookcard_pos[1]
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
