@@ -13,7 +13,7 @@
 #:import MDSlideTransition kivymd.uix.transition.transition.MDSlideTransition
 #:import MDSharedAxisTransition kivymd.uix.transition.transition.MDSharedAxisTransition
 
-<FileImporterItem>
+<FileImporterItem>:
     icon: "folder"
     path: ""
     background_normal: ""
@@ -36,7 +36,7 @@
         role: "medium"
 
 
-<BookContentItem>
+<BookContentItem>:
     theme_bg_color: "Custom"
     md_bg_color: app.theme_cls.surfaceContainerLowColor
     on_release: app.turn_to_page(self.npage)
@@ -51,7 +51,7 @@
         role: "medium"
 
 
-<FileImporterManager>
+<FileImporterManager>:
     canvas:
         Color:
             rgba: app.theme_cls.surfaceContainerLowColor
@@ -103,7 +103,7 @@
                 height: self.minimum_height
 
 
-<BookCard>
+<BookCard>:
     padding: dp(4)
     size_hint: None, None
     size: dp(480), dp(240)
@@ -172,7 +172,7 @@
             pos_hint: {"bottom": 1}
                 
 
-<CoverDropdownTextItem>
+<CoverDropdownTextItem>:
     orientation: "vertical"
     
     MDBoxLayout:
@@ -255,7 +255,7 @@ MDScreenManager:
                     radius: 20
                     font_style: "NavText"
                     role: "medium"
-                    on_text: app.open_input_menu(self, self.text)
+                    on_text: app.open_input_menu(self)
 
                     MDTextFieldLeadingIcon:
                         icon: "magnify"
