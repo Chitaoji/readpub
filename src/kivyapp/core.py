@@ -19,7 +19,7 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.logger import Logger
-from kivy.metrics import Metrics, dp
+from kivy.metrics import dp
 from kivy.properties import ColorProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.button import MDButton
@@ -40,8 +40,8 @@ __all__ = ["MainApp"]
 
 
 Window.maximize()
-if Window.width <= 1920:
-    Metrics.dpi = 100
+# if Window.width <= 1920:
+#     Metrics.dpi = 96
 
 
 class ColorCard(BoxLayout):
