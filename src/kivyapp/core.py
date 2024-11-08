@@ -203,6 +203,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             ver_growth="down",
             radius=radius,
             shadow_radius=shadow_radius,
+            width=dp(160),
         )
         menu_items = [
             {
@@ -244,7 +245,9 @@ class MainApp(Reader, BookCardContainer, FileImporter):
         ]
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button, -dp(5), -dp(5), on_left=True, on_bottom=True)
+        self.open_menu(
+            menu, button, relx=-dp(5), rely=-dp(5), on_left=True, on_bottom=True
+        )
 
     def open_category_menu(self, button) -> None:
         """Open the category menu."""
@@ -258,6 +261,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
             ver_growth="down",
             radius=radius,
             shadow_radius=shadow_radius,
+            width=dp(160),
         )
 
         menu.on_dismiss = partial(_button_auto_dismiss, button, menu.on_dismiss)
@@ -363,8 +367,6 @@ class MainApp(Reader, BookCardContainer, FileImporter):
 
         Window.add_widget(menu)
         menu.position = menu.adjust_position()
-
-        menu.width = dp(160)
 
         menu.height = menu.target_height
         menu._tar_x, menu._tar_y = (

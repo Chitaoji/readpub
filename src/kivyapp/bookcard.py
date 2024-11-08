@@ -170,6 +170,7 @@ class BookCardContainer(BasicApp):
             ver_growth="up",
             radius=button.parent.parent.radius,
             shadow_radius=button.parent.parent.shadow_radius,
+            width=dp(160),
         )
         is_pinned = button.parent.parent.status == "pinned"
         is_deleted = button.parent.parent.status == "deleted"
@@ -215,7 +216,7 @@ class BookCardContainer(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button.parent.parent, dp(10), show_duration_x=0.04)
+        self.open_menu(menu, button.parent.parent, relx=dp(10), show_duration_x=0.04)
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
