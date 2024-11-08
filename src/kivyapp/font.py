@@ -14,6 +14,8 @@ from kivy.logger import Logger
 from kivy.metrics import sp
 from kivymd.font_definitions import theme_font_styles
 
+from ..bookmanager import TextMaster
+
 if TYPE_CHECKING:
     from kivymd.app import MDApp
 
@@ -43,6 +45,7 @@ class KivyFont:
         self.fontpath = sys_fontpath
         self.app = app
         self.font_info: dict[str, tuple[Path, str]] = {}
+        self.font_textmaster: dict[str, dict[str, TextMaster]] = {}
         self.__find_sys_font()
         self.__set_font_styles()
 
@@ -196,3 +199,13 @@ class KivyFont:
         """
         prop = self.font_styles[font_style][role]
         return self.font_info[prop["font-name"]][0], prop["font-size"]
+
+    def gettextmaster(self, font_style: str, role: str) -> TextMaster:
+        """Get the textmaster of the font-style."""
+        if font_style not in self.font_textmaster:
+            self.font_textmaster[font_style] = {}
+        if role not in self.font_textmaster[font_style]:
+            self.font_textmaster[font_style][role] = TextMaster(
+                *self.getpath(font_style, role)
+            )
+        return self.font_textmaster[font_style][role]

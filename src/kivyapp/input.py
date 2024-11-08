@@ -38,6 +38,7 @@ GlobalSize.restype = ctypes.c_size_t
 GMEM_MOVEABLE = 0x0002
 GMEM_ZEROINIT = 0x0040
 GHND = 0x0042
+DWOFFSET_MAX = 1000
 
 
 class CandidateList(ctypes.Structure):
@@ -50,7 +51,7 @@ class CandidateList(ctypes.Structure):
         ("dwSelection", wintypes.DWORD),
         ("dwPageStart", wintypes.DWORD),
         ("dwPageSize", wintypes.DWORD),
-        ("dwOffset", ctypes.ARRAY(wintypes.DWORD, 10)),
+        ("dwOffset", ctypes.ARRAY(wintypes.DWORD, 1 + DWOFFSET_MAX)),
     ]
 
 
@@ -65,6 +66,9 @@ class InputMethod(BasicApp):
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
             return
+        menu_width = self.fontmanager.gettextmaster("Hint", "large").getlinewidth(
+            candidates
+        )
         if self.prev_input_menu is None:
             menu = MDDropdownMenu(
                 caller=button,
@@ -85,7 +89,7 @@ class InputMethod(BasicApp):
                 ver_growth="up",
                 radius=[dp(4), dp(4), dp(4), dp(4)],
                 shadow_radius=[0, 0, 0, 0],
-                width=dp(1000),
+                width=menu_width,
                 theme_shadow_softness="Custom",
                 shadow_softness=12,
             )
@@ -106,6 +110,7 @@ class InputMethod(BasicApp):
                     "adaptive_height": True,
                 }
             ]
+            self.prev_input_menu.width = menu_width
 
     def get_candidates(self) -> str:
         """Get the candidates from the system input method."""
@@ -127,10 +132,18 @@ class InputMethod(BasicApp):
         )
         imm32.ImmGetCandidateListW.restype = ctypes.c_size_t
         imm32.ImmGetCandidateListW(h_imc, 0, ptxt, size)
-        if ptxt.contents.dwPageSize > 10:
-            print(ptxt.contents.dwPageSize)
+        if (
+            ptxt.contents.dwPageSize > 20
+            or ptxt.contents.dwPageStart + ptxt.contents.dwPageSize > DWOFFSET_MAX
+        ):
             return ""
-        a = [ptxt.contents.dwOffset[i] for i in range(ptxt.contents.dwPageSize + 1)]
+        a = [
+            ptxt.contents.dwOffset[i]
+            for i in range(
+                ptxt.contents.dwPageStart,
+                ptxt.contents.dwPageStart + ptxt.contents.dwPageSize + 1,
+            )
+        ]
         op = [
             str(ai + 1) + ":" + str(buffer[a[ai] : a[ai + 1]], encoding="utf-16")
             for ai in range(len(a) - 1)

@@ -409,7 +409,7 @@ class TextMaster:
             return 0
         return npage
 
-    def getlinewidth(self, line: str) -> int:
+    def getlinewidth(self, line: str) -> float:
         """Get the line width."""
         return TextMesurePlain(self.font, self.size).getlength(line)
 
