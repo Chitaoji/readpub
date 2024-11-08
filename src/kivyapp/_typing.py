@@ -43,6 +43,7 @@ class BasicApp(MDApp):
         self.has_filemanager: bool
         self.test_bookcard: "BookCard | None"
         self.prev_snackbar: MDSnackbar | None
+        self.prev_input_menu: MDDropdownMenu | None
 
         self.reader_disabled: bool
         self.book: "Book | None"

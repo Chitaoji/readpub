@@ -216,7 +216,7 @@ class BookCardContainer(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button.parent.parent, relx=dp(10), show_duration_x=0.04)
+        self.open_menu(menu, button.parent.parent, relx=dp(12), show_duration_x=0.04)
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""

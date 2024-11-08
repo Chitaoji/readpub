@@ -93,17 +93,14 @@ class ThemePreview(MDApp):
             "Switch theme style": self.swicth_theme,
         }.items():
             menu_items.append({"text": item, "on_release": method})
-        self.menu = MDDropdownMenu(
-            caller=menu_button,
-            items=menu_items,
-        )
+        self.menu = MDDropdownMenu(caller=menu_button, items=menu_items)
         self.menu.open()
 
     def set_palette(self):
         """Set the palette."""
         instance_from_menu = self.get_instance_from_menu("Set palette")
         available_palettes = [
-            name_color.capitalize() for name_color in hex_colormap.keys()
+            name_color.capitalize() for name_color in list(hex_colormap)
         ]
 
         menu_items = []
@@ -114,10 +111,7 @@ class ThemePreview(MDApp):
                     "on_release": lambda x=name_palette: self.switch_palette(x),
                 }
             )
-        MDDropdownMenu(
-            caller=instance_from_menu,
-            items=menu_items,
-        ).open()
+        MDDropdownMenu(caller=instance_from_menu, items=menu_items).open()
 
     def switch_palette(self, selected_palette):
         """Swicth the palette."""
