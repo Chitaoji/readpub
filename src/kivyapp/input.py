@@ -68,7 +68,7 @@ class InputMethod(BasicApp):
             return
         menu_width = self.fontmanager.gettextmaster("Hint", "large").getlinewidth(
             candidates
-        )
+        ) + dp(8)
         if self.prev_input_menu is None:
             menu = MDDropdownMenu(
                 caller=button,

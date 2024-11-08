@@ -16,8 +16,6 @@ from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
-from ..bookmanager import TextMaster
-
 if TYPE_CHECKING:
     from ._typing import BasicApp
 else:
@@ -137,7 +135,7 @@ class FileImporter(BasicApp):
         fs, role = "NavText", "medium"
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=TextMaster(*self.fontmanager.getpath(fs, role)).shorten(
+                text=self.fontmanager.gettextmaster(fs, role).shorten(
                     snack, Window.width / 2 - 20
                 ),
                 font_style=fs,
