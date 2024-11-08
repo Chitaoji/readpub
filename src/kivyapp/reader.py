@@ -52,15 +52,19 @@ class Reader(BasicApp):
             lb, rb = Window.width / 3, Window.width * 2 / 3
             if Window.height * 0.2 < touch.y < Window.height * 0.8:
                 if lb < touch.x < rb:
-                    if (toolbar := self.root.ids.reader_toolbar).disabled:
-                        asynckivy.start(self.activate_reader_toolbar())
-                    else:
-                        self.root.ids.reader_bottom.disabled = toolbar.disabled = True
-                        self.root.ids.reader_bottom.opacity = toolbar.opacity = 0
+                    self.toggle_toolbar()
                 elif touch.x <= lb:
                     self.prev_page()
                 elif touch.x >= rb:
                     self.next_page()
+
+    def toggle_toolbar(self) -> None:
+        """Toggle the opacity of toolbar."""
+        if (toolbar := self.root.ids.reader_toolbar).disabled:
+            asynckivy.start(self.activate_reader_toolbar())
+        else:
+            self.root.ids.reader_bottom.disabled = toolbar.disabled = True
+            self.root.ids.reader_bottom.opacity = toolbar.opacity = 0
 
     async def activate_reader_toolbar(self) -> None:
         """Activate reader toolbar."""

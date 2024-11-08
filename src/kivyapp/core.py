@@ -134,7 +134,7 @@ class MainApp(Reader, BookCardContainer, FileImporter):
                 self.prev_page()
         elif key == 278:  # Home
             if self.root.current == "Reader":
-                self.homepage()
+                self.toggle_toolbar()
 
     def open_settings(self, *_) -> None: ...
 
