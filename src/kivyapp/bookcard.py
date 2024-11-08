@@ -164,7 +164,7 @@ class BookCardContainer(BasicApp):
         menu = MDDropdownMenu(
             caller=button,
             items=[],
-            show_duration=0.15,
+            show_duration=0.1,
             hide_duration=0.1,
             hor_growth="right",
             ver_growth="up",
@@ -215,12 +215,7 @@ class BookCardContainer(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(
-            menu,
-            button.parent.parent,
-            self.root.ids.grid.spacing[0] / 2,
-            show_duration_x=0.06,
-        )
+        self.open_menu(menu, button.parent.parent, dp(10), show_duration_x=0.04)
 
     def pin_bookcard(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
