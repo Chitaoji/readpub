@@ -47,11 +47,12 @@ class InputMethod(BasicApp):
             hide_duration=0.0,
             hor_growth="right",
             ver_growth="up",
-            radius=[dp(1), dp(1), dp(1), dp(1)],
+            radius=[dp(4), dp(4), dp(4), dp(4)],
             shadow_radius=[0, 0, 0, 0],
             width=dp(160),
             theme_shadow_softness="Custom",
-            shadow_softness=8,
+            shadow_softness=12,
         )
         self.prev_input_menu = menu
-        self.open_menu(menu, button, on_left=True)
+        menu.on_enter = menu.on_leave = lambda: None
+        self.open_menu(menu, button, absx=button.cursor_pos[0], rely=-dp(14))

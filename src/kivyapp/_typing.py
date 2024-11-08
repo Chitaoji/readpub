@@ -70,6 +70,8 @@ class BasicApp(MDApp):
         caller: Any,
         relx: float = 0.0,
         rely: float = 0.0,
+        absx: Optional[float] = None,
+        absy: Optional[float] = None,
         on_left: bool = False,
         on_bottom: bool = False,
         check_ver_growth: bool = False,

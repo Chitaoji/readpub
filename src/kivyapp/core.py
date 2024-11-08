@@ -352,6 +352,8 @@ class MainApp(Reader, BookCardContainer, FileImporter, InputMethod):
         caller: Any,
         relx: float = 0.0,
         rely: float = 0.0,
+        absx: Optional[float] = None,
+        absy: Optional[float] = None,
         on_left: bool = False,
         on_bottom: bool = False,
         check_ver_growth: bool = False,
@@ -374,8 +376,14 @@ class MainApp(Reader, BookCardContainer, FileImporter, InputMethod):
             menu.get_target_pos()
         )  # pylint: disable=protected-access
         button_pos = caller.to_window(*caller.pos)
-        menu.x = button_pos[0] + caller.width - menu.width * on_left + relx
-        menu.y = button_pos[1] - menu.height * on_bottom + rely
+        menu.x = (
+            button_pos[0] + caller.width - menu.width * on_left + relx
+            if absx is None
+            else absx
+        )
+        menu.y = (
+            button_pos[1] - menu.height * on_bottom + rely if absy is None else absy
+        )
         menu.scale_value_center = menu.caller.to_window(*menu.caller.center)
         menu.set_menu_pos()
         menu_on_open(menu, show_duration_x)
