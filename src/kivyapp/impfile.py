@@ -1,5 +1,5 @@
 """
-Contains a kivy app: FileImporter.
+Contains a kivy app: FileImportApp.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -21,23 +21,18 @@ if TYPE_CHECKING:
 else:
     from kivymd.app import MDApp as BasicApp
 
-__all__ = ["FileImporter"]
+__all__ = ["FileImportApp"]
 
 
-class FileImporterItem(MDListItem):
+class FileImportItem(MDListItem):
     """Base class for folders and files icons."""
 
 
-class FileImporterManager(MDFileManager):
+class FileImportManager(MDFileManager):
     """Implements a file manager."""
 
     def show(self, path: str) -> None:
-        """
-        Forms the body of a directory tree.
-
-        :param path:
-            The path to the directory that will be opened in the file manager.
-        """
+        """Forms the body of a directory tree."""
 
         self.current_path = path
         self.selection = []
@@ -106,7 +101,7 @@ class FakeModalView:
         """Dismiss?"""
 
 
-class FileImporter(BasicApp):
+class FileImportApp(BasicApp):
     """Implements a file importer app."""
 
     def filemanager_open(self):

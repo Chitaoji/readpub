@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 else:
     from kivymd.app import MDApp as BasicApp
 
-__all__ = ["InputMethod"]
+__all__ = ["InputMethodApp"]
 
 # windows api 准备
 GlobalFree = ctypes.windll.kernel32.GlobalFree
@@ -55,7 +55,7 @@ class CandidateList(ctypes.Structure):
     ]
 
 
-class InputMethod(BasicApp):
+class InputMethodApp(BasicApp):
     """Implements an input method."""
 
     def open_input_menu(self, button: Any) -> None:

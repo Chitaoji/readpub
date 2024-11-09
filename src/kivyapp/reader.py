@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 else:
     from kivymd.app import MDApp as BasicApp
 
-__all__ = ["Reader"]
+__all__ = ["ReaderApp"]
 
 
 class BookContentItem(MDListItem):
@@ -35,7 +35,7 @@ class BookContentItem(MDListItem):
     npage = NumericProperty()
 
 
-class Reader(BasicApp):
+class ReaderApp(BasicApp):
     """Implements a reader app."""
 
     def homepage(self):

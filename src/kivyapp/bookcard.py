@@ -69,8 +69,8 @@ class BookCard(MDCard):
             super().set_properties_widget()
 
 
-class BookCardContainer(BasicApp):
-    """Implements a bookcard container."""
+class BookCardApp(BasicApp):
+    """Implements a bookcard container app."""
 
     def set_card(self, book: "Book") -> BookCard:
         metadata = book.get_metadata()

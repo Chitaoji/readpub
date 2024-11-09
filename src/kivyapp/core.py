@@ -27,11 +27,11 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
-from .bookcard import BookCardContainer
+from .bookcard import BookCardApp
 from .font import KivyFont
-from .importer import FakeModalView, FileImporter, FileImporterManager
-from .input import InputMethod
-from .reader import Reader
+from .impfile import FakeModalView, FileImportApp, FileImportManager
+from .input import InputMethodApp
+from .reader import ReaderApp
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
@@ -66,7 +66,7 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(Reader, BookCardContainer, FileImporter, InputMethod):
+class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:
@@ -92,7 +92,7 @@ class MainApp(Reader, BookCardContainer, FileImporter, InputMethod):
     def build(self):
         self.title = "ReadPub"
 
-        self.filemanager = FileImporterManager(
+        self.filemanager = FileImportManager(
             exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
         )
         setattr(self.filemanager, "_window_manager", FakeModalView())
