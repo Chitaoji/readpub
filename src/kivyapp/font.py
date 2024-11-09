@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+from math import ceil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -205,7 +206,12 @@ class KivyFont:
         if font_style not in self.font_textmaster:
             self.font_textmaster[font_style] = {}
         if role not in self.font_textmaster[font_style]:
-            self.font_textmaster[font_style][role] = TextMaster(
-                *self.getpath(font_style, role)
-            )
+            path, size = self.getpath(font_style, role)
+            if size % 1 > 0:
+                Logger.info(
+                    "TextMaster: Font size is ceiled: %s -> %s",
+                    size,
+                    ceil(size),
+                )
+            self.font_textmaster[font_style][role] = TextMaster(path, size)
         return self.font_textmaster[font_style][role]

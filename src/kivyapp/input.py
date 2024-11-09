@@ -66,7 +66,7 @@ class InputMethodApp(BasicApp):
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
             return
-        menu_width = self.fontmanager.gettextmaster("Hint", "large").getlinewidth(
+        menu_width = self.fontmanager.gettextmaster("NavText", "medium").getlinewidth(
             candidates
         ) + dp(8)
         if self.prev_input_menu is None:
@@ -76,8 +76,8 @@ class InputMethodApp(BasicApp):
                     {
                         "viewclass": "MDLabel",
                         "text": candidates,
-                        "font_style": "Hint",
-                        "role": "large",
+                        "font_style": "NavText",
+                        "role": "medium",
                         "padding": dp(4),
                         "height": dp(30),
                         "adaptive_height": True,
@@ -103,8 +103,8 @@ class InputMethodApp(BasicApp):
                 {
                     "viewclass": "MDLabel",
                     "text": candidates,
-                    "font_style": "Hint",
-                    "role": "large",
+                    "font_style": "NavText",
+                    "role": "medium",
                     "padding": dp(4),
                     "height": dp(30),
                     "adaptive_height": True,

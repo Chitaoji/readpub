@@ -11,6 +11,7 @@ try:
     from .config import kvconfig
 except ImportError as e:
     raise e
+import ctypes
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
@@ -19,7 +20,7 @@ import asynckivy
 from kivy.animation import Animation
 from kivy.core.window import Window
 from kivy.logger import Logger
-from kivy.metrics import dp
+from kivy.metrics import Metrics, dp, sp
 from kivy.properties import ColorProperty, StringProperty
 from kivy.uix.boxlayout import BoxLayout
 from kivymd.uix.button import MDButton
@@ -41,6 +42,13 @@ __all__ = ["MainApp"]
 
 
 Window.maximize()
+Logger.info(
+    "Metrics: Window: dpi=%s, scale_factor=%s, dp(1)=%s, sp(1)=%s",
+    Metrics.dpi,
+    ctypes.windll.shcore.GetScaleFactorForDevice(0),
+    dp(1),
+    sp(1),
+)
 # if Window.width <= 1920:
 #     Metrics.dpi = 96
 
