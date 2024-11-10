@@ -40,10 +40,10 @@ class ReaderApp(BasicApp):
 
     def homepage(self):
         """Return to the homepage."""
-        self.switch_theme(self.main_theme_style)
         self.check_cards()
         self.root.transition = FadeTransition()
         self.root.current = "MainScreen"
+        self.switch_theme()
         self.close_book()
         self.delete_content()
 

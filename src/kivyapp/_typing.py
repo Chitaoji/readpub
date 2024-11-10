@@ -37,7 +37,9 @@ class BasicApp(MDApp):
         self.fontmanager = KivyFont(Path(""), self)
         self.filemanager = MDFileManager()
         self.main_theme_style: str
+        self.main_theme_palette: str
         self.reader_theme_style: str
+        self.reader_theme_palette: str
 
         self.current_sort_rule: list[str]
         self.category_status: str
@@ -56,7 +58,7 @@ class BasicApp(MDApp):
     def open_nav_drawer(self, name: str) -> None:
         """Open the nav-drawer."""
 
-    def switch_theme(self, to: str) -> None:
+    def switch_theme(self) -> None:
         """Switch the theme-style."""
 
     def set_card(self, book: "Book") -> "BookCard":

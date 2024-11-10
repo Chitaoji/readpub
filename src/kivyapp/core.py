@@ -88,17 +88,20 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                 ["main-screen", "primary_palette", "Blue"],
                 ["main-screen", "fitimage", ""],
                 ["reader", "theme_style", "Light"],
+                ["reader", "primary_palette", "Blue"],
             ]
         )
 
         self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
+
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
         )
         self.reader_theme_style = kvconfig[self].get("reader", "theme_style")
-        self.theme_cls.primary_palette = kvconfig[self].get(
+        self.theme_cls.primary_palette = self.main_theme_palette = kvconfig[self].get(
             "main-screen", "primary_palette"
         )
+        self.reader_theme_palette = kvconfig[self].get("reader", "primary_palette")
 
         if (p := kvconfig[self].get("main-screen", "fitimage")) and Path(p).is_file():
             self.has_fitimage = True
@@ -217,17 +220,26 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             self.check_cards()
             kvconfig[self].update([["main-screen", "theme_style", to]])
 
-    def switch_theme(self, to: str) -> None:
-        self.theme_cls.theme_style = to
+    def switch_theme_palette(self, color: str):
+        """Switch the theme-palette."""
+        if self.root.current == "Reader":
+            self.theme_cls.primary_palette = self.reader_theme_palette = color
+            kvconfig[self].update([["reader", "primary_palette", color]])
+        else:
+            self.theme_cls.primary_palette = self.main_theme_palette = color
+            kvconfig[self].update([["main-screen", "primary_palette", color]])
+
+    def switch_theme(self) -> None:
+        if self.root.current == "Reader":
+            self.theme_cls.theme_style = self.reader_theme_style
+            self.theme_cls.primary_palette = self.reader_theme_palette
+        else:
+            self.theme_cls.theme_style = self.main_theme_style
+            self.theme_cls.primary_palette = self.main_theme_palette
 
     def switch_fullscreen(self):
         """Switch between fullscreen and windowed screen."""
         Window.fullscreen = "auto" if Window.fullscreen is False else False
-
-    def switch_theme_palette(self, color: str):
-        """Switch the theme-palette."""
-        self.theme_cls.primary_palette = color
-        kvconfig[self].update([["main-screen", "primary_palette", color]])
 
     def reset_theme(self):
         """Reset the theme."""
