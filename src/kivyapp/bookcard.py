@@ -148,12 +148,6 @@ class BookCardApp(BasicApp):
                 progress=progress,
                 status=metadata["status"],
             )
-            if metadata["status"] == "deleted":
-                widget.theme_bg_color = "Custom"
-                widget.md_bg_color = self.trans_color(
-                    self.theme_cls.errorContainerColor
-                )
-                self.theme_cls.bind(errorContainerColor=self.color_setter(widget))
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)

@@ -126,9 +126,6 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             self.setattr_cards("theme_shadow_color", "Custom")
             self.setattr_cards("shadow_color", [0, 0, 0, 0])
             self.setattr_cards("theme_bg_color", "Custom")
-            self.setattr_cards(
-                "md_bg_color", self.trans_color(self.theme_cls.surfaceContainerLowColor)
-            )
         Clock.schedule_once(lambda *_: self.switch_theme_style(), 0)
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:

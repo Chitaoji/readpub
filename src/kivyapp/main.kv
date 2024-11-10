@@ -110,7 +110,9 @@
     theme_shadow_color: "Custom" if app.has_bgim else "Primary"
     shadow_color: [0, 0, 0, 0]
     theme_bg_color: "Custom" if app.has_bgim else "Primary"
-    md_bg_color: self.trans_color(app.theme_cls.surfaceContainerLowColor)
+    md_bg_color: 
+        self.trans_color(app.theme_cls.errorContainerColor \
+        if self.status=="deleted" else app.theme_cls.surfaceContainerLowColor)
     on_release: 
         self.auto_disable()
         app.open_book(self.bookid)
