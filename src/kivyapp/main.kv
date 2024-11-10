@@ -245,13 +245,16 @@ MDScreenManager:
 
         MDBoxLayout:
             orientation: "vertical"
+            padding: 0, dp(24), 0, 0
             spacing: 0
             
             MDBoxLayout:
                 adaptive_size: True
-                padding: 0, dp(70), 0, dp(24)
+                padding: dp(10), dp(24), dp(10), dp(24)
                 spacing: dp(20)
                 pos_hint: {"center_x":.5, "top":1}
+                radius: app.get_radius()[0]
+                md_bg_color: app.trans_color(app.theme_cls.surfaceContainerColor)
 
                 MDIconButton:
                     icon: "menu"
@@ -314,6 +317,7 @@ MDScreenManager:
             
             MDNavigationDrawer:
                 id: nav_setting
+                md_bg_color: app.trans_color(self.theme_cls.surfaceContainerLowColor, .8)
                 drawer_type: "modal"
                 radius: app.get_radius(nav="left")[0]
                 enable_swiping: False

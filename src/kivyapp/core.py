@@ -109,7 +109,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
         """Adjust the color according to the transparency."""
-        return color[:-1] + [transparency]
+        if self.has_fitimage:
+            return color[:-1] + [transparency]
+        return color
 
     def build(self):
         self.title = "ReadPub"
