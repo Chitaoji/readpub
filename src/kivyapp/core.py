@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any, Optional
 
 import asynckivy
 from kivy.animation import Animation
+from kivy.clock import Clock
 from kivy.core.window import Window
 from kivy.logger import Logger
 from kivy.metrics import Metrics, dp, sp
@@ -116,10 +117,19 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             self.root.ids.bgim.source = ""
             self.root.ids.bgim.opacity = 0
             self.has_bgim = False
+            self.setattr_cards("theme_shadow_color", "Primary")
+            self.setattr_cards("theme_bg_color", "Primary")
         else:
             self.root.ids.bgim.source = image
             self.root.ids.bgim.opacity = 1
             self.has_bgim = True
+            self.setattr_cards("theme_shadow_color", "Custom")
+            self.setattr_cards("shadow_color", [0, 0, 0, 0])
+            self.setattr_cards("theme_bg_color", "Custom")
+            self.setattr_cards(
+                "md_bg_color", self.trans_color(self.theme_cls.surfaceContainerLowColor)
+            )
+        Clock.schedule_once(lambda *_: self.switch_theme_style(), 0)
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
         if self.has_bgim:
@@ -145,7 +155,10 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         self.book = None
 
         if self.has_bgim:
-            self.set_bgim(kvconfig[self].get("main-screen", "background_image"))
+            self.root.ids.bgim.source = kvconfig[self].get(
+                "main-screen", "background_image"
+            )
+            self.root.ids.bgim.opacity = 1
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)

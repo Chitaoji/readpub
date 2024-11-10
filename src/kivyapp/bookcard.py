@@ -166,6 +166,11 @@ class BookCardApp(BasicApp):
         for card in self.root.ids.grid.children:
             card.check_border()
 
+    def setattr_cards(self, name: str, value: Any) -> None:
+        """Setattr."""
+        for card in self.root.ids.grid.children:
+            setattr(card, name, value)
+
     def truly_disable_cards(self) -> None:
         """Disable the bookcards."""
         for card in self.root.ids.grid.children:
