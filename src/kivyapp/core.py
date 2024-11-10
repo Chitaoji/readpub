@@ -86,6 +86,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             [
                 ["theme-cls", "theme_style", "Light"],
                 ["theme-cls", "primary_palette", "Blue"],
+                ["main-screen", "fitimage", ""],
             ]
         )
 
@@ -95,7 +96,20 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             "theme-cls", "primary_palette"
         )
 
+        if (p := kvconfig[self].get("main-screen", "fitimage")) and Path(p).is_file():
+            self.has_fitimage = True
+        else:
+            self.has_fitimage = False
         self.test_bookcard = None
+
+    def set_fitimage(self, fitimage) -> None:
+        """Set a fitimage."""
+        self.root.ids.fitimage.source = fitimage
+        self.root.ids.fitimage.opacity = 1
+
+    def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
+        """Adjust the color according to the transparency."""
+        return color[:-1] + [transparency]
 
     def build(self):
         self.title = "ReadPub"
@@ -109,6 +123,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
 
         self.reader_disabled = True
         self.book = None
+
+        if self.has_fitimage:
+            self.set_fitimage(kvconfig[self].get("main-screen", "fitimage"))
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)
@@ -182,6 +199,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             self.theme_cls.theme_style = (
                 "Dark" if self.theme_cls.theme_style == "Light" else "Light"
             )
+        self.check_cards()
         kvconfig[self].update(
             [["theme-cls", "theme_style", self.theme_cls.theme_style]]
         )

@@ -54,7 +54,7 @@ class FileImportManager(MDFileManager):
 
             manager_list.append(
                 {
-                    "viewclass": "FileImporterItem",
+                    "viewclass": "FileImportItem",
                     "path": _path,
                     "icon": icon,
                     "dir_or_file_name": name,
@@ -73,7 +73,7 @@ class FileImportManager(MDFileManager):
 
             manager_list.append(
                 {
-                    "viewclass": "FileImporterItem",
+                    "viewclass": "FileImportItem",
                     "path": name,
                     "icon": "file-outline",
                     "dir_or_file_name": os.path.split(name)[1],

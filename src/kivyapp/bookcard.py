@@ -47,13 +47,34 @@ class BookCard(MDCard):
     status: "StatusHint" = StringProperty()
     truly_disabled: bool = BooleanProperty()
 
+    def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
+        """Adjust the color according to the transparency."""
+        return color[:-1] + [transparency]
+
     def check_border(self) -> None:
         """
         Check whether the widget itself is out of border. If True,
         set disabled=True; otherwise, set disabled=False
 
         """
-        self.disabled = self._is_out_of_border()
+        if self._is_out_of_border():
+            self.auto_disable()
+        else:
+            if self.theme_bg_color == "Primary":
+                self.disabled = False
+            else:
+                self.md_bg_color = self.trans_color(
+                    self.theme_cls.surfaceContainerLowColor
+                )
+                self.truly_disabled = False
+
+    def auto_disable(self) -> None:
+        """Disable the bookcard."""
+        if self.theme_bg_color == "Primary":
+            self.disabled = True
+        else:
+            self.md_bg_color = [0, 0, 0, 0]
+            self.truly_disabled = True
 
     def _is_out_of_border(self) -> bool:
         return (

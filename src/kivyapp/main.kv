@@ -108,7 +108,12 @@
     size_hint: None, None
     size: dp(480), dp(240)
     truly_disabled: False
+    theme_shadow_color: "Custom" if app.has_fitimage else "Primary"
+    shadow_color: [0, 0, 0, 0]
+    theme_bg_color: "Custom" if app.has_fitimage else "Primary"
+    md_bg_color: self.trans_color(app.theme_cls.surfaceContainerLowColor)
     on_release: 
+        self.auto_disable()
         app.open_book(self.bookid)
         app.truly_enable_reader()
         app.root.ids.reader_bottom.opacity = app.root.ids.reader_toolbar.opacity = 0
@@ -116,7 +121,6 @@
         True
         app.root.transition = WipeTransition()
         app.root.current = "Reader"
-        self.disabled = True
 
     MDRelativeLayout:
         
@@ -140,7 +144,7 @@
             icon: "pin" if root.status == "pinned" else ""
             pos_hint: {"top": .98, "right": 1}
             disabled: root.status != "pinned"
-        
+
         MDBoxLayout:
             adaptive_height: True
             orientation: "vertical"
@@ -149,6 +153,7 @@
             spacing: dp(26)
             
             MDLabel:
+                id: bookcard_title
                 text: root.title
                 font_style: "BookCover"
                 role: "large"
@@ -160,13 +165,17 @@
                 text: root.author
                 font_style: "BookCover"
                 role: "small"
-                color: app.theme_cls.outlineColor
+                color: 
+                    bookcard_title.color if app.has_fitimage else \
+                    app.theme_cls.outlineColor
                 
         MDLabel:
             text: root.progress
             font_style: "BookCover"
             role: "small"
-            color: app.theme_cls.outlineColor
+            color: 
+                bookcard_title.color if app.has_fitimage else \
+                app.theme_cls.outlineColor
             adaptive_height: True
             padding: dp(190), 0, dp(10), dp(16)
             pos_hint: {"bottom": 1}
@@ -228,6 +237,11 @@ MDScreenManager:
     MDScreen:
         name: "MainScreen"
         md_bg_color: root.theme_cls.surfaceContainerColor
+
+        FitImage:
+            id: fitimage
+            opacity: 0
+            source: ""
 
         MDBoxLayout:
             orientation: "vertical"
@@ -428,7 +442,7 @@ MDScreenManager:
         MDBoxLayout:
             id: reader_bottom
             opacity: 0
-            disabled: 1
+            disabled: True
             adaptive_width: True
             pos_hint: {"center_x": .5}
             y: dp(100)
@@ -462,7 +476,7 @@ MDScreenManager:
             spacing: dp(20)
             pos_hint: {"center_x":.5, "top":1}
             opacity: 0
-            disabled: 1
+            disabled: True
 
             MDIconButton:
                 icon: "chevron-left"

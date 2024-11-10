@@ -41,6 +41,7 @@ class BasicApp(MDApp):
         self.category_status: str
 
         self.has_filemanager: bool
+        self.has_fitimage: bool
         self.test_bookcard: "BookCard | None"
         self.prev_snackbar: MDSnackbar | None
         self.prev_input_menu: MDDropdownMenu | None
