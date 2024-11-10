@@ -84,16 +84,20 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         kvconfig.resgister(self, config)
         kvconfig[self].set_defaults(
             [
-                ["theme-cls", "theme_style", "Light"],
-                ["theme-cls", "primary_palette", "Blue"],
+                ["main-screen", "theme_style", "Light"],
+                ["main-screen", "primary_palette", "Blue"],
                 ["main-screen", "fitimage", ""],
+                ["reader", "theme_style", "Light"],
             ]
         )
 
         self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
-        self.theme_cls.theme_style = kvconfig[self].get("theme-cls", "theme_style")
+        self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
+            "main-screen", "theme_style"
+        )
+        self.reader_theme_style = kvconfig[self].get("reader", "theme_style")
         self.theme_cls.primary_palette = kvconfig[self].get(
-            "theme-cls", "primary_palette"
+            "main-screen", "primary_palette"
         )
 
         if (p := kvconfig[self].get("main-screen", "fitimage")) and Path(p).is_file():
@@ -112,6 +116,12 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         if self.has_fitimage:
             return color[:-1] + [transparency]
         return color
+
+    def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
+        """Adjust the color according to the transparency."""
+        if self.has_fitimage:
+            return color[:-1] + [transparency]
+        return [0, 0, 0, 0]
 
     def build(self):
         self.title = "ReadPub"
@@ -194,17 +204,21 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             Logger.info("Test: Test Step No.%s", str(i))
 
     def switch_theme_style(self, to: Optional[str] = None):
-        """Switch the theme-style."""
-        if to:
-            self.theme_cls.theme_style = to
+        """Switch the theme-style, and update the config."""
+        if self.root.current == "Reader":
+            if not to:
+                to = "Dark" if self.reader_theme_style == "Light" else "Light"
+            self.theme_cls.theme_style = self.reader_theme_style = to
+            kvconfig[self].update([["reader", "theme_style", to]])
         else:
-            self.theme_cls.theme_style = (
-                "Dark" if self.theme_cls.theme_style == "Light" else "Light"
-            )
-        self.check_cards()
-        kvconfig[self].update(
-            [["theme-cls", "theme_style", self.theme_cls.theme_style]]
-        )
+            if not to:
+                to = "Dark" if self.main_theme_style == "Light" else "Light"
+            self.theme_cls.theme_style = self.main_theme_style = to
+            self.check_cards()
+            kvconfig[self].update([["main-screen", "theme_style", to]])
+
+    def switch_theme(self, to: str) -> None:
+        self.theme_cls.theme_style = to
 
     def switch_fullscreen(self):
         """Switch between fullscreen and windowed screen."""
@@ -213,7 +227,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
     def switch_theme_palette(self, color: str):
         """Switch the theme-palette."""
         self.theme_cls.primary_palette = color
-        kvconfig[self].update([["theme-cls", "primary_palette", color]])
+        kvconfig[self].update([["main-screen", "primary_palette", color]])
 
     def reset_theme(self):
         """Reset the theme."""
