@@ -143,9 +143,11 @@
         #     active: not root.is_ready
         
         MDIcon:
-            icon: "pin" if root.status == "pinned" else ""
+            icon: 
+                "pin" if root.status == "pinned" else (\
+                "trash-can-outline" if root.status == "deleted" else "")
             pos_hint: {"top": .98, "right": 1}
-            disabled: root.status != "pinned"
+            disabled: root.status == "normal"
 
         MDBoxLayout:
             adaptive_height: True
