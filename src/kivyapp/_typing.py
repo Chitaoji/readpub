@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from kivymd.app import MDApp
 from kivymd.uix.filemanager import MDFileManager
@@ -26,6 +26,8 @@ logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "
     "therefore unexpected errors may occur"
 )
+
+UploadType = Literal["book", "bgim"]
 
 
 # pylint: disable=unused-argument
@@ -46,9 +48,12 @@ class BasicApp(MDApp):
 
         self.has_filemanager: bool
         self.has_bgim: bool
+
         self.test_bookcard: "BookCard | None"
         self.prev_snackbar: MDSnackbar | None
         self.prev_input_menu: MDDropdownMenu | None
+
+        self.upload_type: UploadType
 
         self.reader_disabled: bool
         self.book: "Book | None"
@@ -94,3 +99,6 @@ class BasicApp(MDApp):
 
     def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
         """Adjust the color of topbars according to the transparency."""
+
+    def set_bgim(self, image: str | None = None) -> None:
+        """Set a background image."""

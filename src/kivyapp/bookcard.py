@@ -63,7 +63,11 @@ class BookCard(MDCard):
             if self.theme_bg_color == "Primary":
                 self.disabled = False
             else:
-                self.md_bg_color = self.trans_color(self.md_bg_color)
+                self.md_bg_color = self.trans_color(
+                    self.theme_cls.errorContainerColor
+                    if self.status == "deleted"
+                    else self.theme_cls.surfaceContainerLowColor
+                )
                 self.truly_disabled = False
 
     def auto_disable(self) -> None:

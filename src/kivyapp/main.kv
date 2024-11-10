@@ -65,7 +65,6 @@
         padding: 0, 0, 0, dp(4)
 
         MDBoxLayout:
-            id: toolbar
             adaptive_height: True
             theme_bg_color: "Custom"
             md_bg_color: app.theme_cls.surfaceContainerLowColor
@@ -256,7 +255,8 @@ MDScreenManager:
                 spacing: dp(20)
                 pos_hint: {"center_x":.5, "top":1}
                 radius: app.get_radius()[0]
-                md_bg_color: app.trans_color_topbar(app.theme_cls.surfaceContainerLowColor)
+                md_bg_color: 
+                    app.trans_color_topbar(app.theme_cls.surfaceContainerLowColor)
 
                 MDIconButton:
                     icon: "menu"
@@ -402,8 +402,7 @@ MDScreenManager:
                     MDButton:
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .63}
-                        on_release: 
-                            Clock.schedule_once(lambda _: app.switch_fullscreen(), .5)
+                        on_release: app.filemanager_open("bgim")
 
                         MDButtonIcon:
                             icon: "image"

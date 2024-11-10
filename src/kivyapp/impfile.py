@@ -17,7 +17,7 @@ from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 if TYPE_CHECKING:
-    from ._typing import BasicApp
+    from ._typing import BasicApp, UploadType
 else:
     from kivymd.app import MDApp as BasicApp
 
@@ -104,8 +104,9 @@ class FakeModalView:
 class FileImportApp(BasicApp):
     """Implements a file importer app."""
 
-    def filemanager_open(self):
+    def filemanager_open(self, upload_type: "UploadType" = "book") -> None:
         """Open filemanager."""
+        self.upload_type = upload_type
         self.open_nav_drawer("nav_upload")
         if not self.has_filemanager:
             self.root.ids.nav_upload.children[0].add_widget(self.filemanager)
@@ -119,6 +120,14 @@ class FileImportApp(BasicApp):
 
         """
         self.filemanager_exit()
+        match self.upload_type:
+            case "book":
+                self.upload_book(path)
+            case "bgim":
+                self.upload_bgim(path)
+
+    def upload_book(self, path: str) -> None:
+        """Uploading book."""
         if checked := self.bookmanager.check_book(p := Path(path)):
             snack = "已导入新书: " + path
         else:
@@ -141,9 +150,41 @@ class FileImportApp(BasicApp):
             size_hint_x=0.5,
         )
         self.prev_snackbar.open()
+
         if checked:
             self.set_card(book := self.bookmanager.add_book(p))
             self.prepare_book(book)
+
+    def upload_bgim(self, path: str) -> None:
+        """Uploading background image."""
+        p = Path(path)
+        if checked := p.is_file() and p.suffix in {".png", ".jpg", ".jpeg"}:
+            snack = "已应用背景图片: " + path
+        else:
+            snack = "无背景图片"
+
+        # open snackbar
+        if self.prev_snackbar:
+            self.prev_snackbar.dismiss()
+        fs, role = "NavText", "medium"
+        self.prev_snackbar = MDSnackbar(
+            MDSnackbarText(
+                text=self.fontmanager.gettextmaster(fs, role).shorten(
+                    snack, Window.width / 2 - 20
+                ),
+                font_style=fs,
+                role=role,
+            ),
+            y=dp(40),
+            pos_hint={"center_x": 0.5},
+            size_hint_x=0.5,
+        )
+        self.prev_snackbar.open()
+
+        if checked:
+            self.set_bgim(path)
+        else:
+            self.set_bgim()
 
     def filemanager_exit(self, *_):
         """Called when the user reaches the root of the directory tree."""

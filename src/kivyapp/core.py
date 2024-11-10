@@ -111,10 +111,15 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             self.has_bgim = False
         self.test_bookcard = None
 
-    def set_bgim(self, image) -> None:
-        """Set a background image."""
-        self.root.ids.bgim.source = image
-        self.root.ids.bgim.opacity = 1
+    def set_bgim(self, image: str | None = None) -> None:
+        if image is None:
+            self.root.ids.bgim.source = ""
+            self.root.ids.bgim.opacity = 0
+            self.has_bgim = False
+        else:
+            self.root.ids.bgim.source = image
+            self.root.ids.bgim.opacity = 1
+            self.has_bgim = True
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
         if self.has_bgim:
