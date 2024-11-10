@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 # pylint: disable=no-name-in-module
 from functools import partial
-from typing import TYPE_CHECKING, Literal, Optional
+from typing import TYPE_CHECKING, Any, Callable, Literal, Optional
 
 import asynckivy
 from kivy.logger import Logger
@@ -63,9 +63,7 @@ class BookCard(MDCard):
             if self.theme_bg_color == "Primary":
                 self.disabled = False
             else:
-                self.md_bg_color = self.trans_color(
-                    self.theme_cls.surfaceContainerLowColor
-                )
+                self.md_bg_color = self.trans_color(self.md_bg_color)
                 self.truly_disabled = False
 
     def auto_disable(self) -> None:
@@ -73,7 +71,7 @@ class BookCard(MDCard):
         if self.theme_bg_color == "Primary":
             self.disabled = True
         else:
-            self.md_bg_color = [0, 0, 0, 0]
+            self.md_bg_color = self.trans_color(self.md_bg_color, 0)
             self.truly_disabled = True
 
     def _is_out_of_border(self) -> bool:
@@ -148,11 +146,17 @@ class BookCardApp(BasicApp):
             )
             if metadata["status"] == "deleted":
                 widget.theme_bg_color = "Custom"
-                widget.md_bg_color = self.theme_cls.errorContainerColor
-                self.theme_cls.bind(errorContainerColor=widget.setter("md_bg_color"))
+                widget.md_bg_color = self.trans_color(
+                    self.theme_cls.errorContainerColor
+                )
+                self.theme_cls.bind(errorContainerColor=self.color_setter(widget))
             self.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
+
+    def color_setter(self, widget: Any) -> Callable[[Any, list[str]], None]:
+        """Get a color setter for widget."""
+        return lambda _, x: setattr(widget, "md_bg_color", self.trans_color(x))
 
     def check_cards(self) -> None:
         for card in self.root.ids.grid.children:

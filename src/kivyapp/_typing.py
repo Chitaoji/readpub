@@ -42,7 +42,7 @@ class BasicApp(MDApp):
         self.reader_theme_palette: str
 
         self.current_sort_rule: list[str]
-        self.category_status: str
+        self.current_category: str
 
         self.has_filemanager: bool
         self.has_bgim: bool
@@ -86,3 +86,11 @@ class BasicApp(MDApp):
         show_duration_x: Optional[float] = None,
     ) -> None:
         """Open the menu object."""
+
+    def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
+        """Adjust the color according to the transparency."""
+        if TYPE_CHECKING:
+            return ""
+
+    def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
+        """Adjust the color of topbars according to the transparency."""

@@ -117,13 +117,11 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         self.root.ids.bgim.opacity = 1
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
-        """Adjust the color according to the transparency."""
         if self.has_bgim:
             return color[:-1] + [transparency]
         return color
 
     def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
-        """Adjust the color according to the transparency."""
         if self.has_bgim:
             return color[:-1] + [transparency]
         return [0, 0, 0, 0]
@@ -153,7 +151,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                 m.findnot(status="deleted").sort(*self.current_sort_rule).books
             )
         )
-        self.category_status = "home"
+        self.current_category = "home"
 
         self.bookmanager = m
         self.init_color_buttons()
@@ -286,9 +284,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                                 0,
                             )
                         ),
-                        self.set_category_status("home"),
+                        self.set_current_category("home"),
                     )
-                    if self.category_status != "home"
+                    if self.current_category != "home"
                     else None
                 ),
             },
@@ -339,9 +337,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                                 0,
                             )
                         ),
-                        self.set_category_status("home"),
+                        self.set_current_category("home"),
                     )
-                    if self.category_status != "home"
+                    if self.current_category != "home"
                     else None
                 ),
             },
@@ -361,9 +359,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                                 0,
                             )
                         ),
-                        self.set_category_status("pinned"),
+                        self.set_current_category("pinned"),
                     )
-                    if self.category_status != "pinned"
+                    if self.current_category != "pinned"
                     else None
                 ),
             },
@@ -383,9 +381,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
                                 0,
                             )
                         ),
-                        self.set_category_status("deleted"),
+                        self.set_current_category("deleted"),
                     )
-                    if self.category_status != "deleted"
+                    if self.current_category != "deleted"
                     else None
                 ),
             },
@@ -394,9 +392,9 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         menu.on_enter = menu.on_leave
         self.open_menu(menu, button, rely=-dp(8), on_left=True, on_bottom=True)
 
-    def set_category_status(self, category_status: str) -> None:
+    def set_current_category(self, current_category: str) -> None:
         """Set the category status."""
-        self.category_status = category_status
+        self.current_category = current_category
 
     def open_nav_drawer(self, name: str) -> None:
         nav_drawer = getattr(self.root.ids, name)
