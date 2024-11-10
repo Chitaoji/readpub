@@ -86,7 +86,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
             [
                 ["main-screen", "theme_style", "Light"],
                 ["main-screen", "primary_palette", "Blue"],
-                ["main-screen", "fitimage", ""],
+                ["main-screen", "background_image", ""],
                 ["reader", "theme_style", "Light"],
                 ["reader", "primary_palette", "Blue"],
             ]
@@ -103,26 +103,28 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         )
         self.reader_theme_palette = kvconfig[self].get("reader", "primary_palette")
 
-        if (p := kvconfig[self].get("main-screen", "fitimage")) and Path(p).is_file():
-            self.has_fitimage = True
+        if (p := kvconfig[self].get("main-screen", "background_image")) and Path(
+            p
+        ).is_file():
+            self.has_bgim = True
         else:
-            self.has_fitimage = False
+            self.has_bgim = False
         self.test_bookcard = None
 
-    def set_fitimage(self, fitimage) -> None:
-        """Set a fitimage."""
-        self.root.ids.fitimage.source = fitimage
-        self.root.ids.fitimage.opacity = 1
+    def set_bgim(self, image) -> None:
+        """Set a background image."""
+        self.root.ids.bgim.source = image
+        self.root.ids.bgim.opacity = 1
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
         """Adjust the color according to the transparency."""
-        if self.has_fitimage:
+        if self.has_bgim:
             return color[:-1] + [transparency]
         return color
 
     def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
         """Adjust the color according to the transparency."""
-        if self.has_fitimage:
+        if self.has_bgim:
             return color[:-1] + [transparency]
         return [0, 0, 0, 0]
 
@@ -139,8 +141,8 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         self.reader_disabled = True
         self.book = None
 
-        if self.has_fitimage:
-            self.set_fitimage(kvconfig[self].get("main-screen", "fitimage"))
+        if self.has_bgim:
+            self.set_bgim(kvconfig[self].get("main-screen", "background_image"))
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)
