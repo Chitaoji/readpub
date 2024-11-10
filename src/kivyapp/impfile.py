@@ -88,6 +88,7 @@ class FileImportManager(MDFileManager):
             )
 
         self.ids.rv.data = manager_list
+        self.selection_button.md_bg_color = self.theme_cls.surfaceContainerColor
         self._show()
 
 
