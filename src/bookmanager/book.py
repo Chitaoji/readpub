@@ -26,7 +26,7 @@ if TYPE_CHECKING:
     from ._typing import Chapter, MetaData, Page, PageSettingsDict, Paragraph
     from .core import BookManager
 
-__all__ = []
+__all__ = ["image_auto_resize"]
 
 
 class Book:
@@ -367,11 +367,12 @@ def _save_cover(z: ZipFile, cover_href: str, path: Path) -> Path:
             p.unlink()
     savepath = path.parent / cover_href.rpartition("/")[-1]
     with Image.open(io.BytesIO(cover)) as image:
-        _image_auto_resize(image, 248, 360).save(savepath, optimize=True)
+        image_auto_resize(image, 248, 360).save(savepath, optimize=True)
     return savepath
 
 
-def _image_auto_resize(image: Image.Image, width: int, height: int) -> Image.Image:
+def image_auto_resize(image: Image.Image, width: int, height: int) -> Image.Image:
+    """Reisze the image according to the width and height."""
     a, b = image.size
     if a / b > width / height:
         eps = int((a - b * width / height) / 2)

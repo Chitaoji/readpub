@@ -12,6 +12,7 @@ try:
 except ImportError as e:
     raise e
 import ctypes
+import shutil
 from functools import partial
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Optional
@@ -147,17 +148,26 @@ class MainApp(BasicApp):
         if self.reader.book:
             self.reader.book.close()
 
-    def set_bgim(self, image: str | None = None) -> None:
+    def set_bgim(self, path: str | None = None) -> None:
         """Set a background image."""
-        if image is None:
+        if path is None:
             self.root.ids.bgim.source = ""
             self.root.ids.bgim.opacity = 0
             self.has_bgim = False
             self.cards.setattr("theme_shadow_color", "Primary")
             self.cards.setattr("theme_bg_color", "Primary")
         else:
-            self.root.ids.bgim.source = image
+            self.root.ids.bgim.source = path
             self.root.ids.bgim.opacity = 1
+
+            if pathnow := kvconfig[self].get("main-screen", "background_image"):
+                Path(pathnow).unlink()
+            savepath = (
+                kvconfig.path.parent / f"background{Path(path).suffix}"
+            ).as_posix()
+            shutil.copyfile(path, savepath)
+            kvconfig[self].update([["main-screen", "background_image", savepath]])
+
             self.has_bgim = True
             self.cards.setattr("theme_shadow_color", "Custom")
             self.cards.setattr("shadow_color", [0, 0, 0, 0])
