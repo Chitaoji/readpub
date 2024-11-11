@@ -44,9 +44,6 @@ class BookViewer:
             f"{self.book.pagemax} {self.book.pagenow/self.book.pagemax:.2%}"
         )
 
-    def __del__(self) -> None:
-        self.book.close()
-
     def turn_to_page(self, n: int) -> Self:
         """Turn to page n."""
         if n < 1:
