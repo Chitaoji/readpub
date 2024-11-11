@@ -7,10 +7,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TYPE_CHECKING, Any, Literal, Optional
+from typing import TYPE_CHECKING, Literal
 
 from kivymd.app import MDApp
-from kivymd.uix.menu import MDDropdownMenu
 
 from ..bookmanager import BookManager
 from .font import KivyFont
@@ -49,35 +48,3 @@ class BasicApp(MDApp):
         self.has_bgim: bool
 
         super().__init__(**kwargs)
-
-    def open_nav_drawer(self, name: str) -> None:
-        """Open the nav-drawer."""
-
-    def switch_theme(self) -> None:
-        """Switch the theme-style."""
-
-    def open_menu(
-        self,
-        menu: MDDropdownMenu,
-        caller: Any,
-        relx: float = 0.0,
-        rely: float = 0.0,
-        absx: Optional[float] = None,
-        absy: Optional[float] = None,
-        on_left: bool = False,
-        on_bottom: bool = False,
-        check_ver_growth: bool = False,
-        show_duration_x: Optional[float] = None,
-    ) -> None:
-        """Open the menu object."""
-
-    def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
-        """Adjust the color according to the transparency."""
-        if TYPE_CHECKING:
-            return ""
-
-    def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
-        """Adjust the color of topbars according to the transparency."""
-
-    def set_bgim(self, image: str | None = None) -> None:
-        """Set a background image."""

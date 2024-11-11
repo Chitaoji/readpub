@@ -54,8 +54,6 @@ Logger.info(
     dp(1),
     sp(1),
 )
-# if Window.width <= 1920:
-#     Metrics.dpi = 96
 
 
 class ColorCard(BoxLayout):
@@ -144,6 +142,7 @@ class MainApp(BasicApp):
         Window.bind(on_keyboard=self.on_keyboard)
 
     def set_bgim(self, image: str | None = None) -> None:
+        """Set a background image."""
         if image is None:
             self.root.ids.bgim.source = ""
             self.root.ids.bgim.opacity = 0
@@ -160,11 +159,13 @@ class MainApp(BasicApp):
         Clock.schedule_once(lambda *_: self.switch_theme_style(), 0)
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
+        """Adjust the color according to the transparency."""
         if self.has_bgim:
             return color[:-1] + [transparency]
         return color
 
     def trans_color_topbar(self, color: list[str], transparency: float = 0.0) -> str:
+        """Adjust the color of topbars according to the transparency."""
         if self.has_bgim:
             return color[:-1] + [transparency]
         return [0, 0, 0, 0]
@@ -240,6 +241,7 @@ class MainApp(BasicApp):
             kvconfig[self].update([["main-screen", "primary_palette", color]])
 
     def switch_theme(self) -> None:
+        """Switch the theme-style."""
         if self.root.current == "Reader":
             self.theme_cls.theme_style = self.reader_theme_style
             self.theme_cls.primary_palette = self.reader_theme_palette
@@ -403,6 +405,7 @@ class MainApp(BasicApp):
         self.open_menu(menu, button, rely=-dp(8), on_left=True, on_bottom=True)
 
     def open_nav_drawer(self, name: str) -> None:
+        """Open the nav-drawer."""
         nav_drawer = getattr(self.root.ids, name)
         nav_drawer.set_state("toggle")
 
@@ -419,6 +422,7 @@ class MainApp(BasicApp):
         check_ver_growth: bool = False,
         show_duration_x: Optional[float] = None,
     ) -> None:
+        """Open the menu object."""
         menu.set_menu_properties()
 
         if check_ver_growth:
