@@ -158,19 +158,19 @@ class BookManager:
             return True
         return False
 
-    def delete(self, bookid: str) -> Book:
+    def delete(self, bookid: str | int) -> Book:
         """
         Delete a book and return itself.
 
         NOTE: you can use `.recover_book()` to recover it.
 
         """
-        book = self.books[bookid]
+        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
         book.update_metadata(status="deleted")
         book.save_metadata()
         return book
 
-    def delete_entirely(self, bookid: str) -> None:
+    def delete_entirely(self, bookid: str | int) -> None:
         """
         Delete a book entirely.
 
@@ -178,29 +178,27 @@ class BookManager:
         to the book, so the book can not be recoverd again!!
 
         """
+        bookid = self[bookid].bookid if isinstance(bookid, int) else bookid
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
         del self.books[bookid]
 
-    def restore(self, bookid: str) -> Book:
+    def restore(self, bookid: str | int) -> Book:
         """Recover a book and return itself."""
-        book = self.books[bookid]
+        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
         book.update_metadata(status="normal")
         book.save_metadata()
         return book
 
-    def pin(self, bookid: str) -> Book:
+    def pin(self, bookid: str | int) -> Book:
         """Pin a book and return itself."""
-        book = self.books[bookid]
+        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
         book.update_metadata(status="pinned")
         book.save_metadata()
         return book
 
-    def view(self, n: int | str) -> BookViewer:
+    def view(self, bookid: str | int) -> BookViewer:
         """View the n-th book in the bookshelf (in console mode)."""
-        if isinstance(n, int):
-            book = self[n]
-        else:
-            book = self.books[n]
+        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
         if self.opened_book == book.bookid:
             return BookViewer(book)
         if self.opened_book:
