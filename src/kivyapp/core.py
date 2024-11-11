@@ -99,7 +99,6 @@ class MainApp(BasicApp):
         self.input = InputMethod(self)
         self.cards = BookCardContainer(self)
         self.reader = Reader(self)
-        self.importer = FileImporter(self)
 
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
@@ -121,6 +120,7 @@ class MainApp(BasicApp):
 
     def build(self):
         self.title = "ReadPub"
+        self.importer = FileImporter(self)
 
         if self.has_bgim:
             self.root.ids.bgim.source = kvconfig[self].get(
