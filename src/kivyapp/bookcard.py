@@ -126,8 +126,8 @@ class BookCardContainer:
             if duration is not None:
                 await asynckivy.sleep(duration)
 
-    def setone(self, book: "Book") -> BookCard:
-        """Set one single card."""
+    def insert(self, book: "Book") -> BookCard:
+        """Insert one single card."""
         metadata = book.get_metadata()
         pagenow, pagemax = metadata["pagenow"], metadata["pagemax"]
         match pagenow / pagemax:
