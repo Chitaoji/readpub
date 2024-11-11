@@ -55,6 +55,13 @@ class BookManager:
     def __getitem__(self, __key: int) -> Book:
         return list(self.books.values())[__key]
 
+    def __init_books(self) -> None:
+        """Load data."""
+        books_path = self.datapath / "books"
+        if not books_path.exists():
+            books_path.mkdir()
+        self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
+
     def login(self, username: str = "", password: str = "") -> None:
         """
         Login as a new user.
@@ -80,13 +87,6 @@ class BookManager:
             self.username = username
         else:
             raise LoginError(f"wrong password for user: {username!r}")
-
-    def __init_books(self) -> None:
-        """Load data."""
-        books_path = self.datapath / "books"
-        if not books_path.exists():
-            books_path.mkdir()
-        self.books = {p.name: Book(p, self) for p in books_path.iterdir()}
 
     def add_book(self, src: Path) -> Book:
         """
@@ -117,64 +117,6 @@ class BookManager:
 
         self.books[bookid] = book = Book(dirpath, self)
         return book
-
-    def check_book(self, src: Path) -> bool:
-        """Check whether the source file is an e-book."""
-        if src.suffix in {".epub"}:
-            return True
-        return False
-
-    def del_book(self, bookid: str) -> Book:
-        """
-        Delete a book and return itself.
-
-        NOTE: you can use `.recover_book()` to recover it.
-
-        """
-        book = self.books[bookid]
-        book.update_metadata(status="deleted")
-        book.save_metadata()
-        return book
-
-    def restore_book(self, bookid: str) -> Book:
-        """Recover a book and return itself."""
-        book = self.books[bookid]
-        book.update_metadata(status="normal")
-        book.save_metadata()
-        return book
-
-    def pin_book(self, bookid: str) -> Book:
-        """Pin a book and return itself."""
-        book = self.books[bookid]
-        book.update_metadata(status="pinned")
-        book.save_metadata()
-        return book
-
-    def del_book_entirely(self, bookid: str) -> None:
-        """
-        Delete a book entirely.
-
-        NOTE: this will entirely delete all the files and records related
-        to the book, so the book can not be recoverd again!!
-
-        """
-        shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
-        del self.books[bookid]
-
-    def view_book(self, n: int | str) -> BookViewer:
-        """View the n-th book in the bookshelf (in console mode)."""
-        if isinstance(n, int):
-            book = self[n]
-        else:
-            book = self.books[n]
-        if self.opened_book == book.bookid:
-            return BookViewer(book)
-        if self.opened_book:
-            self.books[self.opened_book].close()
-        book.get_metadata()
-        book.typeset()
-        book.open()
-        return BookViewer(book)
 
     def get_new_bookid(self, maxruns: int = 20) -> str:
         """
@@ -209,6 +151,64 @@ class BookManager:
             else:
                 raise RuntimeError(f"can't find a legal book id after {maxruns} runs")
         return bookid
+
+    def check_is_book(self, src: Path) -> bool:
+        """Check whether the source file is an e-book."""
+        if src.suffix in {".epub"}:
+            return True
+        return False
+
+    def delete(self, bookid: str) -> Book:
+        """
+        Delete a book and return itself.
+
+        NOTE: you can use `.recover_book()` to recover it.
+
+        """
+        book = self.books[bookid]
+        book.update_metadata(status="deleted")
+        book.save_metadata()
+        return book
+
+    def delete_entirely(self, bookid: str) -> None:
+        """
+        Delete a book entirely.
+
+        NOTE: this will entirely delete all the files and records related
+        to the book, so the book can not be recoverd again!!
+
+        """
+        shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
+        del self.books[bookid]
+
+    def restore(self, bookid: str) -> Book:
+        """Recover a book and return itself."""
+        book = self.books[bookid]
+        book.update_metadata(status="normal")
+        book.save_metadata()
+        return book
+
+    def pin(self, bookid: str) -> Book:
+        """Pin a book and return itself."""
+        book = self.books[bookid]
+        book.update_metadata(status="pinned")
+        book.save_metadata()
+        return book
+
+    def view(self, n: int | str) -> BookViewer:
+        """View the n-th book in the bookshelf (in console mode)."""
+        if isinstance(n, int):
+            book = self[n]
+        else:
+            book = self.books[n]
+        if self.opened_book == book.bookid:
+            return BookViewer(book)
+        if self.opened_book:
+            self.books[self.opened_book].close()
+        book.get_metadata()
+        book.typeset()
+        book.open()
+        return BookViewer(book)
 
     def find(self, **kwargs: Unpack["MetaData"]) -> "TempBookManager":
         """

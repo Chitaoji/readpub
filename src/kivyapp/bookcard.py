@@ -270,7 +270,7 @@ class BookCardContainer:
 
     def pin(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
-        book = self.app.bookmanager.pin_book(button.parent.parent.bookid)
+        book = self.app.bookmanager.pin(button.parent.parent.bookid)
 
         button.parent.parent.status = "pinned"
         self.app.root.ids.grid.remove_widget(button.parent.parent)
@@ -287,7 +287,7 @@ class BookCardContainer:
 
     def unpin(self, button, menu=None) -> None:
         """Unpin the bookcard containing the button."""
-        book = self.app.bookmanager.restore_book(button.parent.parent.bookid)
+        book = self.app.bookmanager.restore(button.parent.parent.bookid)
 
         button.parent.parent.status = "normal"
         self.app.root.ids.grid.remove_widget(button.parent.parent)
@@ -304,7 +304,7 @@ class BookCardContainer:
 
     def restore(self, button, menu=None) -> None:
         """Restore the bookcard containing the button."""
-        self.app.bookmanager.restore_book(button.parent.parent.bookid)
+        self.app.bookmanager.restore(button.parent.parent.bookid)
         button.parent.parent.status = "normal"
         self.app.root.ids.grid.remove_widget(button.parent.parent)
         if menu:
@@ -315,7 +315,7 @@ class BookCardContainer:
 
     def delete(self, button, menu=None) -> None:
         """Delete the bookcard."""
-        self.app.bookmanager.del_book(button.parent.parent.bookid)
+        self.app.bookmanager.delete(button.parent.parent.bookid)
         self.app.root.ids.grid.remove_widget(button.parent.parent)
         if menu:
             menu.dismiss()
@@ -388,7 +388,7 @@ class BookCardContainer:
                     on_release=lambda _: (
                         dialog.dismiss(),
                         menu.dismiss(),
-                        self.app.bookmanager.del_book_entirely(
+                        self.app.bookmanager.delete_entirely(
                             button.parent.parent.bookid
                         ),
                         self.app.root.ids.grid.remove_widget(button.parent.parent),

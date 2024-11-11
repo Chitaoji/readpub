@@ -142,7 +142,7 @@ class FileImporter:
 
     def import_book(self, path: str) -> None:
         """Importing book."""
-        if checked := self.app.bookmanager.check_book(p := Path(path)):
+        if checked := self.app.bookmanager.check_is_book(p := Path(path)):
             snack = "已导入新书: " + path
         else:
             snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
