@@ -209,6 +209,7 @@ class BookCardContainer:
 
     def open_cover_menu(self, button) -> None:
         """Open a menu on the book cover."""
+        bookcard: BookCard = button.parent.parent
         menu = MDDropdownMenu(
             caller=button,
             items=[],
@@ -216,12 +217,12 @@ class BookCardContainer:
             hide_duration=0.1,
             hor_growth="right",
             ver_growth="up",
-            radius=button.parent.parent.radius,
-            shadow_radius=button.parent.parent.shadow_radius,
+            radius=bookcard.radius,
+            shadow_radius=bookcard.shadow_radius,
             width=dp(160),
         )
-        is_pinned = button.parent.parent.status == "pinned"
-        is_deleted = button.parent.parent.status == "deleted"
+        is_pinned = bookcard.status == "pinned"
+        is_deleted = bookcard.status == "deleted"
         menu_items = [
             {
                 "viewclass": "CoverDropdownTextItem",
@@ -231,12 +232,12 @@ class BookCardContainer:
                 ),
                 "height": dp(40),
                 "on_release": (
-                    partial(self.unpin, button, menu)
+                    partial(self.unpin, bookcard, menu)
                     if is_pinned
                     else (
-                        partial(self.restore, button, menu)
+                        partial(self.restore, bookcard, menu)
                         if is_deleted
-                        else partial(self.pin, button, menu)
+                        else partial(self.pin, bookcard, menu)
                     )
                 ),
             },
@@ -256,7 +257,7 @@ class BookCardContainer:
                 "height": dp(40),
                 "on_release": partial(
                     self.show_alert_dialog if is_deleted else self.delete,
-                    button,
+                    bookcard,
                     menu,
                 ),
             },
@@ -264,59 +265,57 @@ class BookCardContainer:
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.app.open_menu(
-            menu, button.parent.parent, relx=dp(12), show_duration_x=0.04
-        )
+        self.app.open_menu(menu, bookcard, relx=dp(12), show_duration_x=0.04)
 
-    def pin(self, button, menu=None) -> None:
+    def pin(self, bookcard: BookCard, menu=None) -> None:
         """Pin the bookcard containing the button."""
-        (book := self.app.bookmanager.books[button.parent.parent.bookid]).pin()
+        self.app.bookmanager.books[bookcard.bookid].pin()
 
-        button.parent.parent.status = "pinned"
-        self.app.root.ids.grid.remove_widget(button.parent.parent)
+        bookcard.status = "pinned"
+        self.app.root.ids.grid.remove_widget(bookcard)
 
         idx = self.app.bookmanager.where_to_insert(
-            book.bookid,
+            bookcard.bookid,
             (x.bookid for x in self.app.root.ids.grid.children),
             *self.current_sort_rule,
             ascending=True,
         )
-        self.app.root.ids.grid.add_widget(button.parent.parent, idx)
+        self.app.root.ids.grid.add_widget(bookcard, idx)
         if menu:
             menu.dismiss()
 
-    def unpin(self, button, menu=None) -> None:
+    def unpin(self, bookcard: BookCard, menu=None) -> None:
         """Unpin the bookcard containing the button."""
-        (book := self.app.bookmanager.books[button.parent.parent.bookid]).restore()
+        self.app.bookmanager.books[bookcard.bookid].restore()
 
-        button.parent.parent.status = "normal"
-        self.app.root.ids.grid.remove_widget(button.parent.parent)
+        bookcard.status = "normal"
+        self.app.root.ids.grid.remove_widget(bookcard)
 
         idx = self.app.bookmanager.where_to_insert(
-            book.bookid,
+            bookcard.bookid,
             (x.bookid for x in self.app.root.ids.grid.children),
             *self.current_sort_rule,
             ascending=True,
         )
-        self.app.root.ids.grid.add_widget(button.parent.parent, idx)
+        self.app.root.ids.grid.add_widget(bookcard, idx)
         if menu:
             menu.dismiss()
 
-    def restore(self, button, menu=None) -> None:
+    def restore(self, bookcard: BookCard, menu=None) -> None:
         """Restore the bookcard containing the button."""
-        self.app.bookmanager.books[button.parent.parent.bookid].restore()
-        button.parent.parent.status = "normal"
-        self.app.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.bookmanager.books[bookcard.bookid].restore()
+        bookcard.status = "normal"
+        self.app.root.ids.grid.remove_widget(bookcard)
         if menu:
             menu.dismiss()
 
-    def getinfo(self, button, menu=None) -> None:
+    def getinfo(self, bookcard: BookCard, menu=None) -> None:
         """Pin the bookcard containing the button."""
 
-    def delete(self, button, menu=None) -> None:
+    def delete(self, bookcard: BookCard, menu=None) -> None:
         """Delete the bookcard."""
-        self.app.bookmanager.books[button.parent.parent.bookid].delete()
-        self.app.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.bookmanager.books[bookcard.bookid].delete()
+        self.app.root.ids.grid.remove_widget(bookcard)
         if menu:
             menu.dismiss()
 
@@ -339,7 +338,7 @@ class BookCardContainer:
                 radius[2] = 0
         return radius, shadow_radius
 
-    def show_alert_dialog(self, button, menu):
+    def show_alert_dialog(self, bookcard: BookCard, menu):
         """Show alert dialog on deleting a book."""
         dialog = MDDialog(
             # ----------------------------Icon-----------------------------
@@ -363,9 +362,7 @@ class BookCardContainer:
                         icon="book-open-variant-outline",
                     ),
                     MDListItemSupportingText(
-                        text=button.parent.parent.title,
-                        font_style="NavText",
-                        role="small",
+                        text=bookcard.title, font_style="NavText", role="small"
                     ),
                     theme_bg_color="Custom",
                     md_bg_color=self.app.theme_cls.transparentColor,
@@ -388,8 +385,8 @@ class BookCardContainer:
                     on_release=lambda _: (
                         dialog.dismiss(),
                         menu.dismiss(),
-                        self.app.bookmanager.remove(button.parent.parent.bookid),
-                        self.app.root.ids.grid.remove_widget(button.parent.parent),
+                        self.app.bookmanager.remove(bookcard.bookid),
+                        self.app.root.ids.grid.remove_widget(bookcard),
                     ),
                 ),
                 MDButton(
