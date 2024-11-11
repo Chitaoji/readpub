@@ -158,21 +158,9 @@ class BookManager:
             return True
         return False
 
-    def delete(self, bookid: str | int) -> Book:
+    def remove(self, bookid: str | int) -> None:
         """
-        Delete a book and return itself.
-
-        NOTE: you can use `.recover_book()` to recover it.
-
-        """
-        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
-        book.update_metadata(status="deleted")
-        book.save_metadata()
-        return book
-
-    def delete_entirely(self, bookid: str | int) -> None:
-        """
-        Delete a book entirely.
+        Remove a book entirely.
 
         NOTE: this will entirely delete all the files and records related
         to the book, so the book can not be recoverd again!!
@@ -181,32 +169,6 @@ class BookManager:
         bookid = self[bookid].bookid if isinstance(bookid, int) else bookid
         shutil.rmtree(self.datapath / "books" / bookid, ignore_errors=True)
         del self.books[bookid]
-
-    def restore(self, bookid: str | int) -> Book:
-        """Recover a book and return itself."""
-        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
-        book.update_metadata(status="normal")
-        book.save_metadata()
-        return book
-
-    def pin(self, bookid: str | int) -> Book:
-        """Pin a book and return itself."""
-        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
-        book.update_metadata(status="pinned")
-        book.save_metadata()
-        return book
-
-    def view(self, bookid: str | int) -> BookViewer:
-        """View the n-th book in the bookshelf (in console mode)."""
-        book = self[bookid] if isinstance(bookid, int) else self.books[bookid]
-        if self.opened_book == book.bookid:
-            return BookViewer(book)
-        if self.opened_book:
-            self.books[self.opened_book].close()
-        book.get_metadata()
-        book.typeset()
-        book.open()
-        return BookViewer(book)
 
     def find(self, **kwargs: Unpack["MetaData"]) -> "TempBookManager":
         """

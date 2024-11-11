@@ -20,6 +20,7 @@ from PIL import Image
 
 from .setting import PageSettings
 from .textmaster import BookIndex, TextMaster, merge_dir
+from .viewer import BookViewer
 
 if TYPE_CHECKING:
     from ._typing import Chapter, MetaData, Page, PageSettingsDict, Paragraph
@@ -105,6 +106,32 @@ class Book:
         yml_path = self.dirpath / "metadata.yml"
         if yml_path.is_file():
             yml_path.unlink()
+
+    def delete(self) -> None:
+        """Delete."""
+        self.update_metadata(status="deleted")
+        self.save_metadata()
+
+    def restore(self) -> None:
+        """Restore."""
+        self.update_metadata(status="normal")
+        self.save_metadata()
+
+    def pin(self) -> None:
+        """Pin a book and return itself."""
+        self.update_metadata(status="pinned")
+        self.save_metadata()
+
+    def view(self) -> BookViewer:
+        """View the n-th book in the bookshelf (in console mode)."""
+        if (openid := self.manager.opened_book) == self.bookid:
+            return BookViewer(self)
+        if openid:
+            self.manager.books[openid].close()
+        self.get_metadata()
+        self.typeset()
+        self.open()
+        return BookViewer(self)
 
     def extract(self) -> None:
         """
