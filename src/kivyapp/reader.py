@@ -212,12 +212,12 @@ class Reader:
 
     def generate_content(self):
         """Generate the book content."""
-        if len(self.app.root.ids.nav_content_box.children) > 0:
+        if len(self.app.root.ids.contentbox.children) > 0:
             return
         self.__generate_content(self.book.get_content()[0][0].content)
 
     def __generate_content(self, content, indent: int = 0):
-        box = self.app.root.ids.nav_content_box
+        box = self.app.root.ids.contentbox
         for x in content:
             if x.title.text != "Unknown":
                 box.add_widget(
@@ -230,6 +230,6 @@ class Reader:
 
     def delete_content(self):
         """Delete the book content."""
-        box = self.app.root.ids.nav_content_box
+        box = self.app.root.ids.contentbox
         for widget in list(box.children):
             box.remove_widget(widget)

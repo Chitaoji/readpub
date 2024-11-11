@@ -85,7 +85,7 @@ class MainApp(BasicApp):
 
     def build_config(self, config: "ConfigParser") -> None:
         kvconfig.resgister(self, config)
-        kvconfig[self].set_defaults(
+        kvconfig[self].set_default(
             [
                 ["main-screen", "theme_style", "Light"],
                 ["main-screen", "primary_palette", "Blue"],
@@ -99,6 +99,7 @@ class MainApp(BasicApp):
         self.input = InputMethod(self)
         self.cards = BookCardContainer(self)
         self.reader = Reader(self)
+        self.importer = FileImporter(self)
 
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
@@ -116,9 +117,10 @@ class MainApp(BasicApp):
         else:
             self.has_bgim = False
 
+        self.nav_now = None
+
     def build(self):
         self.title = "ReadPub"
-        self.importer = FileImporter(self)
 
         if self.has_bgim:
             self.root.ids.bgim.source = kvconfig[self].get(
@@ -140,6 +142,10 @@ class MainApp(BasicApp):
 
         self.root.get_screen("Reader").bind(on_touch_down=self.reader.on_touch_down)
         Window.bind(on_keyboard=self.on_keyboard)
+
+    def on_stop(self) -> None:
+        if self.reader.book:
+            self.reader.book.close()
 
     def set_bgim(self, image: str | None = None) -> None:
         """Set a background image."""
@@ -172,21 +178,35 @@ class MainApp(BasicApp):
 
     def on_keyboard(self, _, key, *__):
         """On keyboard."""
-        if key == 292:  # "F11"
-            match Window.fullscreen:
-                case "auto":
-                    Window.fullscreen = False
-                case False:
-                    Window.fullscreen = "auto"
-        elif key == 281:  # PgDn
-            if self.root.current == "Reader":
-                self.next_page()
-        elif key == 280:  # PgUp
-            if self.root.current == "Reader":
-                self.prev_page()
-        elif key == 278:  # Home
-            if self.root.current == "Reader":
-                self.toggle_toolbar()
+        match key:
+            case 292:  # F11
+                match Window.fullscreen:
+                    case "auto":
+                        Window.fullscreen = False
+                    case False:
+                        Window.fullscreen = "auto"
+            case 286:  # F5
+                if self.root.current == "MainScreen":
+                    self.close_nav_drawer()
+                    self.cards.remove()
+                    self.cards.set_category(self.cards.current_category)
+            case 281:  # PgDn
+                if self.root.current == "Reader":
+                    self.reader.next_page()
+            case 280:  # PgUp
+                if self.root.current == "Reader":
+                    self.reader.prev_page()
+            case 278:  # Home
+                if self.root.current == "Reader":
+                    self.reader.toggle_toolbar()
+            case 27:  # Esc
+                if self.root.current == "Reader":
+                    if self.nav_now:
+                        self.close_nav_drawer()
+                    else:
+                        self.reader.homepage()
+                elif not self.nav_now:
+                    self.open_nav_drawer("nav_setting")
 
     def open_settings(self, *_) -> None: ...
 
@@ -286,18 +306,7 @@ class MainApp(BasicApp):
                 "leading_icon": "home-outline",
                 "height": dp(50),
                 "on_release": lambda: (
-                    (
-                        self.cards.remove(),
-                        asynckivy.start(
-                            self.cards.set(
-                                self.bookmanager.findnot(status="deleted")
-                                .sort(*self.cards.current_sort_rule)
-                                .books,
-                                0,
-                            )
-                        ),
-                        self.cards.set_category("home"),
-                    )
+                    self.cards.set_category("home")
                     if self.cards.current_category != "home"
                     else None
                 ),
@@ -339,18 +348,7 @@ class MainApp(BasicApp):
                 "leading_icon": "home-outline",
                 "height": dp(50),
                 "on_release": lambda: (
-                    (
-                        self.cards.remove(),
-                        asynckivy.start(
-                            self.cards.set(
-                                self.bookmanager.findnot(status="deleted")
-                                .sort(*self.cards.current_sort_rule)
-                                .books,
-                                0,
-                            )
-                        ),
-                        self.cards.set_category("home"),
-                    )
+                    self.cards.set_category("home")
                     if self.cards.current_category != "home"
                     else None
                 ),
@@ -361,18 +359,7 @@ class MainApp(BasicApp):
                 "leading_icon": "pin",
                 "height": dp(50),
                 "on_release": lambda: (
-                    (
-                        self.cards.remove(),
-                        asynckivy.start(
-                            self.cards.set(
-                                self.bookmanager.find(status="pinned")
-                                .sort(*self.cards.current_sort_rule)
-                                .books,
-                                0,
-                            )
-                        ),
-                        self.cards.set_category("pinned"),
-                    )
+                    self.cards.set_category("pinned")
                     if self.cards.current_category != "pinned"
                     else None
                 ),
@@ -383,18 +370,7 @@ class MainApp(BasicApp):
                 "leading_icon": "trash-can",
                 "height": dp(50),
                 "on_release": lambda: (
-                    (
-                        self.cards.remove(),
-                        asynckivy.start(
-                            self.cards.set(
-                                self.bookmanager.find(status="deleted")
-                                .sort(*self.cards.current_sort_rule)
-                                .books,
-                                0,
-                            )
-                        ),
-                        self.cards.set_category("deleted"),
-                    )
+                    self.cards.set_category("deleted")
                     if self.cards.current_category != "deleted"
                     else None
                 ),
@@ -408,6 +384,13 @@ class MainApp(BasicApp):
         """Open the nav-drawer."""
         nav_drawer = getattr(self.root.ids, name)
         nav_drawer.set_state("toggle")
+        self.nav_now = nav_drawer
+
+    def close_nav_drawer(self) -> None:
+        """Open the current nav-drawer."""
+        if self.nav_now:
+            self.nav_now.set_state("toggle")
+        self.nav_now = None
 
     def open_menu(
         self,

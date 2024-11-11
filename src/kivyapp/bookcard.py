@@ -155,9 +155,20 @@ class BookCardContainer:
         self.app.root.ids.grid.add_widget(widget, idx)
         return widget
 
-    def set_category(self, current_category: str) -> None:
-        """Set the current category."""
-        self.current_category = current_category
+    def set_category(self, category: str) -> None:
+        """Reset the cards according to the category."""
+        self.remove()
+        match category:
+            case "home":
+                booklist = self.app.bookmanager.findnot(status="deleted")
+            case "deleted":
+                booklist = self.app.bookmanager.find(status="deleted")
+            case "pinned":
+                booklist = self.app.bookmanager.find(status="pinned")
+            case _:
+                raise RuntimeError(f"undefined category: {category}")
+        asynckivy.start(self.set(booklist.sort(*self.current_sort_rule).books, 0))
+        self.current_category = category
 
     def color_setter(self, widget: Any) -> Callable[[Any, list[str]], None]:
         """Get a color setter for widget."""

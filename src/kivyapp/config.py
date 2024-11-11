@@ -60,7 +60,7 @@ class KivyConfig:
             self.get_ini_path(obj), parser=parser
         )
 
-    def set_defaults(self, commands: list[list]) -> None:
+    def set_default(self, commands: list[list]) -> None:
         """
         Set default values in the config by commands.
 
@@ -135,6 +135,7 @@ class KivyConfig:
 kvconfig = KivyConfig(get_datapath())
 kvconfig.update_and_read(
     [
+        ["kivy", "exit_on_escape", 0],
         ["input", "mouse", "mouse,multitouch_on_demand"],
         # ["graphics", "fullscreen", "auto"],
     ]

@@ -267,7 +267,7 @@ MDScreenManager:
                     theme_font_size: "Custom"
                     font_size: sp(48)
                     size: search_field.height, search_field.height
-                    on_release: nav_setting.set_state("toggle")
+                    on_release: app.open_nav_drawer("nav_setting")
 
                 MDTextField:
                     id: search_field
@@ -331,7 +331,9 @@ MDScreenManager:
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.cards.truly_disable()
-                on_close: app.cards.truly_enable()
+                on_close: 
+                    app.cards.truly_enable()
+                    app.nav_now = ""
 
                 MDRelativeLayout:
                     orientation: "vertical"
@@ -419,13 +421,26 @@ MDScreenManager:
                     MDButton:
                         on_release: app.reset_theme()
                         adaptive_size: True
-                        pos_hint: {"center_x": .5, "center_y": .05}
+                        pos_hint: {"center_x": .5, "center_y": .11}
 
                         MDButtonIcon:
                             icon: "restore"
 
                         MDButtonText:
                             text: "恢复默认"
+                            font_style: "NavText"
+                            role: "medium"
+
+                    MDButton:
+                        on_release: app.reset_theme()
+                        adaptive_size: True
+                        pos_hint: {"center_x": .5, "center_y": .05}
+
+                        MDButtonIcon:
+                            icon: "logout"
+
+                        MDButtonText:
+                            text: "退出软件"
                             font_style: "NavText"
                             role: "medium"
 
@@ -441,7 +456,9 @@ MDScreenManager:
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.cards.truly_disable()
-                on_close: app.cards.truly_enable()
+                on_close: 
+                    app.cards.truly_enable()
+                    app.nav_now = ""
 
                 MDRelativeLayout:
 
@@ -519,7 +536,7 @@ MDScreenManager:
                 size: reader_search_field.height, reader_search_field.height
                 on_release: 
                     app.reader.generate_content()
-                    nav_content.set_state("toggle")
+                    app.open_nav_drawer("nav_content")
 
             MDTextField:
                 id: reader_search_field
@@ -547,7 +564,7 @@ MDScreenManager:
                 theme_font_size: "Custom"
                 font_size: sp(48)
                 size: reader_search_field.height, reader_search_field.height
-                on_release: nav_reader_setting.set_state("toggle")
+                on_release: app.open_nav_drawer("nav_reader_setting")
 
             MDIconButton:
                 icon: "information-variant"
@@ -566,7 +583,9 @@ MDScreenManager:
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.reader.truly_disable()
-                on_close: app.reader.truly_enable()
+                on_close: 
+                    app.reader.truly_enable()
+                    app.nav_now = ""
 
                 MDRelativeLayout:
                     orientation: "vertical"
@@ -662,7 +681,9 @@ MDScreenManager:
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.reader.truly_disable()
-                on_close: app.reader.truly_enable()
+                on_close: 
+                    app.reader.truly_enable()
+                    app.nav_now = ""
 
                 MDBoxLayout:
                     adaptive_height: True
@@ -687,8 +708,7 @@ MDScreenManager:
 
                         
                         MDBoxLayout:
-                            id: nav_content_box
-                            # size_hint: None, None
+                            id: contentbox
                             adaptive_height: True
                             orientation: "vertical"
                             spacing: dp(4)

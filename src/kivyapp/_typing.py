@@ -7,7 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 from kivymd.app import MDApp
 
@@ -46,5 +46,6 @@ class BasicApp(MDApp):
         self.reader_theme_palette: str
 
         self.has_bgim: bool
+        self.nav_now: Any
 
         super().__init__(**kwargs)
