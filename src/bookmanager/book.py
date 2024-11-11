@@ -166,7 +166,7 @@ class Book:
             )
             if self.manager.logger:
                 self.manager.logger.info(
-                    'Typeset: Typsetting book "<%s>"', self.get_metadata()["title"]
+                    'Book: Typsetting book <"%s">', self.get_metadata()["title"]
                 )
         return self.__typeset
 
@@ -180,7 +180,7 @@ class Book:
         if adjusted:
             if self.manager.logger:
                 self.manager.logger.info(
-                    'Typeset: Ajusting settings for book "<%s>": %s',
+                    'Book: Ajusting settings for book <"%s">: %s',
                     self.get_metadata()["title"],
                     repr(kwargs),
                 )

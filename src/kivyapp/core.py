@@ -81,7 +81,7 @@ class MainApp(BasicApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:
-        return kvconfig.get_inipath(self).as_posix()
+        return kvconfig.get_ini_path(self).as_posix()
 
     def build_config(self, config: "ConfigParser") -> None:
         kvconfig.resgister(self, config)

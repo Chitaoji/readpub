@@ -158,7 +158,7 @@ class Reader:
                     )
                 )
             elif isinstance(para, BookImage):
-                Logger.info('Image: Loading image "%s"', para.path)
+                Logger.info('Image: Loading image at "%s"', para.path)
                 imgbox.add_widget(Image(source=para.path.as_posix()))
             elif isinstance(para, AlternativeCharacter):
                 font_style, role = self.app.font.getstyle(

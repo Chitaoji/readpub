@@ -185,9 +185,9 @@ class BookCardContainer:
 
     def prepare_book(self, book: "Book") -> None:
         """Extract and picklize the book."""
-        Logger.info('Extract: Extracting book "%s"', book.get_metadata()["filepath"])
+        Logger.info('Book: Extracting book "%s"', book.get_metadata()["filepath"])
         book.extract()
-        Logger.info('Picklize: Pickling book "%s"', book.get_metadata()["filepath"])
+        Logger.info('Book: Pickling book "%s"', book.get_metadata()["filepath"])
         book.picklize()
 
     def remove(self) -> None:

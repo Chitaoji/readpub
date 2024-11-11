@@ -46,18 +46,18 @@ class KivyConfig:
     def __getitem__(self, __key: object) -> Self:
         return self.children[__key.__class__.__name__]
 
-    def get_inipath(self, obj: object) -> Path:
+    def get_ini_path(self, obj: object) -> Path:
         """Get the `.ini` path for any object."""
-        return self.path.parent / f"kivyapp.{self.get_inistem(obj)}.ini"
+        return self.path.parent / f"kivyapp.{self.get_ini_stem(obj)}.ini"
 
-    def get_inistem(self, obj: object) -> str:
+    def get_ini_stem(self, obj: object) -> str:
         """Get the stem for `.ini` file."""
         return obj.__class__.__name__.lower().removesuffix("app")
 
     def resgister(self, obj: object, parser: "ConfigParser") -> None:
         """Register a config parser of the user's own."""
         self.children[obj.__class__.__name__] = KivyConfig(
-            self.get_inipath(obj), parser=parser
+            self.get_ini_path(obj), parser=parser
         )
 
     def set_defaults(self, commands: list[list]) -> None:
