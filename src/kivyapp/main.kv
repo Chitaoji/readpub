@@ -134,7 +134,7 @@
         MDIconButton:
             icon: "dots-vertical"
             pos_hint: {"bottom": 1, "right": 1}
-            on_release: app.open_cover_menu(self)
+            on_release: app.cards.open_cover_menu(self)
 
         # MDCircularProgressIndicator:
         #     size_hint: None, None
@@ -258,7 +258,7 @@ MDScreenManager:
                 padding: dp(10), dp(24), dp(10), dp(24)
                 spacing: dp(20)
                 pos_hint: {"center_x":.5, "top":1}
-                radius: app.get_radius()[0]
+                radius: app.cards.get_radius()[0]
                 md_bg_color: 
                     app.trans_color_topbar(app.theme_cls.surfaceContainerLowColor)
 
@@ -308,8 +308,8 @@ MDScreenManager:
                 bar_width: dp(12)
                 bar_color: app.theme_cls.surfaceContainerColor
                 bar_inactive_color: [0, 0, 0, 0]
-                on_scroll_start: app.check_cards()
-                on_scroll_stop: app.check_cards()
+                on_scroll_start: app.cards.check()
+                on_scroll_stop: app.cards.check()
 
                 MDGridLayout:
                     id: grid
@@ -327,11 +327,11 @@ MDScreenManager:
                 md_bg_color: 
                     app.trans_color(self.theme_cls.surfaceContainerLowColor, .9)
                 drawer_type: "modal"
-                radius: app.get_radius(nav="left")[0]
+                radius: app.cards.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
-                on_open: app.truly_disable_cards()
-                on_close: app.truly_enable_cards()
+                on_open: app.cards.truly_disable()
+                on_close: app.cards.truly_enable()
 
                 MDRelativeLayout:
                     orientation: "vertical"
@@ -436,12 +436,12 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_upload
                 drawer_type: "modal"
-                radius: app.get_radius(nav="right")[0]
+                radius: app.cards.get_radius(nav="right")[0]
                 anchor: "right"
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
-                on_open: app.truly_disable_cards()
-                on_close: app.truly_enable_cards()
+                on_open: app.cards.truly_disable()
+                on_close: app.cards.truly_enable()
 
                 MDRelativeLayout:
 
@@ -562,7 +562,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_reader_setting
                 drawer_type: "modal"
-                radius: app.get_radius(nav="left")[0]
+                radius: app.cards.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.truly_disable_reader()
@@ -658,7 +658,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_content
                 drawer_type: "modal"
-                radius: app.get_radius(nav="left")[0]
+                radius: app.cards.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
                 on_open: app.truly_disable_reader()

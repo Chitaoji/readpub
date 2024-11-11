@@ -1,5 +1,5 @@
 """
-Contains a kivy app: BookCardContainer.
+Contains a bookcard api: BookCardContainer.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -31,9 +31,7 @@ from kivymd.uix.menu import MDDropdownMenu
 
 if TYPE_CHECKING:
     from ..bookmanager._typing import Book, StatusHint
-    from ._typing import BasicApp
-else:
-    from kivymd.app import MDApp as BasicApp
+    from .core import MainApp
 
 
 class BookCard(MDCard):
@@ -78,6 +76,11 @@ class BookCard(MDCard):
             self.md_bg_color = self.trans_color(self.md_bg_color, 0)
             self.truly_disabled = True
 
+    def set_properties_widget(self) -> None:
+        """Fired `on_release/on_press/on_enter/on_leave` events."""
+        if not self.truly_disabled:
+            super().set_properties_widget()
+
     def _is_out_of_border(self) -> bool:
         return (
             self.to_window(0, self.pos[1] + self.height)[1]
@@ -86,46 +89,17 @@ class BookCard(MDCard):
             )[1]
         )
 
-    def set_properties_widget(self) -> None:
-        """Fired `on_release/on_press/on_enter/on_leave` events."""
-        if not self.truly_disabled:
-            super().set_properties_widget()
 
+class BookCardContainer:
+    """Implements a bookcard container."""
 
-class BookCardApp(BasicApp):
-    """Implements a bookcard container app."""
+    def __init__(self, app: "MainApp") -> None:
+        self.app = app
+        self.test_bookcard: BookCard | None = None
+        self.current_sort_rule: list[str] = ["status", "uploadtime"]
+        self.current_category: str = "home"
 
-    def set_card(self, book: "Book") -> BookCard:
-        metadata = book.get_metadata()
-        pagenow, pagemax = metadata["pagenow"], metadata["pagemax"]
-        match pagenow / pagemax:
-            case 0.0:
-                progress = "待阅读"
-            case 1.0:
-                progress = "已读完√"
-            case _ as x:
-                progress = f"阅读到 {x:.2%}"
-        widget = BookCard(
-            style="elevated",
-            bookid=book.bookid,
-            image=metadata["coverpath"],
-            title=metadata["title"],
-            author=metadata["author"],
-            progress=progress,
-            status=metadata["status"],
-        )
-        idx = self.bookmanager.where_to_insert(
-            book.bookid,
-            (x.bookid for x in self.root.ids.grid.children),
-            *self.current_sort_rule,
-            ascending=True,
-        )
-        self.root.ids.grid.add_widget(widget, idx)
-        return widget
-
-    async def set_cards(
-        self, books: dict[str, "Book"], duration: Optional[float] = None
-    ):
+    async def set(self, books: dict[str, "Book"], duration: Optional[float] = None):
         """Set cards."""
         for bookid, book in books.items():
             metadata = book.get_metadata()
@@ -148,44 +122,79 @@ class BookCardApp(BasicApp):
                 progress=progress,
                 status=metadata["status"],
             )
-            self.root.ids.grid.add_widget(widget)
+            self.app.root.ids.grid.add_widget(widget)
             if duration is not None:
                 await asynckivy.sleep(duration)
 
+    def setone(self, book: "Book") -> BookCard:
+        """Set one single card."""
+        metadata = book.get_metadata()
+        pagenow, pagemax = metadata["pagenow"], metadata["pagemax"]
+        match pagenow / pagemax:
+            case 0.0:
+                progress = "待阅读"
+            case 1.0:
+                progress = "已读完√"
+            case _ as x:
+                progress = f"阅读到 {x:.2%}"
+        widget = BookCard(
+            style="elevated",
+            bookid=book.bookid,
+            image=metadata["coverpath"],
+            title=metadata["title"],
+            author=metadata["author"],
+            progress=progress,
+            status=metadata["status"],
+        )
+        idx = self.app.bookmanager.where_to_insert(
+            book.bookid,
+            (x.bookid for x in self.app.root.ids.grid.children),
+            *self.current_sort_rule,
+            ascending=True,
+        )
+        self.app.root.ids.grid.add_widget(widget, idx)
+        return widget
+
+    def set_category(self, current_category: str) -> None:
+        """Set the current category."""
+        self.current_category = current_category
+
     def color_setter(self, widget: Any) -> Callable[[Any, list[str]], None]:
         """Get a color setter for widget."""
-        return lambda _, x: setattr(widget, "md_bg_color", self.trans_color(x))
+        return lambda _, x: setattr(widget, "md_bg_color", self.app.trans_color(x))
 
-    def check_cards(self) -> None:
-        for card in self.root.ids.grid.children:
-            card.check_border()
-
-    def setattr_cards(self, name: str, value: Any) -> None:
+    def setattr(self, name: str, value: Any) -> None:
         """Setattr."""
-        for card in self.root.ids.grid.children:
+        for card in self.app.root.ids.grid.children:
             setattr(card, name, value)
 
-    def truly_disable_cards(self) -> None:
+    def truly_disable(self) -> None:
         """Disable the bookcards."""
-        for card in self.root.ids.grid.children:
+        for card in self.app.root.ids.grid.children:
             card.truly_disabled = True
 
-    def truly_enable_cards(self) -> None:
+    def truly_enable(self) -> None:
         """Enable the bookcards."""
-        for card in self.root.ids.grid.children:
+        for card in self.app.root.ids.grid.children:
             card.truly_disabled = False
 
+    def check(self) -> None:
+        """Check the bookcards."""
+        for card in self.app.root.ids.grid.children:
+            card.check_border()
+
     def prepare_book(self, book: "Book") -> None:
+        """Extract and picklize the book."""
         Logger.info('Extract: Extracting book "%s"', book.get_metadata()["filepath"])
         book.extract()
         Logger.info('Picklize: Pickling book "%s"', book.get_metadata()["filepath"])
         book.picklize()
 
-    def remove_cards(self) -> None:
+    def remove(self) -> None:
         """Remove all the bookcards."""
-        self.root.ids.grid.parent.scroll_y = 1
-        for widget in list(self.root.ids.grid.children):
-            self.root.ids.grid.remove_widget(widget)
+        self.app.root.ids.grid.parent.scroll_y = 1
+        for widget in list(self.app.root.ids.grid.children):
+            self.app.root.ids.grid.remove_widget(widget)
 
     def open_cover_menu(self, button) -> None:
         """Open a menu on the book cover."""
@@ -211,12 +220,12 @@ class BookCardApp(BasicApp):
                 ),
                 "height": dp(40),
                 "on_release": (
-                    partial(self.unpin_bookcard, button, menu)
+                    partial(self.unpin, button, menu)
                     if is_pinned
                     else (
-                        partial(self.restore_bookcard, button, menu)
+                        partial(self.restore, button, menu)
                         if is_deleted
-                        else partial(self.pin_bookcard, button, menu)
+                        else partial(self.pin, button, menu)
                     )
                 ),
             },
@@ -225,17 +234,17 @@ class BookCardApp(BasicApp):
                 "text": "书籍信息",
                 "leading_icon": "information-outline",
                 "height": dp(40),
-                "on_release": partial(self.get_bookcard_info, button, menu),
+                "on_release": partial(self.getinfo, button, menu),
             },
             {
                 "viewclass": "CoverDeleteDropdownTextItem",
                 "text": "永久删除" if is_deleted else "删除本书",
                 "leading_icon": "delete-alert" if is_deleted else "delete",
-                "leading_icon_color": self.theme_cls.errorColor,
-                "text_color": self.theme_cls.errorColor,
+                "leading_icon_color": self.app.theme_cls.errorColor,
+                "text_color": self.app.theme_cls.errorColor,
                 "height": dp(40),
                 "on_release": partial(
-                    self.show_alert_dialog if is_deleted else self.delete_bookcard,
+                    self.show_alert_dialog if is_deleted else self.delete,
                     button,
                     menu,
                 ),
@@ -244,57 +253,59 @@ class BookCardApp(BasicApp):
 
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
-        self.open_menu(menu, button.parent.parent, relx=dp(12), show_duration_x=0.04)
+        self.app.open_menu(
+            menu, button.parent.parent, relx=dp(12), show_duration_x=0.04
+        )
 
-    def pin_bookcard(self, button, menu=None) -> None:
+    def pin(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
-        book = self.bookmanager.pin_book(button.parent.parent.bookid)
+        book = self.app.bookmanager.pin_book(button.parent.parent.bookid)
 
         button.parent.parent.status = "pinned"
-        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.root.ids.grid.remove_widget(button.parent.parent)
 
-        idx = self.bookmanager.where_to_insert(
+        idx = self.app.bookmanager.where_to_insert(
             book.bookid,
-            (x.bookid for x in self.root.ids.grid.children),
+            (x.bookid for x in self.app.root.ids.grid.children),
             *self.current_sort_rule,
             ascending=True,
         )
-        self.root.ids.grid.add_widget(button.parent.parent, idx)
+        self.app.root.ids.grid.add_widget(button.parent.parent, idx)
         if menu:
             menu.dismiss()
 
-    def unpin_bookcard(self, button, menu=None) -> None:
+    def unpin(self, button, menu=None) -> None:
         """Unpin the bookcard containing the button."""
-        book = self.bookmanager.restore_book(button.parent.parent.bookid)
+        book = self.app.bookmanager.restore_book(button.parent.parent.bookid)
 
         button.parent.parent.status = "normal"
-        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.root.ids.grid.remove_widget(button.parent.parent)
 
-        idx = self.bookmanager.where_to_insert(
+        idx = self.app.bookmanager.where_to_insert(
             book.bookid,
-            (x.bookid for x in self.root.ids.grid.children),
+            (x.bookid for x in self.app.root.ids.grid.children),
             *self.current_sort_rule,
             ascending=True,
         )
-        self.root.ids.grid.add_widget(button.parent.parent, idx)
+        self.app.root.ids.grid.add_widget(button.parent.parent, idx)
         if menu:
             menu.dismiss()
 
-    def restore_bookcard(self, button, menu=None) -> None:
+    def restore(self, button, menu=None) -> None:
         """Restore the bookcard containing the button."""
-        self.bookmanager.restore_book(button.parent.parent.bookid)
+        self.app.bookmanager.restore_book(button.parent.parent.bookid)
         button.parent.parent.status = "normal"
-        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.root.ids.grid.remove_widget(button.parent.parent)
         if menu:
             menu.dismiss()
 
-    def get_bookcard_info(self, button, menu=None) -> None:
+    def getinfo(self, button, menu=None) -> None:
         """Pin the bookcard containing the button."""
 
-    def delete_bookcard(self, button, menu=None) -> None:
+    def delete(self, button, menu=None) -> None:
         """Delete the bookcard."""
-        self.bookmanager.del_book(button.parent.parent.bookid)
-        self.root.ids.grid.remove_widget(button.parent.parent)
+        self.app.bookmanager.del_book(button.parent.parent.bookid)
+        self.app.root.ids.grid.remove_widget(button.parent.parent)
         if menu:
             menu.dismiss()
 
@@ -346,7 +357,7 @@ class BookCardApp(BasicApp):
                         role="small",
                     ),
                     theme_bg_color="Custom",
-                    md_bg_color=self.theme_cls.transparentColor,
+                    md_bg_color=self.app.theme_cls.transparentColor,
                 ),
                 MDDivider(),
                 orientation="vertical",
@@ -360,14 +371,16 @@ class BookCardApp(BasicApp):
                         font_style="NavText",
                         role="small",
                         theme_text_color="Custom",
-                        text_color=self.theme_cls.errorColor,
+                        text_color=self.app.theme_cls.errorColor,
                     ),
                     style="text",
                     on_release=lambda _: (
                         dialog.dismiss(),
                         menu.dismiss(),
-                        self.bookmanager.del_book_entirely(button.parent.parent.bookid),
-                        self.root.ids.grid.remove_widget(button.parent.parent),
+                        self.app.bookmanager.del_book_entirely(
+                            button.parent.parent.bookid
+                        ),
+                        self.app.root.ids.grid.remove_widget(button.parent.parent),
                     ),
                 ),
                 MDButton(

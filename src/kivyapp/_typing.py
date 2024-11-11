@@ -19,7 +19,7 @@ from .font import KivyFont
 
 if TYPE_CHECKING:
     from ..bookmanager._typing import Book
-    from .bookcard import BookCard
+    from .bookcard import BookCard, BookCardContainer
     from .input import InputMethod
 
 logging.warning(
@@ -39,14 +39,12 @@ class BasicApp(MDApp):
         self.fontmanager: KivyFont
         self.filemanager: MDFileManager
         self.input: InputMethod
+        self.cards: BookCardContainer
 
         self.main_theme_style: str
         self.main_theme_palette: str
         self.reader_theme_style: str
         self.reader_theme_palette: str
-
-        self.current_sort_rule: list[str]
-        self.current_category: str
 
         self.has_filemanager: bool
         self.has_bgim: bool
@@ -66,17 +64,6 @@ class BasicApp(MDApp):
 
     def switch_theme(self) -> None:
         """Switch the theme-style."""
-
-    def set_card(self, book: "Book") -> "BookCard":
-        """Set a new book card."""
-        if TYPE_CHECKING:
-            return BookCard()
-
-    def check_cards(self) -> None:
-        """Check the bookcards."""
-
-    def prepare_book(self, book: "Book") -> None:
-        """Extract and picklize the book."""
 
     def open_menu(
         self,

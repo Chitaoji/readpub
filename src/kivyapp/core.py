@@ -29,7 +29,7 @@ from kivymd.uix.menu import MDDropdownMenu
 from kivymd.uix.menu.menu import BaseDropdownItem
 
 from ..bookmanager import BookManager
-from .bookcard import BookCardApp
+from .bookcard import BookCardContainer
 from .font import KivyFont
 from .impfile import FakeModalView, FileImportApp, FileImportManager
 from .input import InputMethod
@@ -75,7 +75,7 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(ReaderApp, BookCardApp, FileImportApp):
+class MainApp(ReaderApp, FileImportApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:
@@ -95,6 +95,8 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
 
         self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
         self.input = InputMethod(self)
+        self.cards = BookCardContainer(self)
+
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
         )
@@ -110,22 +112,21 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
             self.has_bgim = True
         else:
             self.has_bgim = False
-        self.test_bookcard = None
 
     def set_bgim(self, image: str | None = None) -> None:
         if image is None:
             self.root.ids.bgim.source = ""
             self.root.ids.bgim.opacity = 0
             self.has_bgim = False
-            self.setattr_cards("theme_shadow_color", "Primary")
-            self.setattr_cards("theme_bg_color", "Primary")
+            self.cards.setattr("theme_shadow_color", "Primary")
+            self.cards.setattr("theme_bg_color", "Primary")
         else:
             self.root.ids.bgim.source = image
             self.root.ids.bgim.opacity = 1
             self.has_bgim = True
-            self.setattr_cards("theme_shadow_color", "Custom")
-            self.setattr_cards("shadow_color", [0, 0, 0, 0])
-            self.setattr_cards("theme_bg_color", "Custom")
+            self.cards.setattr("theme_shadow_color", "Custom")
+            self.cards.setattr("shadow_color", [0, 0, 0, 0])
+            self.cards.setattr("theme_bg_color", "Custom")
         Clock.schedule_once(lambda *_: self.switch_theme_style(), 0)
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
@@ -159,14 +160,12 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
 
     def on_start(self) -> None:
         m = BookManager(kvconfig.path.parent, logger=Logger)
-        self.current_sort_rule = ["status", "uploadtime"]
 
         asynckivy.start(
-            self.set_cards(
-                m.findnot(status="deleted").sort(*self.current_sort_rule).books
+            self.cards.set(
+                m.findnot(status="deleted").sort(*self.cards.current_sort_rule).books
             )
         )
-        self.current_category = "home"
 
         self.bookmanager = m
         self.init_color_buttons()
@@ -232,7 +231,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
             if not to:
                 to = "Dark" if self.main_theme_style == "Light" else "Light"
             self.theme_cls.theme_style = self.main_theme_style = to
-            self.check_cards()
+            self.cards.check()
             kvconfig[self].update([["main-screen", "theme_style", to]])
 
     def switch_theme_palette(self, color: str):
@@ -263,7 +262,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
 
     def open_plus_menu(self, button) -> None:
         """Open the menu on releasing the plus button."""
-        radius, shadow_radius = self.get_radius()
+        radius, shadow_radius = self.cards.get_radius()
         menu = MDDropdownMenu(
             caller=button,
             items=[],
@@ -290,18 +289,18 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
                 "height": dp(50),
                 "on_release": lambda: (
                     (
-                        self.remove_cards(),
+                        self.cards.remove(),
                         asynckivy.start(
-                            self.set_cards(
+                            self.cards.set(
                                 self.bookmanager.findnot(status="deleted")
-                                .sort(*self.current_sort_rule)
+                                .sort(*self.cards.current_sort_rule)
                                 .books,
                                 0,
                             )
                         ),
-                        self.set_current_category("home"),
+                        self.cards.set_category("home"),
                     )
-                    if self.current_category != "home"
+                    if self.cards.current_category != "home"
                     else None
                 ),
             },
@@ -321,7 +320,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
 
     def open_category_menu(self, button) -> None:
         """Open the category menu."""
-        radius, shadow_radius = self.get_radius()
+        radius, shadow_radius = self.cards.get_radius()
         menu = MDDropdownMenu(
             caller=button,
             items=[],
@@ -343,18 +342,18 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
                 "height": dp(50),
                 "on_release": lambda: (
                     (
-                        self.remove_cards(),
+                        self.cards.remove(),
                         asynckivy.start(
-                            self.set_cards(
+                            self.cards.set(
                                 self.bookmanager.findnot(status="deleted")
-                                .sort(*self.current_sort_rule)
+                                .sort(*self.cards.current_sort_rule)
                                 .books,
                                 0,
                             )
                         ),
-                        self.set_current_category("home"),
+                        self.cards.set_category("home"),
                     )
-                    if self.current_category != "home"
+                    if self.cards.current_category != "home"
                     else None
                 ),
             },
@@ -365,18 +364,18 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
                 "height": dp(50),
                 "on_release": lambda: (
                     (
-                        self.remove_cards(),
+                        self.cards.remove(),
                         asynckivy.start(
-                            self.set_cards(
+                            self.cards.set(
                                 self.bookmanager.find(status="pinned")
-                                .sort(*self.current_sort_rule)
+                                .sort(*self.cards.current_sort_rule)
                                 .books,
                                 0,
                             )
                         ),
-                        self.set_current_category("pinned"),
+                        self.cards.set_category("pinned"),
                     )
-                    if self.current_category != "pinned"
+                    if self.cards.current_category != "pinned"
                     else None
                 ),
             },
@@ -387,18 +386,18 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
                 "height": dp(50),
                 "on_release": lambda: (
                     (
-                        self.remove_cards(),
+                        self.cards.remove(),
                         asynckivy.start(
-                            self.set_cards(
+                            self.cards.set(
                                 self.bookmanager.find(status="deleted")
-                                .sort(*self.current_sort_rule)
+                                .sort(*self.cards.current_sort_rule)
                                 .books,
                                 0,
                             )
                         ),
-                        self.set_current_category("deleted"),
+                        self.cards.set_category("deleted"),
                     )
-                    if self.current_category != "deleted"
+                    if self.cards.current_category != "deleted"
                     else None
                 ),
             },
@@ -406,10 +405,6 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp):
         menu.items.extend(menu_items)
         menu.on_enter = menu.on_leave
         self.open_menu(menu, button, rely=-dp(8), on_left=True, on_bottom=True)
-
-    def set_current_category(self, current_category: str) -> None:
-        """Set the category status."""
-        self.current_category = current_category
 
     def open_nav_drawer(self, name: str) -> None:
         nav_drawer = getattr(self.root.ids, name)

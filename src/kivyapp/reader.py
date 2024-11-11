@@ -40,7 +40,7 @@ class ReaderApp(BasicApp):
 
     def homepage(self):
         """Return to the homepage."""
-        self.check_cards()
+        self.cards.check()
         self.root.transition = FadeTransition()
         self.root.current = "MainScreen"
         self.switch_theme()
