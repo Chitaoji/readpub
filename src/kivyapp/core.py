@@ -31,7 +31,7 @@ from kivymd.uix.menu.menu import BaseDropdownItem
 from ..bookmanager import BookManager
 from .bookcard import BookCardContainer
 from .font import KivyFont
-from .importer import FakeModalView, FileImporter, FileImportManager
+from .importer import FileImporter
 from .input import InputMethod
 from .reader import Reader
 

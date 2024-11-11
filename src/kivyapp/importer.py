@@ -166,7 +166,7 @@ class FileImporter:
         self.prev_snackbar.open()
 
         if checked:
-            self.app.cards.set(book := self.app.bookmanager.add_book(p))
+            self.app.cards.setone(book := self.app.bookmanager.add_book(p))
             self.app.cards.prepare_book(book)
 
     def import_bgim(self, path: str) -> None:
