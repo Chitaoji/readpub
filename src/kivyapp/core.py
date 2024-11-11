@@ -32,7 +32,7 @@ from ..bookmanager import BookManager
 from .bookcard import BookCardApp
 from .font import KivyFont
 from .impfile import FakeModalView, FileImportApp, FileImportManager
-from .input import InputMethodApp
+from .input import InputMethod
 from .reader import ReaderApp
 
 if TYPE_CHECKING:
@@ -75,7 +75,7 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
+class MainApp(ReaderApp, BookCardApp, FileImportApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:
@@ -94,7 +94,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         )
 
         self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
-
+        self.input = InputMethod(self)
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
         )
@@ -146,7 +146,7 @@ class MainApp(ReaderApp, BookCardApp, FileImportApp, InputMethodApp):
         )
         setattr(self.filemanager, "_window_manager", FakeModalView())
         self.has_filemanager = False
-        self.prev_snackbar, self.prev_input_menu = None, None
+        self.prev_snackbar = None
 
         self.reader_disabled = True
         self.book = None

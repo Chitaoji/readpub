@@ -14,11 +14,9 @@ from kivy.metrics import dp
 from kivymd.uix.menu import MDDropdownMenu
 
 if TYPE_CHECKING:
-    from ._typing import BasicApp
-else:
-    from kivymd.app import MDApp as BasicApp
+    from .core import MainApp
 
-__all__ = ["InputMethodApp"]
+__all__ = ["InputMethod"]
 
 # windows api 准备
 GlobalFree = ctypes.windll.kernel32.GlobalFree
@@ -55,10 +53,14 @@ class CandidateList(ctypes.Structure):
     ]
 
 
-class InputMethodApp(BasicApp):
+class InputMethod:
     """Implements an input method."""
 
-    def open_input_menu(self, button: Any) -> None:
+    def __init__(self, app: "MainApp") -> None:
+        self.app = app
+        self.prev_input_menu: MDDropdownMenu | None = None
+
+    def open(self, button: Any) -> None:
         """Open an input menu."""
         candidates = self.get_candidates()
         if not candidates:
@@ -66,9 +68,9 @@ class InputMethodApp(BasicApp):
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
             return
-        menu_width = self.fontmanager.gettextmaster("NavText", "medium").getlinewidth(
-            candidates
-        ) + dp(8)
+        menu_width = self.app.fontmanager.gettextmaster(
+            "NavText", "medium"
+        ).getlinewidth(candidates) + dp(8)
         if self.prev_input_menu is None:
             menu = MDDropdownMenu(
                 caller=button,
@@ -95,7 +97,7 @@ class InputMethodApp(BasicApp):
             )
             menu.on_enter = menu.on_leave = lambda: None
             menu.bind(on_dismiss=lambda _: setattr(self, "prev_input_menu", None))
-            self.open_menu(menu, button, absx=button.cursor_pos[0], rely=-dp(14))
+            self.app.open_menu(menu, button, absx=button.cursor_pos[0], rely=-dp(14))
 
             self.prev_input_menu = menu
         else:

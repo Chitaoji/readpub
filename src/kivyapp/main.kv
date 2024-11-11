@@ -275,10 +275,10 @@ MDScreenManager:
                     size_hint_x: None
                     width: dp(1380)
                     height: dp(240)
-                    radius: 20
+                    radius: dp(15)
                     font_style: "NavText"
                     role: "medium"
-                    on_text: app.open_input_menu(self)
+                    on_text: app.input.open(self)
 
                     MDTextFieldLeadingIcon:
                         icon: "magnify"
@@ -325,7 +325,7 @@ MDScreenManager:
             MDNavigationDrawer:
                 id: nav_setting
                 md_bg_color: 
-                    app.trans_color(self.theme_cls.surfaceContainerLowColor, .8)
+                    app.trans_color(self.theme_cls.surfaceContainerLowColor, .9)
                 drawer_type: "modal"
                 radius: app.get_radius(nav="left")[0]
                 enable_swiping: False
@@ -527,7 +527,7 @@ MDScreenManager:
                 size_hint_x: None
                 width: dp(1380)
                 height: dp(240)
-                radius: 20
+                radius: dp(15)
                 on_focus: reader_search_field_helper.text = "请输入搜索内容..."
 
                 MDTextFieldLeadingIcon:

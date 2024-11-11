@@ -7,7 +7,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import logging
-from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from kivymd.app import MDApp
@@ -21,6 +20,7 @@ from .font import KivyFont
 if TYPE_CHECKING:
     from ..bookmanager._typing import Book
     from .bookcard import BookCard
+    from .input import InputMethod
 
 logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "
@@ -35,9 +35,11 @@ class BasicApp(MDApp):
     """Basic App."""
 
     def __init__(self, **kwargs) -> None:
-        self.bookmanager = BookManager(Path(""))
-        self.fontmanager = KivyFont(Path(""), self)
-        self.filemanager = MDFileManager()
+        self.bookmanager: BookManager
+        self.fontmanager: KivyFont
+        self.filemanager: MDFileManager
+        self.input: InputMethod
+
         self.main_theme_style: str
         self.main_theme_palette: str
         self.reader_theme_style: str
@@ -51,7 +53,6 @@ class BasicApp(MDApp):
 
         self.test_bookcard: "BookCard | None"
         self.prev_snackbar: MDSnackbar | None
-        self.prev_input_menu: MDDropdownMenu | None
 
         self.upload_type: UploadType
 

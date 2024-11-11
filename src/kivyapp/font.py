@@ -91,7 +91,7 @@ class KivyFont:
                 "small": {
                     "line-height": 1.2,
                     "font-name": "msyh",
-                    "font-size": sp(13),
+                    "font-size": sp(12),
                 },
             },
             "NavText": {
