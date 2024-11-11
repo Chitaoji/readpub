@@ -13,7 +13,6 @@ from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
 from .book import Book
 from .textmaster import FontTable
-from .viewer import BookViewer
 
 if TYPE_CHECKING:
     from logging import Logger
