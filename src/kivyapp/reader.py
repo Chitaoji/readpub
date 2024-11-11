@@ -1,5 +1,5 @@
 """
-Contains a kivy app: Reader.
+Contains a book reader: Reader.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -21,11 +21,10 @@ from kivymd.uix.list import MDListItem
 from ..bookmanager import AlternativeCharacter, BookImage
 
 if TYPE_CHECKING:
-    from ._typing import BasicApp
-else:
-    from kivymd.app import MDApp as BasicApp
+    from ..bookmanager._typing import Book
+    from .core import MainApp
 
-__all__ = ["ReaderApp"]
+__all__ = ["Reader"]
 
 
 class BookContentItem(MDListItem):
@@ -35,21 +34,26 @@ class BookContentItem(MDListItem):
     npage = NumericProperty()
 
 
-class ReaderApp(BasicApp):
-    """Implements a reader app."""
+class Reader:
+    """Implements a book reader."""
+
+    def __init__(self, app: "MainApp") -> None:
+        self.app = app
+        self.disabled: bool = True
+        self.book: "Book | None" = None
 
     def homepage(self):
         """Return to the homepage."""
-        self.cards.check()
-        self.root.transition = FadeTransition()
-        self.root.current = "MainScreen"
-        self.switch_theme()
-        self.close_book()
+        self.app.cards.check()
+        self.app.root.transition = FadeTransition()
+        self.app.root.current = "MainScreen"
+        self.app.switch_theme()
+        self.close()
         self.delete_content()
 
-    def on_reader_touch_down(self, _, touch):
+    def on_touch_down(self, _, touch):
         """On mouse down."""
-        if not self.reader_disabled:
+        if not self.disabled:
             lb, rb = Window.width / 3, Window.width * 2 / 3
             if Window.height * 0.2 < touch.y < Window.height * 0.8:
                 if lb < touch.x < rb:
@@ -61,38 +65,38 @@ class ReaderApp(BasicApp):
 
     def toggle_toolbar(self) -> None:
         """Toggle the opacity of toolbar."""
-        if (toolbar := self.root.ids.reader_toolbar).disabled:
+        if (toolbar := self.app.root.ids.reader_toolbar).disabled:
             asynckivy.start(self.activate_reader_toolbar())
         else:
-            self.root.ids.reader_bottom.disabled = toolbar.disabled = True
-            self.root.ids.reader_bottom.opacity = toolbar.opacity = 0
+            self.app.root.ids.reader_bottom.disabled = toolbar.disabled = True
+            self.app.root.ids.reader_bottom.opacity = toolbar.opacity = 0
 
     async def activate_reader_toolbar(self) -> None:
         """Activate reader toolbar."""
         self.fix_reader_search_field()
-        self.root.ids.reader_toolbar.disabled = False
+        self.app.root.ids.reader_toolbar.disabled = False
         await asynckivy.sleep(0.15)
-        if not self.root.ids.reader_toolbar.disabled:
-            self.root.ids.reader_search_field_helper.text = ""
-            self.root.ids.reader_toolbar.opacity = 1
-        self.root.ids.reader_bottom.disabled = False
-        self.root.ids.reader_bottom.opacity = 1
+        if not self.app.root.ids.reader_toolbar.disabled:
+            self.app.root.ids.reader_search_field_helper.text = ""
+            self.app.root.ids.reader_toolbar.opacity = 1
+        self.app.root.ids.reader_bottom.disabled = False
+        self.app.root.ids.reader_bottom.opacity = 1
 
     def fix_reader_search_field(self):
         """Fix the search field."""
-        field = self.root.ids.reader_search_field
+        field = self.app.root.ids.reader_search_field
         field.set_texture_color(
             getattr(field, "_helper_text_label"),
             field.canvas.before.get_group("helper-text-color")[0],
-            self.theme_cls.transparentColor,
+            self.app.theme_cls.transparentColor,
         )
 
-    def open_book(self, bookid: str) -> None:
+    def open(self, bookid: str) -> None:
         """Open a book."""
         if self.book is not None:
             if self.book.bookid != bookid:
                 self.book.release()
-        self.book = self.bookmanager.books[bookid]
+        self.book = self.app.bookmanager.books[bookid]
         self.book.adjust(
             page_height=min(Window.height * 0.7, 900),
             page_width=min(Window.width * 0.4, 1000),
@@ -102,14 +106,14 @@ class ReaderApp(BasicApp):
         self.book.open()
         self.turn_to_page(self.book.pagenow)
 
-    def close_book(self) -> None:
+    def close(self) -> None:
         """Close the book."""
-        for bookcard in self.root.ids.grid.children:
+        for bookcard in self.app.root.ids.grid.children:
             if bookcard.bookid == self.book.bookid:
                 bookcard.progress = f"阅读到 {self.book.pagenow/self.book.pagemax:.2%}"
                 break
         self.book.close()
-        for widget in list((box := self.root.ids.textbox).children):
+        for widget in list((box := self.app.root.ids.textbox).children):
             box.remove_widget(widget)
 
     def next_page(self) -> None:
@@ -129,10 +133,10 @@ class ReaderApp(BasicApp):
         if n < 1:
             n = 1
         page = self.book.turn_to_page(n)
-        box = self.root.ids.textbox
-        for widget in list((box := self.root.ids.textbox).children):
+        box = self.app.root.ids.textbox
+        for widget in list((box := self.app.root.ids.textbox).children):
             box.remove_widget(widget)
-        for widget in list((imgbox := self.root.ids.imagebox).children):
+        for widget in list((imgbox := self.app.root.ids.imagebox).children):
             imgbox.remove_widget(widget)
         for para in page:
             if isinstance(para, list):
@@ -157,7 +161,7 @@ class ReaderApp(BasicApp):
                 Logger.info('Image: Loading image "%s"', para.path)
                 imgbox.add_widget(Image(source=para.path.as_posix()))
             elif isinstance(para, AlternativeCharacter):
-                font_style, role = self.fontmanager.getstyle(
+                font_style, role = self.app.font.getstyle(
                     para.font_name, self.book.settings.fontsize
                 )
                 box.add_widget(
@@ -193,27 +197,27 @@ class ReaderApp(BasicApp):
                         text="",
                     )
                 )
-        self.root.ids.progress_button.text = (
+        self.app.root.ids.progress_button.text = (
             f"{self.book.pagenow}/{self.book.pagemax}"
             f"  {self.book.pagenow/self.book.pagemax:.2%}"
         )
 
-    def truly_disable_reader(self) -> None:
+    def truly_disable(self) -> None:
         """Disable the reader."""
-        self.reader_disabled = True
+        self.disabled = True
 
-    def truly_enable_reader(self) -> None:
+    def truly_enable(self) -> None:
         """Enable the reader."""
-        self.reader_disabled = False
+        self.disabled = False
 
     def generate_content(self):
         """Generate the book content."""
-        if len(self.root.ids.nav_content_box.children) > 0:
+        if len(self.app.root.ids.nav_content_box.children) > 0:
             return
         self.__generate_content(self.book.get_content()[0][0].content)
 
     def __generate_content(self, content, indent: int = 0):
-        box = self.root.ids.nav_content_box
+        box = self.app.root.ids.nav_content_box
         for x in content:
             if x.title.text != "Unknown":
                 box.add_widget(
@@ -226,6 +230,6 @@ class ReaderApp(BasicApp):
 
     def delete_content(self):
         """Delete the book content."""
-        box = self.root.ids.nav_content_box
+        box = self.app.root.ids.nav_content_box
         for widget in list(box.children):
             box.remove_widget(widget)

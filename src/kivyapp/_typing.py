@@ -10,24 +10,23 @@ import logging
 from typing import TYPE_CHECKING, Any, Literal, Optional
 
 from kivymd.app import MDApp
-from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.menu import MDDropdownMenu
-from kivymd.uix.snackbar import MDSnackbar
 
 from ..bookmanager import BookManager
 from .font import KivyFont
 
 if TYPE_CHECKING:
-    from ..bookmanager._typing import Book
-    from .bookcard import BookCard, BookCardContainer
+    from .bookcard import BookCardContainer
+    from .importer import FileImporter
     from .input import InputMethod
+    from .reader import Reader
 
 logging.warning(
     "importing from '._typing' - this module is not intended for direct import, "
     "therefore unexpected errors may occur"
 )
 
-UploadType = Literal["book", "bgim"]
+ImportType = Literal["book", "bgim"]
 
 
 # pylint: disable=unused-argument
@@ -36,26 +35,18 @@ class BasicApp(MDApp):
 
     def __init__(self, **kwargs) -> None:
         self.bookmanager: BookManager
-        self.fontmanager: KivyFont
-        self.filemanager: MDFileManager
+        self.importer: FileImporter
+        self.font: KivyFont
         self.input: InputMethod
         self.cards: BookCardContainer
+        self.reader: Reader
 
         self.main_theme_style: str
         self.main_theme_palette: str
         self.reader_theme_style: str
         self.reader_theme_palette: str
 
-        self.has_filemanager: bool
         self.has_bgim: bool
-
-        self.test_bookcard: "BookCard | None"
-        self.prev_snackbar: MDSnackbar | None
-
-        self.upload_type: UploadType
-
-        self.reader_disabled: bool
-        self.book: "Book | None"
 
         super().__init__(**kwargs)
 

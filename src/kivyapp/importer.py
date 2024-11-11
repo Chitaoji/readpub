@@ -1,5 +1,5 @@
 """
-Contains a kivy app: FileImportApp.
+Contains a file importer: FileImporter.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -17,11 +17,10 @@ from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
 
 if TYPE_CHECKING:
-    from ._typing import BasicApp, UploadType
-else:
-    from kivymd.app import MDApp as BasicApp
+    from ._typing import ImportType
+    from .core import MainApp
 
-__all__ = ["FileImportApp"]
+__all__ = ["FileImporter"]
 
 
 class FileImportItem(MDListItem):
@@ -37,7 +36,7 @@ class FileImportManager(MDFileManager):
         self.current_path = path
         self.selection = []
         dirs, files = self.get_content()
-        manager_list = []
+        items = []
 
         if dirs == [] and files == []:  # selected directory
             pass
@@ -52,7 +51,7 @@ class FileImportManager(MDFileManager):
             else:
                 icon = "folder"
 
-            manager_list.append(
+            items.append(
                 {
                     "viewclass": "FileImportItem",
                     "path": _path,
@@ -71,7 +70,7 @@ class FileImportManager(MDFileManager):
             if self.ext and os.path.splitext(name)[1] not in self.ext:
                 continue
 
-            manager_list.append(
+            items.append(
                 {
                     "viewclass": "FileImportItem",
                     "path": name,
@@ -87,7 +86,7 @@ class FileImportManager(MDFileManager):
                 }
             )
 
-        self.ids.rv.data = manager_list
+        self.ids.rv.data = items
         self.selection_button.md_bg_color = self.theme_cls.surfaceContainerColor
         self._show()
 
@@ -102,34 +101,48 @@ class FakeModalView:
         """Dismiss?"""
 
 
-class FileImportApp(BasicApp):
-    """Implements a file importer app."""
+class FileImporter:
+    """Implements a file importer."""
 
-    def filemanager_open(self, upload_type: "UploadType" = "book") -> None:
+    def __init__(self, app: "MainApp") -> None:
+        self.app = app
+        self.imptype = ""
+        self.activated = False
+        self.prev_snackbar: MDSnackbar | None = None
+        self.filemanager = FileImportManager(
+            exit_manager=self.close, select_path=self.select_path
+        )
+        setattr(self.filemanager, "_window_manager", FakeModalView())
+
+    def open(self, imptype: "ImportType" = "book") -> None:
         """Open filemanager."""
-        self.upload_type = upload_type
-        self.open_nav_drawer("nav_upload")
-        if not self.has_filemanager:
-            self.root.ids.nav_upload.children[0].add_widget(self.filemanager)
-            self.has_filemanager = True
+        self.imptype = imptype
+        self.app.open_nav_drawer("nav_import")
+        if not self.activated:
+            self.app.root.ids.nav_import.children[0].add_widget(self.filemanager)
+            self.activated = True
         self.filemanager.show(os.path.expanduser("~\\DeskTop"))
 
-    def filemanager_select_path(self, path: str):
+    def close(self, *_):
+        """Called when the user reaches the root of the directory tree."""
+        self.filemanager.close()
+
+    def select_path(self, path: str):
         """
         It will be called when you click on the file name
         or the catalog selection button.
 
         """
-        self.filemanager_exit()
-        match self.upload_type:
+        self.close()
+        match self.imptype:
             case "book":
-                self.upload_book(path)
+                self.import_book(path)
             case "bgim":
-                self.upload_bgim(path)
+                self.import_bgim(path)
 
-    def upload_book(self, path: str) -> None:
-        """Uploading book."""
-        if checked := self.bookmanager.check_book(p := Path(path)):
+    def import_book(self, path: str) -> None:
+        """Importing book."""
+        if checked := self.app.bookmanager.check_book(p := Path(path)):
             snack = "已导入新书: " + path
         else:
             snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
@@ -140,7 +153,7 @@ class FileImportApp(BasicApp):
         fs, role = "NavText", "medium"
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=self.fontmanager.gettextmaster(fs, role).shorten(
+                text=self.app.font.gettextmaster(fs, role).shorten(
                     snack, Window.width / 2 - 20
                 ),
                 font_style=fs,
@@ -153,11 +166,11 @@ class FileImportApp(BasicApp):
         self.prev_snackbar.open()
 
         if checked:
-            self.set_card(book := self.bookmanager.add_book(p))
-            self.prepare_book(book)
+            self.app.cards.set(book := self.app.bookmanager.add_book(p))
+            self.app.cards.prepare_book(book)
 
-    def upload_bgim(self, path: str) -> None:
-        """Uploading background image."""
+    def import_bgim(self, path: str) -> None:
+        """Importing background image."""
         p = Path(path)
         if checked := p.is_file() and p.suffix in {".png", ".jpg", ".jpeg"}:
             snack = "已应用背景图片: " + path
@@ -170,7 +183,7 @@ class FileImportApp(BasicApp):
         fs, role = "NavText", "medium"
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
-                text=self.fontmanager.gettextmaster(fs, role).shorten(
+                text=self.app.font.gettextmaster(fs, role).shorten(
                     snack, Window.width / 2 - 20
                 ),
                 font_style=fs,
@@ -183,10 +196,6 @@ class FileImportApp(BasicApp):
         self.prev_snackbar.open()
 
         if checked:
-            self.set_bgim(path)
+            self.app.set_bgim(path)
         else:
-            self.set_bgim()
-
-    def filemanager_exit(self, *_):
-        """Called when the user reaches the root of the directory tree."""
-        self.filemanager.close()
+            self.app.set_bgim()

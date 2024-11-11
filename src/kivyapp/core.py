@@ -31,12 +31,16 @@ from kivymd.uix.menu.menu import BaseDropdownItem
 from ..bookmanager import BookManager
 from .bookcard import BookCardContainer
 from .font import KivyFont
-from .impfile import FakeModalView, FileImportApp, FileImportManager
+from .importer import FakeModalView, FileImporter, FileImportManager
 from .input import InputMethod
-from .reader import ReaderApp
+from .reader import Reader
 
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
+
+    from ._typing import BasicApp
+else:
+    from kivymd.app import MDApp as BasicApp
 
 
 __all__ = ["MainApp"]
@@ -75,7 +79,7 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(ReaderApp, FileImportApp):
+class MainApp(BasicApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:
@@ -93,17 +97,18 @@ class MainApp(ReaderApp, FileImportApp):
             ]
         )
 
-        self.fontmanager = KivyFont(Path("C:\\Windows\\Fonts"), self)
+        self.font = KivyFont(Path("C:\\Windows\\Fonts"), self)
         self.input = InputMethod(self)
         self.cards = BookCardContainer(self)
+        self.reader = Reader(self)
 
         self.theme_cls.theme_style = self.main_theme_style = kvconfig[self].get(
             "main-screen", "theme_style"
         )
-        self.reader_theme_style = kvconfig[self].get("reader", "theme_style")
         self.theme_cls.primary_palette = self.main_theme_palette = kvconfig[self].get(
             "main-screen", "primary_palette"
         )
+        self.reader_theme_style = kvconfig[self].get("reader", "theme_style")
         self.reader_theme_palette = kvconfig[self].get("reader", "primary_palette")
 
         if (p := kvconfig[self].get("main-screen", "background_image")) and Path(
@@ -112,6 +117,31 @@ class MainApp(ReaderApp, FileImportApp):
             self.has_bgim = True
         else:
             self.has_bgim = False
+
+    def build(self):
+        self.title = "ReadPub"
+        self.importer = FileImporter(self)
+
+        if self.has_bgim:
+            self.root.ids.bgim.source = kvconfig[self].get(
+                "main-screen", "background_image"
+            )
+            self.root.ids.bgim.opacity = 1
+
+    def on_start(self) -> None:
+        m = BookManager(kvconfig.path.parent, logger=Logger)
+
+        asynckivy.start(
+            self.cards.set(
+                m.findnot(status="deleted").sort(*self.cards.current_sort_rule).books
+            )
+        )
+
+        self.bookmanager = m
+        self.init_color_buttons()
+
+        self.root.get_screen("Reader").bind(on_touch_down=self.reader.on_touch_down)
+        Window.bind(on_keyboard=self.on_keyboard)
 
     def set_bgim(self, image: str | None = None) -> None:
         if image is None:
@@ -138,40 +168,6 @@ class MainApp(ReaderApp, FileImportApp):
         if self.has_bgim:
             return color[:-1] + [transparency]
         return [0, 0, 0, 0]
-
-    def build(self):
-        self.title = "ReadPub"
-
-        self.filemanager = FileImportManager(
-            exit_manager=self.filemanager_exit, select_path=self.filemanager_select_path
-        )
-        setattr(self.filemanager, "_window_manager", FakeModalView())
-        self.has_filemanager = False
-        self.prev_snackbar = None
-
-        self.reader_disabled = True
-        self.book = None
-
-        if self.has_bgim:
-            self.root.ids.bgim.source = kvconfig[self].get(
-                "main-screen", "background_image"
-            )
-            self.root.ids.bgim.opacity = 1
-
-    def on_start(self) -> None:
-        m = BookManager(kvconfig.path.parent, logger=Logger)
-
-        asynckivy.start(
-            self.cards.set(
-                m.findnot(status="deleted").sort(*self.cards.current_sort_rule).books
-            )
-        )
-
-        self.bookmanager = m
-        self.init_color_buttons()
-
-        self.root.get_screen("Reader").bind(on_touch_down=self.on_reader_touch_down)
-        Window.bind(on_keyboard=self.on_keyboard)
 
     def on_keyboard(self, _, key, *__):
         """On keyboard."""
@@ -278,9 +274,9 @@ class MainApp(ReaderApp, FileImportApp):
             {
                 "viewclass": "CoverDropdownTextItem",
                 "text": "导入新书",
-                "leading_icon": "upload",
+                "leading_icon": "import",
                 "height": dp(50),
-                "on_release": lambda: (self.filemanager_open(), menu.dismiss()),
+                "on_release": lambda: (self.importer.open(), menu.dismiss()),
             },
             {
                 "viewclass": "CoverDropdownTextItem",

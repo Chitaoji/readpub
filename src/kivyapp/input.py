@@ -68,9 +68,9 @@ class InputMethod:
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
             return
-        menu_width = self.app.fontmanager.gettextmaster(
-            "NavText", "medium"
-        ).getlinewidth(candidates) + dp(8)
+        menu_width = self.app.font.gettextmaster("NavText", "medium").getlinewidth(
+            candidates
+        ) + dp(8)
         if self.prev_input_menu is None:
             menu = MDDropdownMenu(
                 caller=button,

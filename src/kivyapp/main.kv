@@ -39,7 +39,7 @@
 <BookContentItem>:
     theme_bg_color: "Custom"
     md_bg_color: app.theme_cls.surfaceContainerLowColor
-    on_release: app.turn_to_page(self.npage)
+    on_release: app.reader.turn_to_page(self.npage)
 
     MDListItemLeadingIcon:
         icon: "folder"
@@ -115,8 +115,8 @@
         if self.status=="deleted" else app.theme_cls.surfaceContainerLowColor)
     on_release: 
         self.auto_disable()
-        app.open_book(self.bookid)
-        app.truly_enable_reader()
+        app.reader.open(self.bookid)
+        app.reader.truly_enable()
         app.root.ids.reader_bottom.opacity = app.root.ids.reader_toolbar.opacity = 0
         app.root.ids.reader_bottom.disabled = app.root.ids.reader_toolbar.disabled = \
         True
@@ -406,7 +406,7 @@ MDScreenManager:
                     MDButton:
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .63}
-                        on_release: app.filemanager_open("bgim")
+                        on_release: app.importer.open("bgim")
 
                         MDButtonIcon:
                             icon: "image"
@@ -434,7 +434,7 @@ MDScreenManager:
             MDScreenManager:
 
             MDNavigationDrawer:
-                id: nav_upload
+                id: nav_import
                 drawer_type: "modal"
                 radius: app.cards.get_radius(nav="right")[0]
                 anchor: "right"
@@ -475,7 +475,7 @@ MDScreenManager:
 
             MDButton:
                 adaptive_size: True
-                on_release: app.homepage()
+                on_release: app.reader.homepage()
                     
                 MDButtonIcon:
                     icon: "keyboard-backspace"
@@ -518,7 +518,7 @@ MDScreenManager:
                 font_size: sp(48)
                 size: reader_search_field.height, reader_search_field.height
                 on_release: 
-                    app.generate_content()
+                    app.reader.generate_content()
                     nav_content.set_state("toggle")
 
             MDTextField:
@@ -565,8 +565,8 @@ MDScreenManager:
                 radius: app.cards.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
-                on_open: app.truly_disable_reader()
-                on_close: app.truly_enable_reader()
+                on_open: app.reader.truly_disable()
+                on_close: app.reader.truly_enable()
 
                 MDRelativeLayout:
                     orientation: "vertical"
@@ -661,8 +661,8 @@ MDScreenManager:
                 radius: app.cards.get_radius(nav="left")[0]
                 enable_swiping: False
                 width: max(dp(480), Window.height * 0.2)
-                on_open: app.truly_disable_reader()
-                on_close: app.truly_enable_reader()
+                on_open: app.reader.truly_disable()
+                on_close: app.reader.truly_enable()
 
                 MDBoxLayout:
                     adaptive_height: True
