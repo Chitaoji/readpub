@@ -39,9 +39,9 @@ from .reader import Reader
 if TYPE_CHECKING:
     from kivy.config import ConfigParser
 
-    from ._typing import BasicApp
+    from ._typing import VirtualApp
 else:
-    from kivymd.app import MDApp as BasicApp
+    from kivymd.app import MDApp as VirtualApp
 
 
 __all__ = ["MainApp"]
@@ -78,7 +78,7 @@ class ColorButton(MDButton):
     color: str = StringProperty()
 
 
-class MainApp(BasicApp):
+class MainApp(VirtualApp):
     """Kivy-App for ReadPub."""
 
     def get_application_config(self, defaultpath="") -> str:

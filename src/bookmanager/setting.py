@@ -1,5 +1,5 @@
 """
-Contains a tool class for reading settings: Book, etc.
+Contains the dataclass of book-page settings: PageSettings.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class PageSettings:
-    """Manages reading settings."""
+    """Manages book-page settings."""
 
     fontpath: str = field(default_factory=lambda: "msyh")
     fontsize: float = 21.0

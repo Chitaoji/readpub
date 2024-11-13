@@ -29,8 +29,8 @@ ImportType = Literal["book", "bgim"]
 
 
 # pylint: disable=unused-argument
-class BasicApp(MDApp):
-    """Basic App."""
+class VirtualApp(MDApp):
+    """Virtual App."""
 
     def __init__(self, **kwargs) -> None:
         self.bookmanager: BookManager

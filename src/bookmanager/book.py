@@ -1,5 +1,5 @@
 """
-Contains the container for a book: Book, etc.
+Contains the basic class for books: Book, etc.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
