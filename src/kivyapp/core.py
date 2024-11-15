@@ -130,7 +130,7 @@ class MainApp(VirtualApp):
             self.root.ids.bgim.opacity = 1
 
     def on_start(self) -> None:
-        m = BookManager(kvconfig.path.parent, logger=Logger)
+        m = BookManager(kvconfig.path.parent, sys_logger=Logger)
 
         asynckivy.start(
             self.cards.set(

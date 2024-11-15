@@ -153,23 +153,24 @@ class Book:
         srcpath = self.dirpath / "source"
         idx = BookIndex()
         to_pickle = [[idx]]
-        for ref in yaml.safe_load((self.dirpath / "content.yml").read_text()):
+        ref_list: list[str] = yaml.safe_load((self.dirpath / "content.yml").read_text())
+        for ref in ref_list:
             fromdir = "".join(ref.rpartition("/")[:-1])
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
             if paras := TextMaster.read_from_bs(
                 bs, srcpath, fromdir, idx, self.manager.fonttable
             ):
                 to_pickle.append(paras)
-        with pk.open("wb") as f:
-            pickle.dump(to_pickle, f)
+        with pk.open("wb") as stream:
+            pickle.dump(to_pickle, stream)
         self.update_metadata(is_ready=True)
         self.save_metadata()
 
     def get_content(self) -> list[list["Paragraph"]]:
         """Get content from source."""
         if self.__content is None:
-            with (self.dirpath / ".pickle").open("rb") as f:
-                self.__content = pickle.load(f)
+            with (self.dirpath / ".pickle").open("rb") as stream:
+                self.__content = pickle.load(stream)
         return self.__content
 
     def typeset(self) -> "Chapter":
@@ -191,8 +192,8 @@ class Book:
             self.update_metadata(
                 pagemax=len(self.__typeset), settings=asdict(self.settings)
             )
-            if self.manager.logger:
-                self.manager.logger.info(
+            if self.manager.sys_logger:
+                self.manager.sys_logger.info(
                     'Book: Typsetting book <"%s">', self.get_metadata()["title"]
                 )
         return self.__typeset
@@ -205,8 +206,8 @@ class Book:
                 setattr(self.settings, k, v)
                 adjusted = True
         if adjusted:
-            if self.manager.logger:
-                self.manager.logger.info(
+            if self.manager.sys_logger:
+                self.manager.sys_logger.info(
                     'Book: Ajusting settings for book <"%s">: %s',
                     self.get_metadata()["title"],
                     repr(kwargs),
@@ -237,6 +238,7 @@ class Book:
                 )
             raise RuntimeError(f"book is already opened: {self.bookid!r}")
         self.manager.opened_book = self.bookid
+        self.manager.read_logger.start()
         self.pagenow = self.get_metadata()["pagenow"]
         self.pagemax = self.get_metadata()["pagemax"]
 
@@ -247,8 +249,10 @@ class Book:
 
         """
         self.save_metadata()
-        self.pagenow = -1
         self.manager.opened_book = ""
+        self.manager.read_logger.end()
+        self.manager.read_logger.dump(self.dirpath)
+        self.pagenow = -1
 
     def turn_to_page(self, n: int) -> "Page":
         """Turn to page n."""

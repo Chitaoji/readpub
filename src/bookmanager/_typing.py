@@ -31,6 +31,7 @@ logging.warning(
 T = TypeVar("T")
 
 TitleLevel = int
+ReadTimeLog = list[tuple[int, int, int, int, str, float]]
 TextMeasureMethod = Literal["plain", "same-sized", "cached", "mixed"]
 StatusHint = Literal["normal", "deleted", "pinned"]
 MetaDataKey = Literal[

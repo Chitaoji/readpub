@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
 from .book import Book
+from .logger import ReadLogger
 from .textmaster import FontTable
 
 if TYPE_CHECKING:
@@ -30,8 +31,8 @@ class BookManager:
     ----------
     datapath : Path
         The path for data storage.
-    logger : Logger, optional
-        Logger.
+    sys_logger : Logger, optional
+        System logger.
 
     Raises
     ------
@@ -41,11 +42,12 @@ class BookManager:
 
     """
 
-    def __init__(self, datapath: Path, logger: Optional["Logger"] = None) -> None:
+    def __init__(self, datapath: Path, sys_logger: Optional["Logger"] = None) -> None:
         if not datapath.is_dir():
             raise NotADirectoryError(f"not a directory: {datapath}")
         self.datapath = datapath
-        self.logger = logger
+        self.sys_logger = sys_logger
+        self.read_logger = ReadLogger()
         self.opened_book = ""
         self.username = "testuser"
         self.fonttable = FontTable()
