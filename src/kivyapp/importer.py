@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Callable
 
 from kivy.core.window import Window
 from kivy.metrics import dp
@@ -43,7 +43,10 @@ class FileImportManager(MDFileManager):
         elif not dirs and not files:  # directory is unavailable
             return
 
-        for name in self._MDFileManager__sort_files(dirs):
+        sort_files: Callable[[list[str]], list[str]] = getattr(
+            self, "_MDFileManager__sort_files"
+        )
+        for name in sort_files(dirs):
             _path = os.path.join(path, name)
             access_string = self.get_access_string(_path)
             if "r" not in access_string:
@@ -66,7 +69,7 @@ class FileImportManager(MDFileManager):
                     "_selected": False,
                 }
             )
-        for name in self._MDFileManager__sort_files(files):
+        for name in sort_files(files):
             if self.ext and os.path.splitext(name)[1] not in self.ext:
                 continue
 
