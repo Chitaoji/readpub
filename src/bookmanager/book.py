@@ -6,12 +6,12 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-import datetime
 import io
 import pickle
 from dataclasses import asdict
+from datetime import datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal, Unpack, overload
+from typing import TYPE_CHECKING, Any, Literal, Unpack, overload
 from zipfile import ZipFile
 
 import yaml
@@ -65,13 +65,16 @@ class Book:
             self.__metadata = yaml.safe_load(yml_path.read_text())
             self.settings = PageSettings(**self.__metadata["settings"])
             return self.__metadata
-        metadata = read_ebook(self.dirpath, only_metadata=True)
+        metadata: dict[str, Any] = read_ebook(self.dirpath, only_metadata=True)
         metadata["title"] = self.textmaster.shorten(metadata["title"], 600)
+
         self.settings = PageSettings()
+        uploadtime = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-4]
         metadata.update(
             {
                 "uploader": self.manager.username,
-                "uploadtime": str(datetime.datetime.now()),
+                "uploadtime": uploadtime,
+                "lastread": uploadtime,
                 "status": "normal",
                 "pagenow": 0,
                 "pagemax": 1,
@@ -248,10 +251,10 @@ class Book:
         is closed.
 
         """
+        self.update_metadata(lastread=self.manager.read_logger.end())
         self.save_metadata()
-        self.manager.opened_book = ""
-        self.manager.read_logger.end()
         self.manager.read_logger.dump(self.dirpath)
+        self.manager.opened_book = ""
         self.pagenow = -1
 
     def turn_to_page(self, n: int) -> "Page":

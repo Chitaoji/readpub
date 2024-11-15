@@ -6,8 +6,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+from datetime import datetime
 from pathlib import Path
-from time import localtime, perf_counter, strftime
+from time import perf_counter
 from typing import TYPE_CHECKING
 
 import yaml
@@ -28,11 +29,14 @@ class ReadLogger:
         """Start logging."""
         self.time = perf_counter()
 
-    def end(self) -> None:
+    def end(self) -> str:
         """End logging."""
         readtime = round(perf_counter() - self.time, 2)
-        y, m, w, d, time = strftime("%Y-%m-%U-%d-%H:%M", localtime()).split("-")
+        y, m, w, d, time = (
+            datetime.now().strftime("%Y-%m-%U-%d-%H:%M:%S.%f")[:-4].split("-")
+        )
         self.counter.append([int(y), int(m), int(w), int(d), time, readtime])
+        return f"{y}-{m}-{d} {time}"
 
     def dump(self, dirpath: Path) -> None:
         """Dump the read-time in a log file."""

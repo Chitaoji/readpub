@@ -96,7 +96,7 @@ class BookCardContainer:
     def __init__(self, app: "MainApp") -> None:
         self.app = app
         self.test_bookcard: BookCard | None = None
-        self.current_sort_rule: list[str] = ["status", "uploadtime"]
+        self.current_sort_rule: list[str] = ["status", "lastread"]
         self.current_category: str = "home"
 
     async def set(self, books: dict[str, "Book"], duration: Optional[float] = None):

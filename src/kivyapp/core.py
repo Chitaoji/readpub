@@ -145,7 +145,7 @@ class MainApp(VirtualApp):
         Window.bind(on_keyboard=self.on_keyboard)
 
     def on_stop(self) -> None:
-        if self.reader.book:
+        if self.reader.book and self.reader.book.is_opened:
             self.reader.book.close()
 
     def set_bgim(self, path: str | None = None) -> None:

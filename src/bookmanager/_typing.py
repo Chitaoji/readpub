@@ -41,6 +41,7 @@ MetaDataKey = Literal[
     "coverpath",
     "uploader",
     "uploadtime",
+    "lastread",
     "status",
     "pagenow",
     "pagemax",
@@ -70,6 +71,7 @@ class MetaData(TypedDict):
     coverpath: NotRequired[Optional[str]]
     uploader: NotRequired[Optional[str]]
     uploadtime: NotRequired[Optional[str]]
+    lastread: NotRequired[Optional[str]]
     status: NotRequired[Optional[StatusHint]]
     pagenow: NotRequired[Optional[float]]
     pagemax: NotRequired[Optional[float]]
