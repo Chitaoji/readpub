@@ -1,5 +1,5 @@
 """
-Contains a simple book viewer class: BookViewer.
+Contains a simple book viewer: BookViewer.
 
 NOTE: this module is private. All functions and objects are available in the main
 `readpub` namespace - use that instead.
