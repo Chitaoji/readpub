@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 class PageSettings:
     """Manages the book-page settings."""
 
-    fontpath: str = field(default_factory=lambda: "msyh")
+    fontpath: str = "msyh"
     fontsize: float = 21.0
     page_width: float = 1000.0
     page_height: float = 900.0
