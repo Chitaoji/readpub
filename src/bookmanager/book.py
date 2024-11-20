@@ -197,7 +197,7 @@ class Book:
             )
             if self.manager.sys_logger:
                 self.manager.sys_logger.info(
-                    "Book: Typsetting <'%s'>", self.get_metadata()["title"]
+                    "Book: Typsetting book: <'%s'>", self.get_metadata()["title"]
                 )
         return self.__typeset
 
@@ -211,7 +211,7 @@ class Book:
         if adjusted:
             if self.manager.sys_logger:
                 self.manager.sys_logger.info(
-                    "Book: Ajusting page settings for <'%s'>: %s",
+                    "Book: Ajusting page settings for book: <'%s'>: %s",
                     self.get_metadata()["title"],
                     repr(kwargs),
                 )
@@ -245,7 +245,7 @@ class Book:
         self.pagenow = self.get_metadata()["pagenow"]
         self.pagemax = self.get_metadata()["pagemax"]
         self.manager.sys_logger.info(
-            "Book: Opening <'%s'>", self.get_metadata()["title"]
+            "Book: Opening book: <'%s'>", self.get_metadata()["title"]
         )
 
     def close(self) -> None:

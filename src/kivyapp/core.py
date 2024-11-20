@@ -151,12 +151,19 @@ class MainApp(VirtualApp):
     def set_bgim(self, path: str | None = None) -> None:
         """Set a background image."""
         if path is None:
+            Logger.info("Image: Removing background image")
+
             self.root.ids.bgim.source = ""
             self.root.ids.bgim.opacity = 0
+
+            kvconfig[self].update([["main-screen", "background_image", None]])
+
             self.has_bgim = False
             self.cards.setattr("theme_shadow_color", "Primary")
             self.cards.setattr("theme_bg_color", "Primary")
         else:
+            Logger.info('Image: Loading background image at "%s"', path)
+
             self.root.ids.bgim.source = path
             self.root.ids.bgim.opacity = 1
 
@@ -166,6 +173,7 @@ class MainApp(VirtualApp):
                 kvconfig.path.parent / f"background{Path(path).suffix}"
             ).as_posix()
             shutil.copyfile(path, savepath)
+
             kvconfig[self].update([["main-screen", "background_image", savepath]])
 
             self.has_bgim = True

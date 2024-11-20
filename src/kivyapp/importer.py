@@ -132,8 +132,8 @@ class FileImporter:
 
     def select_path(self, path: str):
         """
-        It will be called when you click on the file name
-        or the catalog selection button.
+        It will be called when you click on the file name or the catalog
+        selection button.
 
         """
         self.close()

@@ -6,6 +6,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+from itertools import compress
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Self
 
@@ -72,7 +73,11 @@ class KivyConfig:
         """
         done = [self._setdefault(*c) for c in commands]
         if any(done) or not Path(self.path).exists():
-            Logger.info('Config: Updating default values in "%s"', self.path)
+            Logger.info(
+                'Config: Updating default values in "%s": %s',
+                self.path,
+                repr(list(compress(commands, done))),
+            )
             self.parser.write()
 
     def update(self, commands: list[list]) -> None:
@@ -87,7 +92,11 @@ class KivyConfig:
         """
         done = [self._set(*c) for c in commands]
         if any(done) or not Path(self.path).exists():
-            Logger.info('Config: Updating configurations in "%s"', self.path)
+            Logger.info(
+                'Config: Updating "%s": %s',
+                self.path.name,
+                repr(list(compress(commands, done))),
+            )
             self.parser.write()
 
     def update_and_read(self, commands: list[list]) -> None:
@@ -101,13 +110,14 @@ class KivyConfig:
 
         """
         done = [self._set(*c) for c in commands]
-        if any(done):
-            Logger.info('Config: Updating configurations in "%s"', self.path)
+        if any(done) or not Path(self.path).exists():
+            Logger.info(
+                'Config: Updating "%s": %s',
+                self.path.name,
+                repr(list(compress(commands, done))),
+            )
             self.parser.write()
             self.parser.read(self.path.as_posix())
-        elif not Path(self.path).exists():
-            Logger.info('Config: Updating configurations in "%s"', self.path)
-            self.parser.write()
 
     def get(self, section: str, option: str) -> str:
         """Get a config value."""
