@@ -12,7 +12,6 @@ from typing import TYPE_CHECKING, Callable
 
 from kivy.core.window import Window
 from kivy.metrics import dp
-from kivymd.uix.button import MDFabButton
 from kivymd.uix.filemanager import MDFileManager
 from kivymd.uix.list.list import MDListItem
 from kivymd.uix.snackbar import MDSnackbar, MDSnackbarText
@@ -91,8 +90,12 @@ class FileImportManager(MDFileManager):
             )
 
         self.ids.rv.data = items
-        self.selection_button.md_bg_color = self.theme_cls.surfaceContainerColor
+        self.update_button_color()
         self._show()
+
+    def update_button_color(self) -> None:
+        """Update button color."""
+        self.selection_button.md_bg_color = self.theme_cls.surfaceContainerColor
 
 
 class FakeModalView:

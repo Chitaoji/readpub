@@ -267,6 +267,7 @@ class MainApp(VirtualApp):
             if not to:
                 to = "Dark" if self.main_theme_style == "Light" else "Light"
             self.theme_cls.theme_style = self.main_theme_style = to
+            self.importer.filemanager.update_button_color()
             self.cards.check()
             kvconfig[self].update([["main-screen", "theme_style", to]])
 
