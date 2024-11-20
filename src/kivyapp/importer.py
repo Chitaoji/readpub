@@ -94,26 +94,6 @@ class FileImportManager(MDFileManager):
         self.selection_button.md_bg_color = self.theme_cls.surfaceContainerColor
         self._show()
 
-    def _create_selection_button(self, *args):
-        if (
-            self.selector == "any"
-            or self.selector == "multi"
-            or self.selector == "folder"
-        ):
-            self.selection_button = MDFabButton(
-                on_release=self.select_directory_on_press_button,
-                theme_bg_color="Custom",
-                md_bg_color=(
-                    self.theme_cls.primaryColor
-                    if not self.background_color_selection_button
-                    else self.background_color_selection_button
-                ),
-                icon=self.icon_selection_button,
-                pos_hint={"right": 0.99},
-                y=dp(12),
-            )
-            self.add_widget(self.selection_button)
-
 
 class FakeModalView:
     """A fake view."""
