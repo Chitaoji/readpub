@@ -278,7 +278,6 @@ class MainApp(VirtualApp):
             kvconfig[self].update([["reader", "primary_palette", color]])
         else:
             self.theme_cls.primary_palette = self.main_theme_palette = color
-            self.importer.filemanager.update_button_color()
             kvconfig[self].update([["main-screen", "primary_palette", color]])
 
     def switch_theme(self) -> None:
