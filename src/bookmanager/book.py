@@ -211,7 +211,7 @@ class Book:
         if adjusted:
             if self.manager.sys_logger:
                 self.manager.sys_logger.info(
-                    "Book: Ajusting page settings for book: <'%s'>: %s",
+                    "Book: Page settings adjusted for <'%s'>: %s",
                     self.get_metadata()["title"],
                     repr(kwargs),
                 )
