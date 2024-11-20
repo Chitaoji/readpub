@@ -197,7 +197,7 @@ class Book:
             )
             if self.manager.sys_logger:
                 self.manager.sys_logger.info(
-                    "Book: Typsetting book <'%s'>", self.get_metadata()["title"]
+                    "Book: Typsetting <'%s'>", self.get_metadata()["title"]
                 )
         return self.__typeset
 
@@ -244,6 +244,9 @@ class Book:
         self.manager.read_logger.start()
         self.pagenow = self.get_metadata()["pagenow"]
         self.pagemax = self.get_metadata()["pagemax"]
+        self.manager.sys_logger.info(
+            "Book: Opening <'%s'>", self.get_metadata()["title"]
+        )
 
     def close(self) -> None:
         """
@@ -256,6 +259,7 @@ class Book:
         self.manager.read_logger.dump(self.dirpath)
         self.manager.opened_book = ""
         self.pagenow = -1
+        self.manager.sys_logger.info("Book: Closing the book")
 
     def turn_to_page(self, n: int) -> "Page":
         """Turn to page n."""
