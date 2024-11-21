@@ -170,10 +170,6 @@ class BookCardContainer:
         asynckivy.start(self.set(booklist.sort(*self.current_sort_rule).books, 0))
         self.current_category = category
 
-    def color_setter(self, widget: Any) -> Callable[[Any, list[str]], None]:
-        """Get a color setter for widget."""
-        return lambda _, x: setattr(widget, "md_bg_color", self.app.trans_color(x))
-
     def setattr(self, name: str, value: Any) -> None:
         """Setattr."""
         for card in self.app.root.ids.grid.children:
