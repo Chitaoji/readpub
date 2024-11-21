@@ -18,7 +18,6 @@ if TYPE_CHECKING:
 
     import asynckivy
     import kivymd.uix.list
-    import yaml
     from bs4 import BeautifulSoup
     from kivy import animation, config, lang, logger, metrics, properties, utils
     from kivy.core import text, window

@@ -6,12 +6,11 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
+import json
 from datetime import datetime
 from pathlib import Path
 from time import perf_counter
 from typing import TYPE_CHECKING
-
-import yaml
 
 if TYPE_CHECKING:
     from ._typing import ReadTimeLog
@@ -20,7 +19,7 @@ if TYPE_CHECKING:
 class ReadLogger:
     """Records and logs the reading history."""
 
-    def __init__(self, filename: str = "reading.log.yaml") -> None:
+    def __init__(self, filename: str = "reading.log.json") -> None:
         self.filename = filename
         self.time = 0.0
         self.counter: "ReadTimeLog" = []
@@ -40,15 +39,18 @@ class ReadLogger:
 
     def dump(self, dirpath: Path) -> None:
         """Dump the read-time in a log file."""
-        if (yml_path := dirpath / self.filename).exists():
-            log: "ReadTimeLog" = yaml.safe_load(yml_path.read_text())
+        if (jspath := dirpath / self.filename).exists():
+            with jspath.open(encoding="utf-8") as stream:
+                log: "ReadTimeLog" = json.load(stream)
         else:
             log: "ReadTimeLog" = []
         log.extend(self.counter)
-        with open(yml_path, "w", encoding="utf-8") as stream:
-            yaml.safe_dump(log, stream)
+        with jspath.open("w", encoding="utf-8") as stream:
+            json.dump(log, stream)
         self.counter.clear()
 
     def load(self, dirpath: Path) -> "ReadTimeLog":
         """Load from the file."""
-        return yaml.safe_load((dirpath / self.filename).read_text())
+        with (dirpath / self.filename).open(encoding="utf-8") as stream:
+            log = json.load(stream)
+        return log

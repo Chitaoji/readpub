@@ -7,6 +7,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 """
 
 import io
+import json
 import pickle
 from dataclasses import asdict
 from datetime import datetime
@@ -14,7 +15,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal, Unpack, overload
 from zipfile import ZipFile
 
-import yaml
 from bs4 import BeautifulSoup
 from PIL import Image
 
@@ -60,9 +60,9 @@ class Book:
         """Get the metadata from the book."""
         if self.__metadata is not None:
             return self.__metadata
-        yml_path = self.dirpath / "metadata.yml"
-        if yml_path.exists():
-            self.__metadata = yaml.safe_load(yml_path.read_text())
+        if (jspath := self.dirpath / "metadata.json").exists():
+            with jspath.open(encoding="utf-8") as stream:
+                self.__metadata = json.load(stream)
             self.settings = PageSettings(**self.__metadata["settings"])
             return self.__metadata
         metadata: dict[str, Any] = read_ebook(self.dirpath, only_metadata=True)
@@ -82,15 +82,15 @@ class Book:
                 "settings": asdict(self.settings),
             }
         )
-        with open(yml_path, "w", encoding="utf-8") as stream:
-            yaml.safe_dump(metadata, stream)
+        with jspath.open("w", encoding="utf-8") as stream:
+            json.dump(metadata, stream)
         self.__metadata = metadata
         return self.__metadata
 
     def save_metadata(self) -> None:
         """Save the metadata."""
-        with open(self.dirpath / "metadata.yml", "w", encoding="utf-8") as stream:
-            yaml.safe_dump(self.__metadata, stream)
+        with (self.dirpath / "metadata.json").open("w", encoding="utf-8") as stream:
+            json.dump(self.__metadata, stream)
 
     def update_metadata(self, **kwargs: Unpack["MetaData"]) -> None:
         """
@@ -106,9 +106,9 @@ class Book:
 
     def del_metadata(self) -> None:
         """Delete the saved metadata."""
-        yml_path = self.dirpath / "metadata.yml"
-        if yml_path.is_file():
-            yml_path.unlink()
+        jspath = self.dirpath / "metadata.json"
+        if jspath.is_file():
+            jspath.unlink()
 
     def delete(self) -> None:
         """Delete."""
@@ -151,12 +151,13 @@ class Book:
         but we will not ensure it.
 
         """
-        if (pk := self.dirpath / ".pickle").exists():
+        if (pklpath := self.dirpath / ".pickle").exists():
             return
         srcpath = self.dirpath / "source"
         idx = BookIndex()
         to_pickle = [[idx]]
-        ref_list: list[str] = yaml.safe_load((self.dirpath / "content.yml").read_text())
+        with (self.dirpath / "content.json").open(encoding="utf-8") as stream:
+            ref_list: list[str] = json.load(stream)
         for ref in ref_list:
             fromdir = "".join(ref.rpartition("/")[:-1])
             bs = BeautifulSoup((srcpath / ref).read_bytes(), features="xml")
@@ -164,7 +165,7 @@ class Book:
                 bs, srcpath, fromdir, idx, self.manager.fonttable
             ):
                 to_pickle.append(paras)
-        with pk.open("wb") as stream:
+        with pklpath.open("wb") as stream:
             pickle.dump(to_pickle, stream)
         self.update_metadata(is_ready=True)
         self.save_metadata()
@@ -341,8 +342,8 @@ def _read_epub_metadata(path: Path) -> "MetaData":
             cover_path = _save_cover(z, cover_href, path)
         else:
             raise EBookFormatError(f"unsupported epub format: {path}")
-    with open(path.parent / "content.yml", "w", encoding="utf-8") as stream:
-        yaml.safe_dump(content, stream)
+    with path.with_name("content.json").open("w", encoding="utf-8") as stream:
+        json.dump(content, stream)
     return {
         "title": path.stem,
         "author": author,
