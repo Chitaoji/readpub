@@ -47,7 +47,7 @@ class Reader:
         self.app.cards.check()
         self.app.root.transition = FadeTransition()
         self.app.root.current = "MainScreen"
-        self.app.switch_theme()
+        self.app.switch_screen()
         self.close()
         self.delete_content()
 

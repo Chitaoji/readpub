@@ -122,7 +122,7 @@
         True
         app.root.transition = WipeTransition()
         app.root.current = "Reader"
-        app.switch_theme()
+        app.switch_screen()
 
     MDRelativeLayout:
         
@@ -378,7 +378,7 @@ MDScreenManager:
                             id: palette_now
                             size: dp(30), dp(30)
                             theme_bg_color: "Custom"
-                            md_bg_color: app.theme_cls.primary_palette.lower()
+                            md_bg_color: app.main_theme_palette.lower()
                             opacity: .5
 
                     MDGridLayout:
@@ -630,7 +630,7 @@ MDScreenManager:
                             id: reader_palette_now
                             size: dp(30), dp(30)
                             theme_bg_color: "Custom"
-                            md_bg_color: palette_now.md_bg_color
+                            md_bg_color: app.reader_theme_palette.lower()
                             opacity: .5
 
                     MDGridLayout:

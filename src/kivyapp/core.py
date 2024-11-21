@@ -243,11 +243,6 @@ class MainApp(VirtualApp):
         ]:
             self.root.ids.palette_grid.add_widget(ColorButton(color=color))
             self.root.ids.reader_palette_grid.add_widget(ColorButton(color=color))
-        self.theme_cls.bind(
-            primary_palette=lambda _, c: setattr(
-                self.root.ids.palette_now, "md_bg_color", c.lower()
-            )
-        )
 
     async def asynctest(self, time: int, duration: Optional[float] = None):
         """Test the async functionality."""
@@ -270,6 +265,7 @@ class MainApp(VirtualApp):
             self.importer.filemanager.update_button_color()
             self.cards.check()
             kvconfig[self].update([["main-screen", "theme_style", to]])
+        self.palette_binder()
 
     def switch_theme_palette(self, color: str):
         """Switch the theme-palette."""
@@ -279,9 +275,19 @@ class MainApp(VirtualApp):
         else:
             self.theme_cls.primary_palette = self.main_theme_palette = color
             kvconfig[self].update([["main-screen", "primary_palette", color]])
+        self.palette_binder()
 
-    def switch_theme(self) -> None:
-        """Switch the theme-style."""
+    def palette_binder(self) -> None:
+        """Binds the primary palette."""
+        if self.root.current == "Reader":
+            self.root.ids.reader_palette_now.md_bg_color = (
+                self.reader_theme_palette.lower()
+            )
+        else:
+            self.root.ids.palette_now.md_bg_color = self.main_theme_palette.lower()
+
+    def switch_screen(self) -> None:
+        """Switch the screen."""
         if self.root.current == "Reader":
             self.theme_cls.theme_style = self.reader_theme_style
             self.theme_cls.primary_palette = self.reader_theme_palette
