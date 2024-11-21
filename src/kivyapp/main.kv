@@ -375,14 +375,14 @@ MDScreenManager:
                             role: "medium"
 
                         MDButton:
-                            id: palette_now_button
+                            id: palette_now
                             size: dp(30), dp(30)
                             theme_bg_color: "Custom"
                             md_bg_color: app.theme_cls.primary_palette.lower()
                             opacity: .5
 
                     MDGridLayout:
-                        id: palette_pre_grid
+                        id: palette_grid
                         rows: 1
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .78}
@@ -627,14 +627,14 @@ MDScreenManager:
                             role: "medium"
 
                         MDButton:
-                            id: reader_palette_now_button
+                            id: reader_palette_now
                             size: dp(30), dp(30)
                             theme_bg_color: "Custom"
-                            md_bg_color: palette_now_button.md_bg_color
+                            md_bg_color: palette_now.md_bg_color
                             opacity: .5
 
                     MDGridLayout:
-                        id: reader_palette_pre_grid
+                        id: reader_palette_grid
                         rows: 1
                         adaptive_size: True
                         pos_hint: {"center_x": .5, "center_y": .78}

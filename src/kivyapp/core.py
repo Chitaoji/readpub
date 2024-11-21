@@ -241,11 +241,11 @@ class MainApp(VirtualApp):
             "purple",
             "olive",
         ]:
-            self.root.ids.palette_pre_grid.add_widget(ColorButton(color=color))
-            self.root.ids.reader_palette_pre_grid.add_widget(ColorButton(color=color))
+            self.root.ids.palette_grid.add_widget(ColorButton(color=color))
+            self.root.ids.reader_palette_grid.add_widget(ColorButton(color=color))
         self.theme_cls.bind(
             primary_palette=lambda _, c: setattr(
-                self.root.ids.palette_now_button, "md_bg_color", c.lower()
+                self.root.ids.palette_now, "md_bg_color", c.lower()
             )
         )
 
