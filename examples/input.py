@@ -1,11 +1,13 @@
+"""Input method."""
+
 import ctypes
-import platform
-import subprocess
 from ctypes import wintypes
 
-import numpy as np
+from kivy.app import App
+from kivy.core.text import LabelBase as kvLabelBase
+from kivy.lang import Builder
 
-# windows api 准备
+# windows api preparing
 # GlobalAlloc = ctypes.windll.kernel32.GlobalAlloc
 # GlobalLock = ctypes.windll.kernel32.GlobalLock
 GlobalFree = ctypes.windll.kernel32.GlobalFree
@@ -30,6 +32,8 @@ GHND = 0x0042
 
 
 class CANDIDATELIST(ctypes.Structure):
+    """Condidate list."""
+
     _fields_ = [
         ("dwSize", wintypes.DWORD),
         ("dwStyle", wintypes.DWORD),
@@ -41,18 +45,14 @@ class CANDIDATELIST(ctypes.Structure):
     ]
 
 
-from kivy.core.text import LabelBase as kvLabelBase
-
 kvLabelBase.register(name="msyh", fn_regular=r"C:\Windows\Fonts\msyh.ttc")
 
 
-from kivy.app import App
-from kivy.lang import Builder
-from kivy.uix.label import Label
+class InputMethod(App):
+    """Example application."""
 
-
-class FirstKivy(App):
-    def ime_press(self, instance, value):
+    def ime_press(self, *_):
+        """Overrides `ime_press()`."""
 
         user32 = ctypes.WinDLL(name="user32")
         imm32 = ctypes.WinDLL(name="imm32")
@@ -106,4 +106,4 @@ BoxLayout:
         )
 
 
-FirstKivy().run()
+InputMethod().run()

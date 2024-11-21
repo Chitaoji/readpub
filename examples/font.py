@@ -121,7 +121,7 @@ class FontMenu(MDScreen):
         return self.__text if self.__text else default
 
 
-class IconPreview(MDApp):
+class FontPreview(MDApp):
     """Example application."""
 
     def __init__(self, **kwargs):
@@ -159,4 +159,4 @@ class IconPreview(MDApp):
 
 
 if __name__ == "__main__":
-    IconPreview().run()
+    FontPreview().run()
