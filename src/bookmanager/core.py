@@ -11,7 +11,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Iterator, Optional, Self, Unpack
 
-from .book import Book
+from .book import Book, EBookFormatError
 from .logger import ReadLogger
 from .textmaster import FontTable
 
@@ -89,7 +89,7 @@ class BookManager:
         else:
             raise LoginError(f"wrong password for user: {username!r}")
 
-    def add_book(self, src: Path) -> Book:
+    def add_book(self, src: Path) -> Book | None:
         """
         Add a book.
 
@@ -100,13 +100,13 @@ class BookManager:
 
         Returns
         -------
-        Book
+        Book | None
             New book.
 
         Raises
         ------
         FileNotFoundError
-            Raised when book is not found.
+            Raised when the book file is not found.
 
         """
         if not src.exists():
@@ -115,8 +115,13 @@ class BookManager:
         dirpath = self.datapath / "books" / bookid
         dirpath.mkdir()
         shutil.copyfile(src, dirpath / src.name)
-
-        self.books[bookid] = book = Book(dirpath, self)
+        try:
+            book = Book(dirpath, self)
+            book.get_metadata()
+        except EBookFormatError:
+            shutil.rmtree(dirpath)
+            return
+        self.books[bookid] = book
         return book
 
     def get_new_bookid(self, maxruns: int = 20) -> str:
@@ -152,12 +157,6 @@ class BookManager:
             else:
                 raise RuntimeError(f"can't find a legal book id after {maxruns} runs")
         return bookid
-
-    def check_is_book(self, src: Path) -> bool:
-        """Check whether the source file is an e-book."""
-        if src.suffix in {".epub"}:
-            return True
-        return False
 
     def remove(self, bookid: str | int) -> None:
         """

@@ -131,7 +131,6 @@ class Book:
             return BookViewer(self)
         if openid:
             self.manager.books[openid].close()
-        self.get_metadata()
         self.typeset()
         self.open()
         return BookViewer(self)
@@ -290,17 +289,17 @@ class Book:
 
 
 @overload
-def read_ebook(path: Path, only_metadata: Literal[True] = True) -> "MetaData": ...
+def read_ebook(dirpath: Path, only_metadata: Literal[True] = True) -> "MetaData": ...
 @overload
-def read_ebook(path: Path, only_metadata: Literal[False] = False) -> None: ...
-def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | None":
+def read_ebook(dirpath: Path, only_metadata: Literal[False] = False) -> None: ...
+def read_ebook(dirpath: Path, only_metadata: bool = False) -> "MetaData | None":
     """
     Read an e-book from the path.
 
     Parameters
     ----------
-    path : Path
-        File path or directory path.
+    dirpath : Path
+        Directory path.
     only_metadata : bool, optional
         If true, only returns the metadata of the book, by default
         False.
@@ -316,17 +315,19 @@ def read_ebook(path: Path, only_metadata: bool = False) -> "MetaData | None":
         Raised when the e-book format is unsupported.
 
     """
-    if path.is_dir():
-        for p in path.iterdir():
-            if p.suffix in [".epub"]:
-                path = p
-                break
-        else:
-            raise EBookFormatError(f"unsupported e-book format: {path}")
+    for p in dirpath.iterdir():
+        if p.suffix in [".epub"]:
+            path = p
+            break
+    else:
+        raise EBookFormatError(f"unsupported e-book format: {dirpath}")
 
     match path.suffix:
         case ".epub":
-            return _read_epub_metadata(path) if only_metadata else _read_epub(path)
+            try:
+                return _read_epub_metadata(path) if only_metadata else _read_epub(path)
+            except Exception as e:
+                raise EBookFormatError(f"unsupported epub format: {path}") from e
 
 
 def _read_epub(path: Path) -> None:

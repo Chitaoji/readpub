@@ -149,7 +149,7 @@ class FileImporter:
 
     def import_book(self, path: str) -> None:
         """Importing book."""
-        if checked := self.app.bookmanager.check_is_book(p := Path(path)):
+        if book := self.app.bookmanager.add_book(p := Path(path)):
             snack = "已导入新书: " + path
         else:
             snack = f"无法解析文件{"夹" if p.is_dir() else ""}: " + path
@@ -161,7 +161,7 @@ class FileImporter:
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
                 text=self.app.font.gettextmaster(fs, role).shorten(
-                    snack, Window.width / 2 - 20
+                    snack, Window.width / 2 - dp(20)
                 ),
                 font_style=fs,
                 role=role,
@@ -172,8 +172,8 @@ class FileImporter:
         )
         self.prev_snackbar.open()
 
-        if checked:
-            self.app.cards.insert(book := self.app.bookmanager.add_book(p))
+        if book:
+            self.app.cards.insert(book)
             self.app.cards.prepare_book(book)
 
     def import_bgim(self, path: str) -> None:
@@ -191,7 +191,7 @@ class FileImporter:
         self.prev_snackbar = MDSnackbar(
             MDSnackbarText(
                 text=self.app.font.gettextmaster(fs, role).shorten(
-                    snack, Window.width / 2 - 20
+                    snack, Window.width / 2 - dp(20)
                 ),
                 font_style=fs,
                 role=role,
