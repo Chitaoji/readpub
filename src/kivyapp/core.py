@@ -164,6 +164,8 @@ class MainApp(VirtualApp):
             self.has_bgim = False
             self.cards.setattr("theme_shadow_color", "Primary")
             self.cards.setattr("theme_bg_color", "Primary")
+
+            Clock.schedule_once(lambda *_: self.switch_theme_style("Light"), 0)
         else:
             Logger.info('Image: Loading background image at "%s"', path)
 
@@ -181,7 +183,8 @@ class MainApp(VirtualApp):
             self.cards.setattr("theme_shadow_color", "Custom")
             self.cards.setattr("shadow_color", [0, 0, 0, 0])
             self.cards.setattr("theme_bg_color", "Custom")
-        Clock.schedule_once(lambda *_: self.switch_theme_style(), 0)
+
+            Clock.schedule_once(lambda *_: self.switch_theme_style("Dark"), 0)
 
     def trans_color(self, color: list[str], transparency: float = 0.4) -> str:
         """Adjust the color according to the transparency."""
@@ -262,6 +265,10 @@ class MainApp(VirtualApp):
         else:
             if not to:
                 to = "Dark" if self.main_theme_style == "Light" else "Light"
+            elif self.main_theme_style == to:
+                self.root.ids.nav_setting.md_bg_color = self.trans_color(
+                    self.theme_cls.surfaceContainerLowColor, 0.9
+                )
             self.theme_cls.theme_style = self.main_theme_style = to
             self.importer.filemanager.update_button_color()
             self.cards.check()
