@@ -15,7 +15,7 @@ just_fix_windows_console()
 parser = argparse.ArgumentParser(
     prog="install.py", formatter_class=argparse.ArgumentDefaultsHelpFormatter
 )
-parser.add_argument("dir", nargs="?", help="output directory", default="ReadPub")
+parser.add_argument("dir", nargs="?", help="output directory", default="./ReadPub")
 
 
 filepath = Path(__file__)
