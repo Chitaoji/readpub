@@ -53,6 +53,9 @@ class BookManager:
         self.fonttable = FontTable()
         self.__init_books()
 
+    def __eq__(self, __other: Self | "TempBookManager") -> bool:
+        return list(self.books) == list(__other.books)
+
     def __getitem__(self, __key: int) -> Book:
         return list(self.books.values())[__key]
 
@@ -329,6 +332,9 @@ class TempBookManager:
 
     def __init__(self, books: dict[str, Book]) -> None:
         self.books = books
+
+    def __eq__(self, __other: Self | BookManager) -> bool:
+        return list(self.books) == list(__other.books)
 
     def find(self, **kwargs: Unpack["MetaData"]) -> Self:
         """See BookManager.find()."""
