@@ -165,20 +165,12 @@ class BookCardContainer:
             )
         )
 
-    # def sort(self, sort_rule: list[str]) -> None:
-    #     """Reset the cards according to the sorting rule."""
-    #     self.remove()
-    #     match category:
-    #         case "home":
-    #             booklist = self.app.bookmanager.findnot(status="deleted")
-    #         case "deleted":
-    #             booklist = self.app.bookmanager.find(status="deleted")
-    #         case "pinned":
-    #             booklist = self.app.bookmanager.find(status="pinned")
-    #         case _:
-    #             raise RuntimeError(f"undefined category: {category}")
-    #     asynckivy.start(self.set(booklist.sort(*self.current_sort_rule).books, 0))
-    #     self.current_category = category
+    def search_title(self, text: str) -> None:
+        """Search for the book title."""
+        self.remove()
+        asynckivy.start(
+            self.set(self.get_current_manager().search_title(text).books, 0)
+        )
 
     def get_current_manager(self):
         """Get the books from the current category."""
@@ -418,7 +410,3 @@ class BookCardContainer:
             # -------------------------------------------------------------
         )
         dialog.open()
-
-    def search(self, text: str) -> None:
-        """Search for the book title."""
-        self.set_category(self.current_category)
