@@ -134,7 +134,7 @@ class MainApp(VirtualApp):
 
         asynckivy.start(
             self.cards.set(
-                m.findnot(status="deleted").sort(*self.cards.current_sort_rule).books
+                m.findnot(status="deleted").sortby(*self.cards.current_sort_rule).books
             )
         )
 
@@ -207,7 +207,6 @@ class MainApp(VirtualApp):
             case 286:  # F5
                 if self.root.current == "MainScreen":
                     self.close_nav_drawer()
-                    self.cards.remove()
                     self.cards.set_category(self.cards.current_category)
             case 281:  # PgDn
                 if self.root.current == "Reader":

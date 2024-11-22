@@ -219,7 +219,9 @@ class BookManager:
                 books[bookid] = book
         return TempBookManager(books)
 
-    def sort(self, *args: "MetaDataKey", ascending: bool = False) -> "TempBookManager":
+    def sortby(
+        self, *args: "MetaDataKey", ascending: bool = False
+    ) -> "TempBookManager":
         """
         Return a new dict of books sorted by its metadata.
 
@@ -316,9 +318,9 @@ class TempBookManager:
         """See BookManager.findnot()."""
         return BookManager.findnot(self, **kwargs)
 
-    def sort(self, *args: "MetaDataKey", ascending: bool = False) -> Self:
-        """See BookManager.sort()."""
-        return BookManager.sort(self, *args, ascending=ascending)
+    def sortby(self, *args: "MetaDataKey", ascending: bool = False) -> Self:
+        """See BookManager.sortby()."""
+        return BookManager.sortby(self, *args, ascending=ascending)
 
 
 def get_datapath(datapath: Optional[Path] = None) -> Path:
