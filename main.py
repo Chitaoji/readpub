@@ -13,6 +13,10 @@ If you want to import from the module, use the main `readpub` namespace instead.
 
 from typing import TYPE_CHECKING
 
+from colorama import just_fix_windows_console
+
+just_fix_windows_console()
+
 if TYPE_CHECKING:
     import secrets
 
