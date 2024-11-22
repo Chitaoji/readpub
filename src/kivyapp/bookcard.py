@@ -167,10 +167,16 @@ class BookCardContainer:
 
     def search_title(self, text: str) -> None:
         """Search for the book title."""
+        if not text:
+            return
         self.remove()
-        asynckivy.start(
-            self.set(self.get_current_manager().search_title(text).books, 0)
-        )
+        if (
+            books := self.get_current_manager()
+            .search_title(text)
+            .sortby(*self.current_sort_rule)
+            .books
+        ):
+            asynckivy.start(self.set(books))
 
     def get_current_manager(self):
         """Get the books from the current category."""
