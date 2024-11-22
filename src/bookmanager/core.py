@@ -223,7 +223,7 @@ class BookManager:
         self, *args: "MetaDataKey", ascending: bool = False
     ) -> "TempBookManager":
         """
-        Return a new dict of books sorted by its metadata.
+        Return books sorted by its metadata.
 
         Parameters
         ----------
@@ -247,6 +247,26 @@ class BookManager:
             reverse=not ascending,
         )
         books = {bookid: self.books[bookid] for bookid in sortids}
+        return TempBookManager(books)
+
+    def search_title(self, text: str) -> "TempBookManager":
+        """
+        Search among book titles.
+
+        Parameters
+        ----------
+        text : str
+            String to search.
+
+        Returns
+        -------
+        TempBookManager
+            Contains the matched books.
+
+        """
+        books = {
+            k: v for k, v in self.books.items() if text in v.get_metadata()["title"]
+        }
         return TempBookManager(books)
 
     def where_to_insert(
@@ -321,6 +341,10 @@ class TempBookManager:
     def sortby(self, *args: "MetaDataKey", ascending: bool = False) -> Self:
         """See BookManager.sortby()."""
         return BookManager.sortby(self, *args, ascending=ascending)
+
+    def search_title(self, text: str) -> Self:
+        """See BookManager.search_title()."""
+        return BookManager.search_title(self, text)
 
 
 def get_datapath(datapath: Optional[Path] = None) -> Path:
