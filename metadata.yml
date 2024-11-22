@@ -13,6 +13,7 @@ REQUIRES:
     - pillow
     - fonttools
     - colorama
+    - PyInstaller
 EXTRAS:   
   exe:
     - pyinstaller
