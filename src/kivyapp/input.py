@@ -58,6 +58,7 @@ class InputMethod:
 
     def __init__(self, app: "MainApp") -> None:
         self.app = app
+        self.backspace: bool = False
         self.prev_input_menu: MDDropdownMenu | None = None
 
     def open(self, button: Any) -> None:
@@ -67,7 +68,14 @@ class InputMethod:
             if self.prev_input_menu:
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
+            if self.consume_backspace() and not button.text:
+                self.app.cards.reset()
+            else:
+                self.app.cards.search_title(button.text)
             return
+
+        self.consume_backspace()
+
         menu_width = self.app.font.gettextmaster("NavText", "medium").getlinewidth(
             candidates
         ) + dp(8)
@@ -153,3 +161,12 @@ class InputMethod:
 
         imm32.ImmReleaseContext(h_wnd, h_imc)
         return " ".join(op).replace("\x00", "")
+
+    def receive_backspace(self) -> None:
+        """Receive a backspace."""
+        self.backspace = True
+
+    def consume_backspace(self) -> bool:
+        """Consume a backspace."""
+        self.backspace, consumed = False, self.backspace
+        return consumed

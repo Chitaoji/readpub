@@ -8,7 +8,7 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 # pylint: disable=no-name-in-module
 from functools import partial
-from typing import TYPE_CHECKING, Any, Callable, Literal, Optional
+from typing import TYPE_CHECKING, Any, Literal, Optional
 
 import asynckivy
 from kivy.logger import Logger
@@ -155,8 +155,12 @@ class BookCardContainer:
         self.app.root.ids.grid.add_widget(widget, idx)
         return widget
 
+    def reset(self) -> None:
+        """Reset the cards."""
+        self.set_category(self.current_category)
+
     def set_category(self, category: str) -> None:
-        """Reset the cards according to the category."""
+        """Set the cards according to the category."""
         self.remove()
         self.current_category = category
         asynckivy.start(

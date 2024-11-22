@@ -207,7 +207,7 @@ class MainApp(VirtualApp):
             case 286:  # F5
                 if self.root.current == "MainScreen":
                     self.close_nav_drawer()
-                    self.cards.set_category(self.cards.current_category)
+                    self.cards.reset()
             case 281:  # PgDn
                 if self.root.current == "Reader":
                     self.reader.next_page()
@@ -225,6 +225,8 @@ class MainApp(VirtualApp):
                         self.reader.homepage()
                 elif not self.nav_now:
                     self.open_nav_drawer("nav_setting")
+            case 8:  # backspace
+                self.input.receive_backspace()
 
     def open_settings(self, *_) -> None: ...
 

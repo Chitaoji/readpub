@@ -279,9 +279,7 @@ MDScreenManager:
                     radius: dp(15)
                     font_style: "NavText"
                     role: "medium"
-                    on_text: 
-                        app.input.open(self)
-                        app.cards.search_title(self.text)
+                    on_text: app.input.open(self)
 
                     MDTextFieldLeadingIcon:
                         icon: "magnify"
