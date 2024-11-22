@@ -34,29 +34,29 @@ class KivyFont:
 
     Parameters
     ----------
-    sys_fontpath : Path
-        System font path (must be a directory).
+    sys_dir : Path
+        System font directory.
 
     """
 
-    def __init__(self, sys_fontpath: Path, app: "MDApp") -> None:
-        if not sys_fontpath.is_dir():
-            raise NotADirectoryError(f"not a directory: {sys_fontpath}")
+    def __init__(self, sys_dir: Path, app: "MDApp") -> None:
+        if not sys_dir.is_dir():
+            raise NotADirectoryError(f"not a directory: {sys_dir}")
 
-        self.fontpath = sys_fontpath
+        self.sys_dir = sys_dir
         self.app = app
-        self.font_info: dict[str, tuple[Path, str]] = {}
-        self.font_textmaster: dict[str, dict[str, TextMaster]] = {}
+        self.font_files: dict[str, Path] = {}
+        self.textmasters: dict[str, dict[str, TextMaster]] = {}
         self.__find_sys_font()
         self.__set_font_styles()
 
     def __find_sys_font(self):
-        for stem, name in SYS_FONT_MAPPING.items():
-            if p := self.findfont(stem):
-                LabelBase.register(name=stem, fn_regular=p.as_posix())
-                self.font_info[stem] = (p, name)
+        for font in SYS_FONT_MAPPING:
+            if p := self.findfont(font):
+                LabelBase.register(name=font, fn_regular=p.as_posix())
+                self.font_files[font] = p
             else:
-                Logger.info('Font: Font style not found: "%s"', stem)
+                Logger.info('Font: Font file not found: "%s"', font)
 
     def __set_font_styles(self):
         self.font_styles = {
@@ -146,8 +146,8 @@ class KivyFont:
             None.
 
         """
-        if (p := self.fontpath / f"{font_name}.ttc").exists() or (
-            p := self.fontpath / f"{font_name}.ttf"
+        if (p := self.sys_dir / f"{font_name}.ttc").exists() or (
+            p := self.sys_dir / f"{font_name}.ttf"
         ).exists():
             return p
         return None
@@ -199,19 +199,17 @@ class KivyFont:
 
         """
         prop = self.font_styles[font_style][role]
-        return self.font_info[prop["font-name"]][0], prop["font-size"]
+        return self.font_files[prop["font-name"]], prop["font-size"]
 
     def gettextmaster(self, font_style: str, role: str) -> TextMaster:
         """Get the textmaster of the font-style."""
-        if font_style not in self.font_textmaster:
-            self.font_textmaster[font_style] = {}
-        if role not in self.font_textmaster[font_style]:
+        if font_style not in self.textmasters:
+            self.textmasters[font_style] = {}
+        if role not in self.textmasters[font_style]:
             path, size = self.getpath(font_style, role)
             if size % 1 > 0:
                 Logger.info(
-                    "TextMaster: Font size is ceiled: %s -> %s",
-                    size,
-                    ceil(size),
+                    "TextMaster: Font size is ceiled: %s -> %s", size, ceil(size)
                 )
-            self.font_textmaster[font_style][role] = TextMaster(path, size)
-        return self.font_textmaster[font_style][role]
+            self.textmasters[font_style][role] = TextMaster(path, size)
+        return self.textmasters[font_style][role]
