@@ -225,8 +225,8 @@ class Reader:
                         text=" " * indent * 4 + x.title.text, npage=x.title.npage
                     )
                 )
-            # if 0 < len(x.content) and indent <= 0:
-            #     self.__generate_content(x.content, indent=indent + 1)
+            if len(x.content) > 0:
+                self.__generate_content(x.content, indent=indent + 1)
 
     def delete_content(self):
         """Delete the book content."""
