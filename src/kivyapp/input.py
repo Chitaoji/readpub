@@ -58,30 +58,28 @@ class InputMethod:
 
     def __init__(self, app: "MainApp") -> None:
         self.app = app
-        self.backspace: bool = False
+        self.textfields: dict[str, Any] = {}
         self.prev_input_menu: MDDropdownMenu | None = None
 
-    def open(self, button: Any) -> None:
+    def open(self, textfield: Any) -> None:
         """Open an input menu."""
+        if textfield.name not in self.textfields:
+            self.textfields[textfield.name] = textfield
+
         candidates = self.get_candidates()
         if not candidates:
             if self.prev_input_menu:
                 self.prev_input_menu.dismiss()
                 self.prev_input_menu = None
-            if self.consume_backspace() and not button.text:
-                self.app.cards.reset()
-            else:
-                self.app.cards.search_title(button.text)
+            self.app.cards.search_title(textfield.text)
             return
-
-        self.consume_backspace()
 
         menu_width = self.app.font.gettextmaster("NavText", "medium").getlinewidth(
             candidates
         ) + dp(8)
         if self.prev_input_menu is None:
             menu = MDDropdownMenu(
-                caller=button,
+                caller=textfield,
                 items=[
                     {
                         "viewclass": "MDLabel",
@@ -105,7 +103,9 @@ class InputMethod:
             )
             menu.on_enter = menu.on_leave = lambda: None
             menu.bind(on_dismiss=lambda _: setattr(self, "prev_input_menu", None))
-            self.app.open_menu(menu, button, absx=button.cursor_pos[0], rely=-dp(14))
+            self.app.open_menu(
+                menu, textfield, absx=textfield.cursor_pos[0], rely=-dp(14)
+            )
 
             self.prev_input_menu = menu
         else:
@@ -164,9 +164,9 @@ class InputMethod:
 
     def receive_backspace(self) -> None:
         """Receive a backspace."""
-        self.backspace = True
-
-    def consume_backspace(self) -> bool:
-        """Consume a backspace."""
-        self.backspace, consumed = False, self.backspace
-        return consumed
+        if (
+            "search_field" in self.textfields
+            and not self.textfields["search_field"].text
+        ):
+            self.app.cards.reset()
+        self.textfields.clear()

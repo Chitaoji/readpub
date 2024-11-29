@@ -254,7 +254,6 @@ MDScreenManager:
             spacing: 0
             
             MDBoxLayout:
-                id: main_topbar
                 adaptive_size: True
                 padding: dp(10), dp(24), dp(10), dp(24)
                 spacing: dp(20)
@@ -272,6 +271,7 @@ MDScreenManager:
 
                 MDTextField:
                     id: search_field
+                    name: "search_field"
                     mode: "outlined"
                     size_hint_x: None
                     width: dp(1380)
@@ -541,6 +541,7 @@ MDScreenManager:
 
             MDTextField:
                 id: reader_search_field
+                name: "reader_search_field"
                 mode: "outlined"
                 size_hint_x: None
                 width: dp(1380)
