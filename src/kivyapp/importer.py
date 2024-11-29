@@ -89,7 +89,7 @@ class FileImportManager(MDFileManager):
                 }
             )
 
-        self.ids.rv.data = items
+        self.ids.rv_importer.data = items
         self.update_button_color()
         self._show()
 
