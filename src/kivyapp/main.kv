@@ -95,7 +95,7 @@
             RecycleGridLayout:
                 padding: dp(10)
                 spacing: dp(2)
-                cols: 3 if root.preview else 1
+                cols: 1
                 default_size: None, dp(48)
                 default_size_hint: 1, None
                 size_hint_y: None
@@ -698,19 +698,20 @@ MDScreenManager:
                         font_style: "NavText"
                         role: "large"
 
-                    MDScrollView:
-                        size_hint: None, None
-                        size: self.parent.width, Window.height * 0.85
-                        do_scroll_x: False
-                        do_scroll_y: True
-                        scroll_x: .1
-                        scroll_type: ["content", "bars"]
+                    RecycleView:
+                        id: rv_content
+                        key_viewclass: "viewclass"
+                        key_size: "height"
+                        bar_width: dp(4)
                         scroll_wheel_distance: dp(120)
+                        bar_inactive_color: [0, 0, 0, 0]
 
-                        
-                        MDBoxLayout:
-                            id: contentbox
-                            adaptive_height: True
-                            orientation: "vertical"
-                            spacing: dp(4)
+                        RecycleGridLayout:
+                            padding: dp(10)
+                            spacing: dp(2)
+                            cols: 1
+                            default_size: None, dp(48)
+                            default_size_hint: 1, None
+                            size_hint_y: None
+                            height: self.minimum_height
 
