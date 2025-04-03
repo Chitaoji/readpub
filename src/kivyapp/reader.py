@@ -230,6 +230,6 @@ class Reader:
 
     def delete_content(self):
         """Delete the book content."""
-        box = self.app.root.ids.contentbox
+        box = self.app.root.ids.rv_content
         for widget in list(box.children):
             box.remove_widget(widget)
