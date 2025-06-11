@@ -6,7 +6,6 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-import logging
 from typing import (
     TYPE_CHECKING,
     Literal,
@@ -17,15 +16,14 @@ from typing import (
     TypeVar,
 )
 
+import loggings
+
 if TYPE_CHECKING:
     from .book import Book
     from .textmaster import AlternativeCharacter, BookImage, BookIndex, BookTitle
 
 
-logging.warning(
-    "importing from '._typing' - this module is not intended for direct import, "
-    "therefore unexpected errors may occur"
-)
+loggings.warning("this module is not intended to be imported at runtime")
 
 
 T = TypeVar("T")

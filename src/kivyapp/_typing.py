@@ -6,9 +6,9 @@ NOTE: this module is private. All functions and objects are available in the mai
 
 """
 
-import logging
 from typing import TYPE_CHECKING, Any, Literal
 
+import loggings
 from kivymd.app import MDApp
 
 from ..bookmanager import BookManager
@@ -20,10 +20,7 @@ if TYPE_CHECKING:
     from .input import InputMethod
     from .reader import Reader
 
-logging.warning(
-    "importing from '._typing' - this module is not intended for direct import, "
-    "therefore unexpected errors may occur"
-)
+loggings.warning("this module is not intended to be imported at runtime")
 
 ImportType = Literal["book", "bgim"]
 
