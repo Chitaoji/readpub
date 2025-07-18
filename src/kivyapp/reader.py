@@ -212,12 +212,12 @@ class Reader:
 
     def generate_content(self):
         """Generate the book content."""
-        if len(self.app.root.ids.contentbox.children) > 0:
+        if len(self.app.root.ids.rv_content.children) > 0:
             return
         self.__generate_content(self.book.get_content()[0][0].content)
 
     def __generate_content(self, content, indent: int = 0):
-        box = self.app.root.ids.contentbox
+        box = self.app.root.ids.rv_content
         for x in content:
             if x.title.text != "Unknown":
                 box.add_widget(
